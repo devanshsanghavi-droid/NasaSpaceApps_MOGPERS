@@ -59,30 +59,33 @@ Key: (`pdiv_id`, `year`, `use`). `use` is part of the key because a few PDs carr
 | n_rights | number of water rights with a record at this PD that year |
 | lon, lat | PD location, decimal degrees NAD83, **as given by WIMAS** (100% present, so no PLSS conversion was needed) |
 | county_fips | 5-character FIPS |
-| gmd | GMD number from WIMAS's own PD attribute; null outside a GMD |
-| gmd_county | GMD from the contract county list |
+| gmd | "GMD1"/"GMD3"/"GMD4" from WIMAS's own PD attribute (official district membership of the PD); null outside a GMD |
+| gmd_county | "GMD1"/"GMD3"/"GMD4" from the contract county list (whole counties) |
 | source | `G` groundwater, `S` surface (`GS` if both) |
 | aquifer_codes | WIMAS aquifer code(s) |
 | af_reported | reported water use, acre-feet: sum of af_used over this PD's records that year |
 | acres_irrigated | reported acres irrigated: sum over records |
 | af_per_acre | af_reported / acres_irrigated, only when both are > 0 (feet) |
 | flag_af_per_acre | True if af_per_acre is outside 0.05-5 ft (0.4% of rows; kept, but excluded from county AF/acre) |
+| flag_acres_jump | True if acres_irrigated is more than 5x the PD's own median of positive reported acres (PDs with >= 3 such years). Likely typos or whole-right acres on one PD (e.g. Stevens PD 53793: 3,320 ac in 2002 at 0.16 ft). Kept, but excluded from county AF/acre |
 | crop_code, crop_name, crop_group | WIMAS crop code; name from OFR 2005-30; group in {corn, sorghum, wheat, soybeans, alfalfa, cotton, pasture, multiple/other} |
 | system_code, system_name | irrigation system (1 flood, 3 center pivot, 4 LEPA, 7 SDI, ...) |
 | authorized_af | authorized quantity allocated to the PD in AF (see conventions below) |
 | wur_code | water-use report code(s) (A metered AF, M gallons, E non-use with reason, ...) |
 | metered | a meter unit was reported |
-| depth_to_water_ft | depth to water reported on the use report (sparse) |
+| depth_to_water_ft | depth to water reported on the use report (sparse). Values above 600 ft are source errors (max 9,301 ft; 99.9th percentile 582 ft) and are set to null |
 | sect, twp, twp_dir, rng, rng_dir, plss_qq | PLSS location; plss_qq is the quarter calls from smallest to largest tract |
 
 ### `data/processed/wimas_county_year.parquet` (936 rows = 26 counties x 36 years, 1990-2025)
 
 | column | meaning |
 |---|---|
-| county_fips, county_name, gmd | gmd is from the contract list |
+| county_fips, county_name, gmd | gmd is "GMD1"/"GMD3"/"GMD4" from the contract list |
 | irr_af | total reported irrigation use (AF), groundwater and surface |
 | irr_af_gw, irr_af_sw | split by source (surface matters only in Kearny, about 37 kAF/yr, and Hamilton, about 8 kAF/yr: Arkansas River ditches) |
-| irr_acres | total reported acres irrigated |
+| irr_acres | total reported acres irrigated (as WIMAS reports them; includes flagged rows) |
+| irr_acres_gw | acres on groundwater PDs (pair with irr_af_gw) |
+| irr_acres_jump_flagged | acres in rows with flag_acres_jump (subtract from irr_acres for a cleaned total) |
 | af_per_acre | sum AF / sum acres over PD-years that report both AF > 0 and acres > 0 and are not flagged (feet) |
 | n_pdiv | number of irrigation PDs reporting use > 0 |
 | n_pdiv_reports | all PD-year records, including zero use |
@@ -93,7 +96,15 @@ Key: (`pdiv_id`, `year`, `use`). `use` is part of the key because a few PDs carr
 | complete | False where the WIMAS query failed (Sherman 1998). Numbers are null there, not zero. |
 
 ### `data/processed/wimas_summary.json`
-Coverage, GMD totals per year, the checks against KGS TS22, and region AF/acre by crop.
+Coverage, GMD totals per year under both conventions (`gmd_year_county_based`: whole counties by the contract list;
+`gmd_year_pd_attribute`: each PD's WIMAS gmd attribute), the checks against KGS TS22, and region AF/acre by crop.
+
+### Which numbers to use for the groundwater clock
+- Use `irr_af_gw` (or `source == "G"` in wimas_use), not `irr_af`. `irr_af` includes Arkansas River ditch diversions: the top
+  af_reported rows are all surface-water PDs in Kearny (e.g. PD 19614, rights V FI 217 / V KE 76 / V KE 77, 68,279 AF in 2000).
+  PD 19614 reports 8,000-9,999 ac in most years (a canal service area), so its 11,000 ac in 1998 is not a 10x typo.
+- Use WIMAS acres together with WIMAS AF (af_per_acre is consistent with official application rates); do not divide WIMAS AF by
+  Census acres.
 
 ## Aggregation conventions (verified)
 - **Reported use.** The plain sum of `af_used` reproduces the WIMAS web "Water Use Trends" total for Greeley IRR groundwater in
@@ -178,11 +189,22 @@ Mean reported irrigation use, 2000-2024 (from `wimas_county_year`):
 
 ## Caveats
 - Reported use is self-reported, mostly metered: TS22 says about 96% of irrigation wells in the GMDs had flowmeters as of 2013. We
-  did no further QC beyond the af/acre flag.
-- Acres irrigated are reported per right and PD. When several PDs serve one place of use, acres can be reported on each record, so
-  county acres may slightly overcount. The plain sum matches WIMAS's own convention.
+  did no further QC beyond the af/acre flag, the acres-jump flag and nulling depth_to_water_ft above 600 ft.
+- **Acres definition (important).** Acres irrigated are reported per right and PD. When several PDs serve one place of use, the
+  same acres are reported on each record (in Finney, 89 multi-PD rights carry identical acres on every PD). Summed WIMAS acres
+  are therefore **about 1.4x the Census of Agriculture irrigated land**: 2022 total over the 26 counties 1.97 M ac (WIMAS irr_acres) vs
+  1.42 M ac (Census of Ag 2022 irrigated land, econ module county_context.json), ratio 1.39, ranging from 1.0x (Greeley) and
+  1.1x (Morton, Logan) to 2.1x (Graham) and 2.3x (Stanton). 2022 was also a drought year, which lowers Census irrigated land. The plain sum is the official reporting
+  convention: our 2014 totals by WIMAS PD gmd attribute match the official USGS/KDA 2014 Kansas irrigation water-use release
+  (ScienceBase 577b8b5fe4b0ef4d2f4223a1, cached at data/raw/gmd/regions2014.csv) within 1-2%: GMD3 1,418,892 ac at 1.30 ft vs
+  1,432,463 ac at 1.28 ft (1.841 vs 1.838 MAF); GMD1 and GMD4 also match in AF, acres and application rate (0.91 and 1.02 ft).
+  For the rotation engine use WIMAS acres with WIMAS AF consistently, and show Census irrigated acres only as an alternative.
 - The `gmd` attribute comes from WIMAS. County totals use the contract county list. The two differ for PDs outside GMD boundaries
-  inside a listed county: 44,528 PD-year rows have no WIMAS GMD.
+  inside a listed county (44,528 PD-year rows have no WIMAS GMD) and for **Wallace (20199)**: the contract list puts it in GMD4,
+  but about 90% of its irrigated acres are in GMD1 by the official polygons (econ check data/raw/gmd/county_gmd_check.json; WIMAS
+  PD attribute agrees). Wallace has about 43k irrigated acres, roughly 20% of GMD1's acres and pumping. All processed files and
+  model/common.py use the county-based GMD4 for Wallace; GMD-level totals by official membership are in
+  `wimas_summary.json: gmd_year_pd_attribute`. The model owner should state the chosen convention in VALIDATION.md.
 - Municipal use covers only MUN rights in the 26 counties (677 PDs). Industrial, stock and domestic uses were not fetched.
 - The WIMAS disclaimer limits use of the data for selling property or services (K.S.A. 45-220(c)(2)). This non-commercial project
   is compatible with that.

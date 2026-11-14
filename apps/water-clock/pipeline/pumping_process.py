@@ -28,7 +28,9 @@ OUT.mkdir(parents=True, exist_ok=True)
 from pumping_fetch import COUNTIES  # noqa: E402  (same directory)
 
 CODE2FIPS = {code: f"20{c3:03d}" for c3, (name, code, gmd) in COUNTIES.items()}
-FIPS2GMD = {f"20{c3:03d}": gmd for c3, (name, code, gmd) in COUNTIES.items()}
+FIPS2GMD = {f"20{c3:03d}": f"GMD{gmd}" for c3, (name, code, gmd) in COUNTIES.items()}  # county-based (contract list)
+DTW_MAX_FT = 600.0      # depth_to_water_ft above this is a source error (99.9th pct = 582 ft; max reported 9,301 ft) -> null
+ACRES_JUMP_X = 5.0      # PD-year acres > 5x the PD's median reported acres -> flag_acres_jump (likely typo / whole-right acres)
 FIPS2NAME = {f"20{c3:03d}": name for c3, (name, code, gmd) in COUNTIES.items()}
 
 # WIMAS crop codes, KGS OFR 2005-30 (WIMAS v5 user manual), "Crop Codes" table
@@ -162,9 +164,11 @@ def main():
         lambda c: CROP_GROUP.get(int(c), "multiple/other") if pd.notna(c) else None)
     pd_year["system_name"] = pd_year["system_code"].map(lambda c: SYSTEM_NAMES.get(int(c)) if pd.notna(c) else None)
     pd_year = pd_year.merge(auth.rename(columns={"umw_code": "use"}), on=["pdiv_id", "use"], how="left")
-    pd_year["gmd"] = pd_year["gmd_wimas"].replace("", np.nan)
-    pd_year["gmd"] = pd.to_numeric(pd_year["gmd"], errors="coerce").astype("Int64")
-    pd_year["gmd_county"] = pd_year["county_fips"].map(FIPS2GMD).astype("Int64")
+    # gmd = WIMAS's own per-PD GMD attribute (official district membership of the PD; null outside the GMDs);
+    # gmd_county = county-based GMD from the contract county list. Both encoded "GMD1"/"GMD3"/"GMD4".
+    g_ = pd.to_numeric(pd_year["gmd_wimas"].replace("", np.nan), errors="coerce")
+    pd_year["gmd"] = g_.map(lambda v: f"GMD{int(v)}" if pd.notna(v) else None)
+    pd_year["gmd_county"] = pd_year["county_fips"].map(FIPS2GMD)
     pd_year = pd_year.drop(columns=["gmd_wimas"])
     pd_year["pdiv_id"] = pd_year["pdiv_id"].astype("int64")
     for c in ["twp", "rng", "sect"]:
@@ -176,9 +180,18 @@ def main():
     pd_year["af_per_acre"] = ap.where((pd_year["acres_irrigated"] > 0) & (pd_year["af_reported"] > 0))
     # flag implausible application depths (> 5 ft/ac or < 0.05 ft/ac) - kept but flagged
     pd_year["flag_af_per_acre"] = pd_year["af_per_acre"].notna() & ~pd_year["af_per_acre"].between(0.05, 5.0)
+    # flag acre jumps: acres > 5x the PD's own median of positive reported acres (per use) - kept but flagged
+    pos = pd_year["acres_irrigated"].where(pd_year["acres_irrigated"] > 0)
+    med_ac = pos.groupby([pd_year["pdiv_id"], pd_year["use"]]).transform("median")
+    nyr = pos.groupby([pd_year["pdiv_id"], pd_year["use"]]).transform("count")
+    pd_year["flag_acres_jump"] = (nyr >= 3) & (pd_year["acres_irrigated"] > ACRES_JUMP_X * med_ac)
+    # depth to water: values above DTW_MAX_FT are source errors -> null
+    n_dtw_null = int((pd_year["depth_to_water_ft"] > DTW_MAX_FT).sum())
+    pd_year.loc[pd_year["depth_to_water_ft"] > DTW_MAX_FT, "depth_to_water_ft"] = np.nan
     pd_year = pd_year.sort_values(["county_fips", "pdiv_id", "year", "use"]).reset_index(drop=True)
     cols = ["pdiv_id", "year", "use", "wr_file_no", "n_rights", "lon", "lat", "county_fips", "gmd", "gmd_county",
-            "source", "aquifer_codes", "af_reported", "acres_irrigated", "af_per_acre", "flag_af_per_acre", "crop_code", "crop_name",
+            "source", "aquifer_codes", "af_reported", "acres_irrigated", "af_per_acre", "flag_af_per_acre", "flag_acres_jump",
+            "crop_code", "crop_name",
             "crop_group", "system_code", "system_name", "authorized_af", "wur_code", "metered", "depth_to_water_ft",
             "sect", "twp", "twp_dir", "rng", "rng_dir", "plss_qq"]
     pd_year = pd_year[cols]
@@ -189,7 +202,7 @@ def main():
 
     # ---------- county x year ----------
     irr = pd_year[pd_year["use"] == "IRR"]
-    both = irr[(irr.af_reported > 0) & (irr.acres_irrigated > 0) & ~irr.flag_af_per_acre]
+    both = irr[(irr.af_reported > 0) & (irr.acres_irrigated > 0) & ~irr.flag_af_per_acre & ~irr.flag_acres_jump]
     cy = irr.groupby(["county_fips", "year"]).agg(
         irr_af=("af_reported", "sum"), irr_acres=("acres_irrigated", "sum"),
         n_pdiv=("af_reported", lambda s: int((s > 0).sum())),
@@ -197,8 +210,11 @@ def main():
     )
     gw = irr[irr.source.str.contains("G")].groupby(["county_fips", "year"])["af_reported"].sum().rename("irr_af_gw")
     sw = irr[irr.source == "S"].groupby(["county_fips", "year"])["af_reported"].sum().rename("irr_af_sw")
+    gwa = irr[irr.source.str.contains("G")].groupby(["county_fips", "year"])["acres_irrigated"].sum().rename("irr_acres_gw")
+    jmp = irr[irr.flag_acres_jump].groupby(["county_fips", "year"])["acres_irrigated"].sum().rename("irr_acres_jump_flagged")
     mm = both.groupby(["county_fips", "year"]).agg(af_m=("af_reported", "sum"), ac_m=("acres_irrigated", "sum"))
-    cy = cy.join([gw, sw, mm])
+    cy = cy.join([gw, sw, gwa, jmp, mm])
+    cy["irr_acres_jump_flagged"] = cy["irr_acres_jump_flagged"].fillna(0.0)
     cy["af_per_acre"] = cy["af_m"] / cy["ac_m"]
     cy = cy.drop(columns=["af_m", "ac_m"])
     # by single-crop group
@@ -212,7 +228,7 @@ def main():
     mun = pd_year[pd_year.use == "MUN"].groupby(["county_fips", "year"])["af_reported"].sum().rename("mun_af")
     cy = cy.join(mun).reset_index()
     cy["county_name"] = cy["county_fips"].map(FIPS2NAME)
-    cy["gmd"] = cy["county_fips"].map(FIPS2GMD).astype("Int64")
+    cy["gmd"] = cy["county_fips"].map(FIPS2GMD)
     cy["irr_authorized_af"] = cy["county_fips"].map(auth_county.get("IRR", pd.Series(dtype=float)))
     for c in [c for c in cy.columns if c.startswith("acres_")] + ["n_pdiv", "n_pdiv_reports"]:
         cy[c] = cy[c].fillna(0) if c.startswith("n_") else cy[c]
@@ -251,7 +267,7 @@ def main():
         if len(yrs) >= 18:
             b, a = np.polyfit(yrs, s.loc[yrs].values, 1)
             fit0, fit1 = a + b * 1996, a + b * 2016
-            ts22[f"GMD{int(gmd_)}"] = {
+            ts22[gmd_] = {
                 "mean_af_1996_2016": round(float(s.loc[yrs].mean())),
                 "years_used_1996_2016": len(yrs),
                 "linear_trend_change_pct_1996_2016": round(float(100 * (fit1 - fit0) / fit0), 1),
@@ -260,8 +276,19 @@ def main():
                 "mean_ft_per_acre_2000_2024": round(float(d[d.year.between(2000, 2024)].af_reported.sum()
                                                           / d[d.year.between(2000, 2024)].acres_irrigated.sum()), 3),
             }
+    # same GMD x year totals using the WIMAS per-PD gmd attribute (official membership; matches the USGS/KDA 2014 release)
+    gmd_pd = {f"{r.gmd}_{int(r.year)}": {"irr_af": round(float(r.af_reported)), "irr_acres": round(float(r.acres_irrigated)),
+                                         "ft_per_acre": round(float(r.af_reported / r.acres_irrigated), 3)}
+              for r in gw_.itertuples() if r.acres_irrigated > 0}
     summary = {
         "gmd_attr_checks_vs_KGS_TS22": ts22,
+        "gmd_conventions_note": "gmd_year_county_based sums whole counties by the contract county list (Wallace 20199 in GMD4); "
+                                "gmd_year_pd_attribute uses each PD's WIMAS gmd attribute (official membership: most of Wallace's "
+                                "irrigated acres are in GMD1). See notes/pumping.md.",
+        "gmd_year_pd_attribute": gmd_pd,
+        "depth_to_water_values_nulled_gt_600ft": n_dtw_null,
+        "pd_years_flag_acres_jump": int(irr.flag_acres_jump.sum()),
+        "acres_in_flag_acres_jump_rows": round(float(irr.loc[irr.flag_acres_jump, "acres_irrigated"].sum())),
         "source": "Kansas WIMAS (KGS / KDA-DWR) via https://geohydro.kgs.ku.edu/geohydro/wimas/ ; data as of WIMAS weekly build 11/08/2026",
         "n_rows_wimas_use": int(len(pd_year)), "n_pdiv": int(pd_year.pdiv_id.nunique()),
         "n_pdiv_irr": int(irr.pdiv_id.nunique()),
@@ -270,7 +297,7 @@ def main():
         "share_pd_years_with_lonlat": float(pd_year.lon.notna().mean()),
         "share_irr_pd_years_with_crop": float(irr.crop_code.notna().mean()),
         "irr_authorized_af_by_county": {k: round(float(v), 1) for k, v in auth_county.get("IRR", pd.Series(dtype=float)).items()},
-        "gmd_year": {f"GMD{int(r.gmd)}_{int(r.year)}": {"irr_af": round(r.irr_af), "irr_acres": round(r.irr_acres),
+        "gmd_year_county_based": {f"{r.gmd}_{int(r.year)}": {"irr_af": round(r.irr_af), "irr_acres": round(r.irr_acres),
                                                        "ft_per_acre": round(r.ft_per_acre, 3)}
                      for r in gmd_year.itertuples()},
         "region_mean_irr_af_2000_2024": round(float(cy[cy.year.between(2000, 2024)].groupby("year").irr_af.sum().mean())),
@@ -280,7 +307,7 @@ def main():
                 lambda d: d.af_reported.sum() / d.acres_irrigated.sum(), include_groups=False).items()},
     }
     (OUT / "wimas_summary.json").write_text(json.dumps(summary, indent=1))
-    print(json.dumps({k: v for k, v in summary.items() if k != "gmd_year"}, indent=1)[:3000])
+    print(json.dumps({k: v for k, v in summary.items() if not k.startswith("gmd_year")}, indent=1)[:3000])
 
 
 if __name__ == "__main__":

@@ -132,3 +132,12 @@ County -> GMD check (`data/raw/gmd/county_gmd_check.json`; WIMAS irrigation poin
   income estimate has to extrapolate the earlier irrigated/dryland ratio or use district/state data and must say so.
 - Prices are state marketing-year averages (nominal); costs are ERS regional averages (nominal, all practices combined).
 - County ALL-practice yields have many suppressed years after 2008 (see coverage table); use DISTRICT_OTHER/DISTRICT rows to fill.
+- `nass_county` mixes non-county rows into `county_fips` (`20000` state, `20D10`/`20D40`/`20D70` districts, `20C40`-style
+  "other counties" codes); e.g. state wheat harvested_acres is about 10,000,000. Always filter `agg_level == "COUNTY"` before joining
+  on county or summing.
+- One county yield is exactly 0 (Gray 2003, soybeans NON-IRRIGATED, NASS raw value "0"). It is faithful to the source; exclude
+  `yield == 0` from yield-distribution ranges or treat it explicitly as a crop failure.
+- Corn ALL-practice county yields exist for only 9-22 of the 26 counties per year after 2018; recent income estimates lean on
+  district/state fallbacks.
+- GMD encoding: all processed files now use the string form "GMD1"/"GMD3"/"GMD4" (wells_meta, wimas_* were switched from integers in
+  the data fix pass). Wallace stays "GMD4" (contract list) everywhere; see section 4.

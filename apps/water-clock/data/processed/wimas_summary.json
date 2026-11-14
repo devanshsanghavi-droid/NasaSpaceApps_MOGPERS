@@ -25,6 +25,552 @@
    "mean_ft_per_acre_2000_2024": 1.029
   }
  },
+ "gmd_conventions_note": "gmd_year_county_based sums whole counties by the contract county list (Wallace 20199 in GMD4); gmd_year_pd_attribute uses each PD's WIMAS gmd attribute (official membership: most of Wallace's irrigated acres are in GMD1). See notes/pumping.md.",
+ "gmd_year_pd_attribute": {
+  "GMD1_1990": {
+   "irr_af": 387590,
+   "irr_acres": 268755,
+   "ft_per_acre": 1.442
+  },
+  "GMD1_1991": {
+   "irr_af": 355558,
+   "irr_acres": 262402,
+   "ft_per_acre": 1.355
+  },
+  "GMD1_1992": {
+   "irr_af": 269776,
+   "irr_acres": 244456,
+   "ft_per_acre": 1.104
+  },
+  "GMD1_1993": {
+   "irr_af": 197355,
+   "irr_acres": 222918,
+   "ft_per_acre": 0.885
+  },
+  "GMD1_1994": {
+   "irr_af": 281529,
+   "irr_acres": 237054,
+   "ft_per_acre": 1.188
+  },
+  "GMD1_1995": {
+   "irr_af": 258455,
+   "irr_acres": 243887,
+   "ft_per_acre": 1.06
+  },
+  "GMD1_1996": {
+   "irr_af": 252706,
+   "irr_acres": 245341,
+   "ft_per_acre": 1.03
+  },
+  "GMD1_1997": {
+   "irr_af": 225649,
+   "irr_acres": 246719,
+   "ft_per_acre": 0.915
+  },
+  "GMD1_1998": {
+   "irr_af": 222946,
+   "irr_acres": 246515,
+   "ft_per_acre": 0.904
+  },
+  "GMD1_1999": {
+   "irr_af": 221262,
+   "irr_acres": 247478,
+   "ft_per_acre": 0.894
+  },
+  "GMD1_2000": {
+   "irr_af": 275618,
+   "irr_acres": 251422,
+   "ft_per_acre": 1.096
+  },
+  "GMD1_2001": {
+   "irr_af": 230446,
+   "irr_acres": 238218,
+   "ft_per_acre": 0.967
+  },
+  "GMD1_2002": {
+   "irr_af": 286764,
+   "irr_acres": 244107,
+   "ft_per_acre": 1.175
+  },
+  "GMD1_2003": {
+   "irr_af": 237680,
+   "irr_acres": 235572,
+   "ft_per_acre": 1.009
+  },
+  "GMD1_2004": {
+   "irr_af": 208331,
+   "irr_acres": 226708,
+   "ft_per_acre": 0.919
+  },
+  "GMD1_2005": {
+   "irr_af": 188025,
+   "irr_acres": 218379,
+   "ft_per_acre": 0.861
+  },
+  "GMD1_2006": {
+   "irr_af": 212783,
+   "irr_acres": 213805,
+   "ft_per_acre": 0.995
+  },
+  "GMD1_2007": {
+   "irr_af": 185796,
+   "irr_acres": 208454,
+   "ft_per_acre": 0.891
+  },
+  "GMD1_2008": {
+   "irr_af": 210804,
+   "irr_acres": 212229,
+   "ft_per_acre": 0.993
+  },
+  "GMD1_2009": {
+   "irr_af": 178121,
+   "irr_acres": 203763,
+   "ft_per_acre": 0.874
+  },
+  "GMD1_2010": {
+   "irr_af": 178578,
+   "irr_acres": 200645,
+   "ft_per_acre": 0.89
+  },
+  "GMD1_2011": {
+   "irr_af": 209241,
+   "irr_acres": 200478,
+   "ft_per_acre": 1.044
+  },
+  "GMD1_2012": {
+   "irr_af": 227487,
+   "irr_acres": 198076,
+   "ft_per_acre": 1.148
+  },
+  "GMD1_2013": {
+   "irr_af": 188356,
+   "irr_acres": 199232,
+   "ft_per_acre": 0.945
+  },
+  "GMD1_2014": {
+   "irr_af": 178535,
+   "irr_acres": 195494,
+   "ft_per_acre": 0.913
+  },
+  "GMD1_2015": {
+   "irr_af": 142494,
+   "irr_acres": 183877,
+   "ft_per_acre": 0.775
+  },
+  "GMD1_2016": {
+   "irr_af": 136232,
+   "irr_acres": 181980,
+   "ft_per_acre": 0.749
+  },
+  "GMD1_2017": {
+   "irr_af": 115378,
+   "irr_acres": 176817,
+   "ft_per_acre": 0.653
+  },
+  "GMD1_2018": {
+   "irr_af": 124787,
+   "irr_acres": 170809,
+   "ft_per_acre": 0.731
+  },
+  "GMD1_2019": {
+   "irr_af": 102995,
+   "irr_acres": 169026,
+   "ft_per_acre": 0.609
+  },
+  "GMD1_2020": {
+   "irr_af": 147376,
+   "irr_acres": 166382,
+   "ft_per_acre": 0.886
+  },
+  "GMD1_2021": {
+   "irr_af": 126649,
+   "irr_acres": 170450,
+   "ft_per_acre": 0.743
+  },
+  "GMD1_2022": {
+   "irr_af": 162986,
+   "irr_acres": 167565,
+   "ft_per_acre": 0.973
+  },
+  "GMD1_2023": {
+   "irr_af": 100554,
+   "irr_acres": 160770,
+   "ft_per_acre": 0.625
+  },
+  "GMD1_2024": {
+   "irr_af": 116310,
+   "irr_acres": 164161,
+   "ft_per_acre": 0.709
+  },
+  "GMD1_2025": {
+   "irr_af": 82210,
+   "irr_acres": 155786,
+   "ft_per_acre": 0.528
+  },
+  "GMD3_1990": {
+   "irr_af": 2551864,
+   "irr_acres": 1577062,
+   "ft_per_acre": 1.618
+  },
+  "GMD3_1991": {
+   "irr_af": 2659672,
+   "irr_acres": 1592994,
+   "ft_per_acre": 1.67
+  },
+  "GMD3_1992": {
+   "irr_af": 2176818,
+   "irr_acres": 1579073,
+   "ft_per_acre": 1.379
+  },
+  "GMD3_1993": {
+   "irr_af": 1887733,
+   "irr_acres": 1550158,
+   "ft_per_acre": 1.218
+  },
+  "GMD3_1994": {
+   "irr_af": 2238461,
+   "irr_acres": 1560930,
+   "ft_per_acre": 1.434
+  },
+  "GMD3_1995": {
+   "irr_af": 2109564,
+   "irr_acres": 1546516,
+   "ft_per_acre": 1.364
+  },
+  "GMD3_1996": {
+   "irr_af": 1954745,
+   "irr_acres": 1536371,
+   "ft_per_acre": 1.272
+  },
+  "GMD3_1997": {
+   "irr_af": 1849068,
+   "irr_acres": 1591941,
+   "ft_per_acre": 1.162
+  },
+  "GMD3_1998": {
+   "irr_af": 1937435,
+   "irr_acres": 1602886,
+   "ft_per_acre": 1.209
+  },
+  "GMD3_1999": {
+   "irr_af": 1760663,
+   "irr_acres": 1608583,
+   "ft_per_acre": 1.095
+  },
+  "GMD3_2000": {
+   "irr_af": 2115385,
+   "irr_acres": 1593033,
+   "ft_per_acre": 1.328
+  },
+  "GMD3_2001": {
+   "irr_af": 1888730,
+   "irr_acres": 1561172,
+   "ft_per_acre": 1.21
+  },
+  "GMD3_2002": {
+   "irr_af": 2357234,
+   "irr_acres": 1603047,
+   "ft_per_acre": 1.47
+  },
+  "GMD3_2003": {
+   "irr_af": 1939588,
+   "irr_acres": 1523902,
+   "ft_per_acre": 1.273
+  },
+  "GMD3_2004": {
+   "irr_af": 1708839,
+   "irr_acres": 1537253,
+   "ft_per_acre": 1.112
+  },
+  "GMD3_2005": {
+   "irr_af": 1526183,
+   "irr_acres": 1486812,
+   "ft_per_acre": 1.026
+  },
+  "GMD3_2006": {
+   "irr_af": 1877833,
+   "irr_acres": 1477657,
+   "ft_per_acre": 1.271
+  },
+  "GMD3_2007": {
+   "irr_af": 1703421,
+   "irr_acres": 1472289,
+   "ft_per_acre": 1.157
+  },
+  "GMD3_2008": {
+   "irr_af": 1935116,
+   "irr_acres": 1476726,
+   "ft_per_acre": 1.31
+  },
+  "GMD3_2009": {
+   "irr_af": 1734107,
+   "irr_acres": 1464522,
+   "ft_per_acre": 1.184
+  },
+  "GMD3_2010": {
+   "irr_af": 1831158,
+   "irr_acres": 1450910,
+   "ft_per_acre": 1.262
+  },
+  "GMD3_2011": {
+   "irr_af": 2300752,
+   "irr_acres": 1450296,
+   "ft_per_acre": 1.586
+  },
+  "GMD3_2012": {
+   "irr_af": 2084081,
+   "irr_acres": 1427865,
+   "ft_per_acre": 1.46
+  },
+  "GMD3_2013": {
+   "irr_af": 1908316,
+   "irr_acres": 1463263,
+   "ft_per_acre": 1.304
+  },
+  "GMD3_2014": {
+   "irr_af": 1840696,
+   "irr_acres": 1418892,
+   "ft_per_acre": 1.297
+  },
+  "GMD3_2015": {
+   "irr_af": 1507005,
+   "irr_acres": 1402096,
+   "ft_per_acre": 1.075
+  },
+  "GMD3_2016": {
+   "irr_af": 1506320,
+   "irr_acres": 1390566,
+   "ft_per_acre": 1.083
+  },
+  "GMD3_2017": {
+   "irr_af": 1382324,
+   "irr_acres": 1391722,
+   "ft_per_acre": 0.993
+  },
+  "GMD3_2018": {
+   "irr_af": 1465074,
+   "irr_acres": 1320064,
+   "ft_per_acre": 1.11
+  },
+  "GMD3_2019": {
+   "irr_af": 1337524,
+   "irr_acres": 1377446,
+   "ft_per_acre": 0.971
+  },
+  "GMD3_2020": {
+   "irr_af": 1648680,
+   "irr_acres": 1340509,
+   "ft_per_acre": 1.23
+  },
+  "GMD3_2021": {
+   "irr_af": 1595142,
+   "irr_acres": 1398603,
+   "ft_per_acre": 1.141
+  },
+  "GMD3_2022": {
+   "irr_af": 1906536,
+   "irr_acres": 1348641,
+   "ft_per_acre": 1.414
+  },
+  "GMD3_2023": {
+   "irr_af": 1424003,
+   "irr_acres": 1264656,
+   "ft_per_acre": 1.126
+  },
+  "GMD3_2024": {
+   "irr_af": 1553508,
+   "irr_acres": 1340686,
+   "ft_per_acre": 1.159
+  },
+  "GMD3_2025": {
+   "irr_af": 1357287,
+   "irr_acres": 1290731,
+   "ft_per_acre": 1.052
+  },
+  "GMD4_1990": {
+   "irr_af": 513656,
+   "irr_acres": 358278,
+   "ft_per_acre": 1.434
+  },
+  "GMD4_1991": {
+   "irr_af": 478386,
+   "irr_acres": 359885,
+   "ft_per_acre": 1.329
+  },
+  "GMD4_1992": {
+   "irr_af": 267822,
+   "irr_acres": 340269,
+   "ft_per_acre": 0.787
+  },
+  "GMD4_1993": {
+   "irr_af": 261185,
+   "irr_acres": 343366,
+   "ft_per_acre": 0.761
+  },
+  "GMD4_1994": {
+   "irr_af": 396154,
+   "irr_acres": 366767,
+   "ft_per_acre": 1.08
+  },
+  "GMD4_1995": {
+   "irr_af": 361310,
+   "irr_acres": 355138,
+   "ft_per_acre": 1.017
+  },
+  "GMD4_1996": {
+   "irr_af": 369124,
+   "irr_acres": 374950,
+   "ft_per_acre": 0.984
+  },
+  "GMD4_1997": {
+   "irr_af": 412847,
+   "irr_acres": 383048,
+   "ft_per_acre": 1.078
+  },
+  "GMD4_1998": {
+   "irr_af": 257195,
+   "irr_acres": 264521,
+   "ft_per_acre": 0.972
+  },
+  "GMD4_1999": {
+   "irr_af": 330969,
+   "irr_acres": 380823,
+   "ft_per_acre": 0.869
+  },
+  "GMD4_2000": {
+   "irr_af": 489735,
+   "irr_acres": 387415,
+   "ft_per_acre": 1.264
+  },
+  "GMD4_2001": {
+   "irr_af": 416819,
+   "irr_acres": 381380,
+   "ft_per_acre": 1.093
+  },
+  "GMD4_2002": {
+   "irr_af": 520880,
+   "irr_acres": 387832,
+   "ft_per_acre": 1.343
+  },
+  "GMD4_2003": {
+   "irr_af": 477053,
+   "irr_acres": 388110,
+   "ft_per_acre": 1.229
+  },
+  "GMD4_2004": {
+   "irr_af": 472303,
+   "irr_acres": 386255,
+   "ft_per_acre": 1.223
+  },
+  "GMD4_2005": {
+   "irr_af": 390724,
+   "irr_acres": 382321,
+   "ft_per_acre": 1.022
+  },
+  "GMD4_2006": {
+   "irr_af": 428323,
+   "irr_acres": 380501,
+   "ft_per_acre": 1.126
+  },
+  "GMD4_2007": {
+   "irr_af": 411237,
+   "irr_acres": 378075,
+   "ft_per_acre": 1.088
+  },
+  "GMD4_2008": {
+   "irr_af": 400055,
+   "irr_acres": 378626,
+   "ft_per_acre": 1.057
+  },
+  "GMD4_2009": {
+   "irr_af": 294623,
+   "irr_acres": 377151,
+   "ft_per_acre": 0.781
+  },
+  "GMD4_2010": {
+   "irr_af": 361285,
+   "irr_acres": 377972,
+   "ft_per_acre": 0.956
+  },
+  "GMD4_2011": {
+   "irr_af": 428817,
+   "irr_acres": 381730,
+   "ft_per_acre": 1.123
+  },
+  "GMD4_2012": {
+   "irr_af": 539866,
+   "irr_acres": 387877,
+   "ft_per_acre": 1.392
+  },
+  "GMD4_2013": {
+   "irr_af": 465518,
+   "irr_acres": 393140,
+   "ft_per_acre": 1.184
+  },
+  "GMD4_2014": {
+   "irr_af": 398443,
+   "irr_acres": 390027,
+   "ft_per_acre": 1.022
+  },
+  "GMD4_2015": {
+   "irr_af": 376844,
+   "irr_acres": 395894,
+   "ft_per_acre": 0.952
+  },
+  "GMD4_2016": {
+   "irr_af": 366422,
+   "irr_acres": 392394,
+   "ft_per_acre": 0.934
+  },
+  "GMD4_2017": {
+   "irr_af": 294034,
+   "irr_acres": 392236,
+   "ft_per_acre": 0.75
+  },
+  "GMD4_2018": {
+   "irr_af": 276269,
+   "irr_acres": 393973,
+   "ft_per_acre": 0.701
+  },
+  "GMD4_2019": {
+   "irr_af": 238669,
+   "irr_acres": 393538,
+   "ft_per_acre": 0.606
+  },
+  "GMD4_2020": {
+   "irr_af": 392922,
+   "irr_acres": 401571,
+   "ft_per_acre": 0.978
+  },
+  "GMD4_2021": {
+   "irr_af": 383972,
+   "irr_acres": 410540,
+   "ft_per_acre": 0.935
+  },
+  "GMD4_2022": {
+   "irr_af": 483202,
+   "irr_acres": 397160,
+   "ft_per_acre": 1.217
+  },
+  "GMD4_2023": {
+   "irr_af": 290604,
+   "irr_acres": 391723,
+   "ft_per_acre": 0.742
+  },
+  "GMD4_2024": {
+   "irr_af": 419024,
+   "irr_acres": 407424,
+   "ft_per_acre": 1.028
+  },
+  "GMD4_2025": {
+   "irr_af": 349696,
+   "irr_acres": 396212,
+   "ft_per_acre": 0.883
+  }
+ },
+ "depth_to_water_values_nulled_gt_600ft": 164,
+ "pd_years_flag_acres_jump": 665,
+ "acres_in_flag_acres_jump_rows": 211453,
  "source": "Kansas WIMAS (KGS / KDA-DWR) via https://geohydro.kgs.ku.edu/geohydro/wimas/ ; data as of WIMAS weekly build 11/08/2026",
  "n_rows_wimas_use": 621295,
  "n_pdiv": 23454,
@@ -91,7 +637,7 @@
   "20199": 161975.1,
   "20203": 230647.9
  },
- "gmd_year": {
+ "gmd_year_county_based": {
   "GMD1_1990": {
    "irr_af": 300302,
    "irr_acres": 215015,
@@ -635,13 +1181,13 @@
  },
  "region_mean_irr_af_2000_2024": 2440975,
  "median_pd_af_per_acre_by_crop_2000_2024": {
-  "alfalfa": 1.613,
-  "corn": 1.328,
+  "alfalfa": 1.615,
+  "corn": 1.329,
   "cotton": 0.839,
-  "multiple/other": 1.04,
+  "multiple/other": 1.042,
   "pasture": 1.109,
   "sorghum": 0.847,
-  "soybeans": 1.194,
+  "soybeans": 1.193,
   "wheat": 0.758
  }
 }

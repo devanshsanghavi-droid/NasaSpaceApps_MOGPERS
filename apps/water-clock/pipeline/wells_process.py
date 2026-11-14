@@ -31,13 +31,19 @@ BBOX = (-102.06, 36.99, -99.55, 40.01)
 CELL = 0.02
 TO_ALB = Transformer.from_crs("EPSG:4326", "EPSG:5070", always_xy=True)
 
-GMD_OF = {f"20{c:03d}": g for c, (n, g) in COUNTIES.items()}
+GMD_OF = {f"20{c:03d}": f"GMD{g}" for c, (n, g) in COUNTIES.items()}   # county-based GMD (contract list), "GMD1" strings
 NAME_OF = {f"20{c:03d}": n for c, (n, g) in COUNTIES.items()}
 
 # KGS WIZARD water-level status codes (KGS OFR 2007-15 manual). Blank = static. B = only year/month known (kept).
 KGS_BAD_STATUS = set("ADEFGHIJOPRSTVWXZN")
 KGS_BAD_METHOD = {"E", "L"}          # estimated; interpreted from geophysical logs
-NWIS_OK_QUAL = {(), ("Static",)}     # drop ForeignSubstance, Pumping, Dry, Flowing, GWSWAffected...
+NWIS_OK_QUAL = {(), ("Static",)}
+# ForeignSubstance (e.g. oil from oil-lubricated turbine pumps on the water surface) is KEPT with a flag, on NWIS rows and on
+# the same well-date KGS rows (KGS leaves its status blank for these); any other qualifier (Pumping, Dry, Flowing,
+# GWSWAffected, ...) drops the row from BOTH sources.
+NWIS_FLAG_QUAL = {"ForeignSubstance", "Static"}
+LAND_ELEV_TOL_FT = 50.0   # |reported land altitude - NASADEM| above this -> land altitude suspect (1-99% range is -41..+29 ft)
+DUP_DIST_M = 5.0          # co-located wells closer than this with near-identical annual series are merged
 NWIS_BAD_PROC = {"E", "L"}
 NON_HPA_AQUIFERS = {"210DKOT", "211DKOT", "217DKOT", "210CRCS", "300PLZC", "310PRMN"}  # Dakota/Cretaceous/Permian bedrock aquifers
 
@@ -114,7 +120,9 @@ def load_nwis():
     fm["method"] = fm.proc
     fm["agency"] = fm.source_id.str.split("-", n=1).str[0]
     fm["source"] = "USGS_NWIS"
-    fm["bad"] = ~fm.qual.isin(NWIS_OK_QUAL) | fm.proc.isin(NWIS_BAD_PROC) | (fm.approval != "Approved")
+    fm["foreign_substance"] = fm.qual.map(lambda q: "ForeignSubstance" in q)
+    fm["qual_bad"] = fm.qual.map(lambda q: not set(q) <= NWIS_FLAG_QUAL)
+    fm["bad"] = fm.qual_bad | fm.proc.isin(NWIS_BAD_PROC) | (fm.approval != "Approved")
     ml["source"] = "USGS_NWIS"
     return ml, fm
 
@@ -179,6 +187,14 @@ def main():
     nf["well_id"] = nf.well_id.replace(remap)
     nwis_only = nwis_only[~nwis_only.well_id.isin(remap)]
 
+    # --- carry the NWIS qualifier onto the same well-date KGS rows (same physical measurement, KGS status blank)
+    q = nf[nf.meas_date.notna()].groupby(["well_id", "meas_date"]).agg(nwis_fs=("foreign_substance", "any"),
+                                                                       nwis_qbad=("qual_bad", "any")).reset_index()
+    kl = kl.merge(q, on=["well_id", "meas_date"], how="left")
+    kl["foreign_substance"] = kl.nwis_fs.fillna(False).astype(bool)
+    n_kgs_drop_nwis_qual = int((kl.nwis_qbad.fillna(False).astype(bool) & ~kl.bad).sum())
+    kl["bad"] = kl.bad | kl.nwis_qbad.fillna(False).astype(bool)
+
     # --- union measurements: KGS preferred; NWIS rows added only for (well,date) not in KGS
     kl_good = kl[~kl.bad & kl.meas_date.notna() & kl.depth_to_water_ft.notna()]
     nf_good = nf[~nf.bad & nf.meas_date.notna() & nf.depth_to_water_ft.notna()]
@@ -187,7 +203,7 @@ def main():
     agree = (np.abs(shared.depth_to_water_ft - shared.depth_to_water_ft_kgs) <= 0.05).mean() if len(shared) else np.nan
     key = set(zip(kl_good.well_id, kl_good.meas_date))
     add = nf_good[[k not in key for k in zip(nf_good.well_id, nf_good.meas_date)]]
-    cols = ["well_id", "meas_date", "source", "depth_to_water_ft", "status", "method", "agency"]
+    cols = ["well_id", "meas_date", "source", "depth_to_water_ft", "status", "method", "agency", "foreign_substance"]
     lev = pd.concat([kl_good[cols], add[cols]], ignore_index=True)
     # one row per (well, date): KGS rows come first; same-day repeats -> keep first
     n_dup_day = int(lev.duplicated(["well_id", "meas_date"]).sum())
@@ -200,6 +216,15 @@ def main():
                      ignore_index=True).drop_duplicates("well_id")
     meta = meta[meta.county_fips.isin(GMD_OF)]
     meta["gmd"] = meta.county_fips.map(GMD_OF)
+    # official GMD membership of the well location (USGS ScienceBase GMD polygons, econ module's gmd.geojson)
+    gpoly = OUT / "gmd.geojson"
+    if gpoly.exists():
+        gp = gpd.read_file(gpoly)[["gmd", "geometry"]].to_crs("EPSG:4326")
+        pts_ = gpd.GeoDataFrame(meta[["well_id"]], geometry=gpd.points_from_xy(meta.lon, meta.lat), crs="EPSG:4326")
+        j = gpd.sjoin(pts_, gp.rename(columns={"gmd": "gmd_polygon"}), how="left", predicate="within")
+        meta["gmd_polygon"] = meta.well_id.map(j.drop_duplicates("well_id").set_index("well_id").gmd_polygon)
+    else:
+        meta["gmd_polygon"] = None
     # fill missing KGS land elevation / well depth from NWIS where the same site exists
     nml = nm.set_index("well_id")
     for c in ["land_elev_ft", "well_depth_ft"]:
@@ -213,6 +238,53 @@ def main():
     n_non_hpa = int(non_hpa.sum())
     meta = meta[~non_hpa]
     lev = lev[lev.well_id.isin(meta.well_id)]
+
+    # --- land-altitude check against NASADEM (pipeline/wells_dem.py cache)
+    dem_path = RAW / "nasadem" / "wells_nasadem.parquet"
+    if dem_path.exists():
+        dem = pd.read_parquet(dem_path).drop_duplicates("well_id").set_index("well_id").nasadem_ft
+        meta["nasadem_ft"] = meta.well_id.map(dem)
+    else:
+        meta["nasadem_ft"] = np.nan
+    meta["land_elev_minus_dem_ft"] = meta.land_elev_ft - meta.nasadem_ft
+    meta["land_elev_suspect"] = meta.land_elev_minus_dem_ft.abs() > LAND_ELEV_TOL_FT
+
+    # --- merge co-located duplicate wells (nested / -01,-02 records with near-identical winter series)
+    mx_, my_ = TO_ALB.transform(meta.lon.values, meta.lat.values)
+    okxy = np.isfinite(mx_) & np.isfinite(my_)
+    ids = meta.well_id.values[okxy]
+    pairs = cKDTree(np.c_[mx_[okxy], my_[okxy]]).query_pairs(DUP_DIST_M)
+    wint = lev[lev.meas_date.dt.month.isin([12, 1, 2, 3])].copy()
+    wint["wy"] = np.where(wint.meas_date.dt.month == 12, wint.meas_date.dt.year + 1, wint.meas_date.dt.year)
+    wser = wint.groupby(["well_id", "wy"]).depth_to_water_ft.median()
+    nmeas = lev.groupby("well_id").size()
+    dup_map, dup_log = {}, []
+    for i, j in sorted(pairs):
+        a, b = ids[i], ids[j]
+        if a not in wser.index.get_level_values(0) or b not in wser.index.get_level_values(0):
+            continue
+        sa, sb = wser.loc[a], wser.loc[b]
+        com = sa.index.intersection(sb.index)
+        if len(com) < 5:
+            continue
+        share = float((np.abs(sa.loc[com] - sb.loc[com]) <= 0.5).mean())
+        if share > 0.8:
+            keep, drop = (a, b) if nmeas.get(a, 0) >= nmeas.get(b, 0) else (b, a)
+            while keep in dup_map:
+                keep = dup_map[keep]
+            if drop != keep and drop not in dup_map:
+                dup_map[drop] = keep
+                dup_log.append({"kept": keep, "merged": drop, "shared_winters": int(len(com)), "share_within_0.5ft": round(share, 3)})
+    if dup_map:
+        lev["_merged"] = lev.well_id.isin(dup_map)
+        lev["well_id"] = lev.well_id.replace(dup_map)
+        lev = lev.sort_values("_merged", kind="stable").drop(columns="_merged")
+        lev = lev.drop_duplicates(["well_id", "meas_date"], keep="first")   # keep the kept well's own reading on shared dates
+        merged_from = pd.Series(dup_map).reset_index().groupby(0)["index"].agg(";".join)
+        meta = meta[~meta.well_id.isin(dup_map)].copy()
+        meta["merged_from"] = meta.well_id.map(merged_from)
+    else:
+        meta["merged_from"] = None
 
     # --- sanity rules on values
     lev = lev.merge(meta[["well_id", "land_elev_ft", "well_depth_ft"]], on="well_id", how="left")
@@ -254,6 +326,10 @@ def main():
     mx, my = TO_ALB.transform(meta.lon.values, meta.lat.values)
     meta["base_usgs_ft"] = interp_base(pts, vals, mx, my)
     meta["base_kgs_ft"] = meta.land_elev_ft - meta.depth_to_bedrock_ft
+    has_pick = meta.base_kgs_ft.notna()
+    meta["bedrock_pick_flag"] = np.where(~has_pick, None, np.where(
+        meta.well_depth_ft.notna() & (meta.depth_to_bedrock_ft == meta.well_depth_ft), "eq_well_depth",
+        np.where(meta.well_depth_ft.notna() & (meta.depth_to_bedrock_ft > meta.well_depth_ft), "deeper_than_well", "ok")))
     resid = meta.base_kgs_ft - meta.base_usgs_ft
     ok_pick = resid.notna() & (resid.abs() <= 250)  # gross-error screen for bedrock picks
     n_pick_bad = int((resid.notna() & ~ok_pick).sum())
@@ -261,12 +337,14 @@ def main():
     px, py = TO_ALB.transform(pk.lon.values, pk.lat.values)
     rt = cKDTree(np.c_[px, py])
     rvals = resid[ok_pick].values
+    # picks equal to / deeper than the well depth are lower bounds or estimates -> half weight in the residual IDW
+    rwt = np.where(meta.loc[ok_pick, "bedrock_pick_flag"].isin(["eq_well_depth", "deeper_than_well"]), 0.5, 1.0)
 
     def resid_idw(x, y, R=15000.0, R0=5000.0):
         d, i = rt.query(np.c_[x, y], k=12, distance_upper_bound=R)
         d = np.maximum(d, 1.0)
         valid = np.isfinite(d) & (i < len(rvals))
-        wgt = np.where(valid, 1.0 / d ** 2, 0.0)
+        wgt = np.where(valid, rwt[np.minimum(i, len(rvals) - 1)] / d ** 2, 0.0)
         rv = np.where(valid, rvals[np.minimum(i, len(rvals) - 1)], 0.0)
         return (wgt * rv).sum(1) / (wgt.sum(1) + 1.0 / R0 ** 2)
 
@@ -300,7 +378,12 @@ def main():
                 "name": "USGS OFR 98-393, Digital map of base of aquifer for High Plains aquifer (Cederstrand & Becker, 1998), "
                         "digitized from Gutentag and others (1984) USGS PP 1400-B, 1:1,000,000, 200-ft contours",
                 "url": "https://www.sciencebase.gov/catalog/item/631405f5d34e36012efa35b2",
-                "method": "contour vertices densified to ~500 m, linear (Delaunay) interpolation in EPSG:5070; NaN outside contour hull",
+                "method": "contour vertices densified to ~500 m, linear (Delaunay) interpolation in EPSG:5070. Contours are "
+                          "clipped to the region + ~50-60 km margin (levels 1400-4000 ft), so every grid cell lies inside the "
+                          "vertex hull and none is NaN. Delaunay triangles whose 3 vertices lie on the same contour are flat, so "
+                          "about 27% of cells equal a 200-ft contour level exactly (terracing; e.g. the 8 cells at exactly "
+                          "2000 ft near -100.6..-99.6 lon, 37.0-38.2 lat). That is an interpolation artefact, not clamping; "
+                          "it is within the +/-100 ft half-contour-interval resolution of the source.",
             },
             "base_blend_ft": {
                 "method": "base_usgs_ft + inverse-distance (p=2, 12 nearest, 15 km radius, 5 km shrink-to-zero term) "
@@ -310,6 +393,10 @@ def main():
                 "url": "https://geohydro.kgs.ku.edu/geohydro/wizard/index.html",
             },
             "hpa_present_2009": "True where the USGS 2009 saturated-thickness raster has data (aquifer present)",
+            "base_blend_note": "residual IDW gives half weight to KGS picks whose depth to bedrock equals (or exceeds) the "
+                               "well depth (likely lower bounds / estimates)",
+            "vertical_datum_note": "base and most land altitudes are NGVD29; land altitudes of NAVD88 wells are used as given "
+                                   "(NAVD88 - NGVD29 is about +1.5-2 ft here), a small bias next to the +/-20-25 ft base uncertainty",
         },
     }
     (OUT / "aquifer_base.json").write_text(json.dumps(base_json, separators=(",", ":")))
@@ -338,7 +425,10 @@ def main():
     meta = meta[meta.n_meas > 0].copy()
     last = ann.sort_values("year").groupby("well_id").tail(1).set_index("well_id")
     meta["sat_thick_last_ft"] = meta.well_id.map(last.sat_thick_ft)
+    # min saturated thickness: over annual values when the well has any, else over all its (non-outlier) measurements
     minsat = ann.groupby("well_id").sat_thick_ft.min()
+    minsat_all = lev[~lev.outlier_flag].groupby("well_id").sat_thick_ft.min()
+    minsat = minsat.reindex(minsat_all.index).fillna(minsat_all)
     meta["sat_flag"] = "ok"
     meta.loc[meta.base_elev_ft.isna(), "sat_flag"] = "no_base"
     meta.loc[meta.sat_thick_2009_usgs_ft.isna() & meta.base_elev_ft.notna(), "sat_flag"] = "outside_hpa_2009_raster"
@@ -346,6 +436,7 @@ def main():
     neg = meta.well_id.map(minsat) < 0
     meta.loc[neg & meta.sat_flag.eq("ok"), "sat_flag"] = "negative_sat_thick"
     meta.loc[meta.well_id.map(minsat) < -100, "sat_flag"] = "base_or_land_elev_inconsistent"
+    meta.loc[meta.land_elev_suspect, "sat_flag"] = "land_elev_suspect_vs_nasadem"
 
     # cross-check: 2009 winter sat thickness at wells vs USGS published raster
     a09 = ann[ann.year == 2009][["well_id", "sat_thick_ft"]].merge(meta[["well_id", "sat_thick_2009_usgs_ft"]], on="well_id")
@@ -353,14 +444,15 @@ def main():
     diff = a09.sat_thick_ft - a09.sat_thick_2009_usgs_ft
 
     lev_out = lev[["well_id", "meas_date", "source", "year", "depth_to_water_ft", "wl_elev_ft", "sat_thick_ft",
-                   "is_winter", "is_annual", "outlier_flag", "status", "method", "agency"]].rename(
+                   "is_winter", "is_annual", "outlier_flag", "foreign_substance", "status", "method", "agency"]].rename(
         columns={"status": "measurement_status", "method": "measurement_method"})
     lev_out["year"] = lev_out.year.astype("int16")
     lev_out.to_parquet(OUT / "wells_levels.parquet", index=False, compression="zstd")
     meta_cols = ["well_id", "source", "source_id", "lon", "lat", "county_fips", "gmd", "land_elev_ft", "land_elev_datum",
                  "well_depth_ft", "base_elev_ft", "base_source", "base_usgs_ft", "base_kgs_ft", "depth_to_bedrock_ft",
                  "sat_thick_2009_usgs_ft", "n_years", "first_year", "last_year", "n_meas", "aquifer_code", "kgs_gmd",
-                 "local_well_number", "use_of_water", "kgs_kid", "sat_thick_last_ft", "sat_flag", "well_depth_suspect"]
+                 "local_well_number", "use_of_water", "kgs_kid", "sat_thick_last_ft", "sat_flag", "well_depth_suspect",
+                 "gmd_polygon", "nasadem_ft", "land_elev_minus_dem_ft", "land_elev_suspect", "bedrock_pick_flag", "merged_from"]
     meta[meta_cols].to_parquet(OUT / "wells_meta.parquet", index=False, compression="zstd")
 
     # --- summary
@@ -379,6 +471,15 @@ def main():
                   "nwis_rows_added": int(len(add)), "nwis_wells_merged_by_location_50m": n_loc_merged,
                   "nwis_only_wells": int((meta.source == "USGS_NWIS").sum()), "non_hpa_wells_dropped": n_non_hpa},
         "same_day_duplicates_dropped": n_dup_day,
+        "kgs_rows_dropped_by_nwis_qualifier": n_kgs_drop_nwis_qual,
+        "annual_values_foreign_substance_flag": int(ann.foreign_substance.sum()),
+        "colocated_duplicate_wells_merged": dup_log,
+        "land_elev_suspect_wells": int(meta.land_elev_suspect.sum()),
+        "land_elev_suspect_wells_with_annual": int((meta.land_elev_suspect & (meta.n_years > 0)).sum()),
+        "land_elev_minus_nasadem_ft_median_by_datum": {k: round(float(v), 2) for k, v in
+                                                     meta.groupby("land_elev_datum").land_elev_minus_dem_ft.median().items()},
+        "sat_flag_counts_all_wells": meta.sat_flag.value_counts().to_dict(),
+        "bedrock_pick_flag_counts": meta.bedrock_pick_flag.value_counts().to_dict(),
         "sat_flag_counts_wells_with_annual": m_ann.sat_flag.value_counts().to_dict(),
         "cleaning_rules_dropped": n_rule, "annual_spikes_flagged": n_spike,
         "wells_with_annual_levels": int(len(m_ann)), "kgs_wells_with_annual_levels": int(len(k_ann)),

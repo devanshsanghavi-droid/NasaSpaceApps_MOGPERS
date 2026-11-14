@@ -6,6 +6,7 @@ cd apps/water-clock/pipeline
 python3 wells_kgs_fetch.py      # KGS WIZARD sites + water levels, per county (raw -> data/raw/kgs/)
 python3 wells_nwis_fetch.py     # USGS Water Data OGC API field measurements + monitoring locations (data/raw/nwis/)
 python3 wells_base_fetch.py     # USGS base-of-aquifer contours + 2009 saturated thickness raster (data/raw/usgs_hpa/)
+python3 wells_dem.py            # NASADEM ground elevation at every well (Planetary Computer COGs -> data/raw/nasadem/)
 python3 wells_process.py        # merge, clean, annual levels, base, sat thickness -> data/processed/
 ```
 Everything is real downloaded data. Nothing was typed in by hand. The only constants are the cleaning thresholds listed below.
@@ -13,9 +14,9 @@ Everything is real downloaded data. Nothing was typed in by hand. The only const
 ## Outputs (data/processed/)
 | File | Content |
 |---|---|
-| `wells_levels.parquet` | 139,882 rows, unique on (well_id, meas_date). Columns: `well_id`, `meas_date`, `source` (KGS_WIZARD / USGS_NWIS), `year` (water year: Dec goes to the next year's Jan; other months keep their calendar year), `depth_to_water_ft` (ft below land surface), `wl_elev_ft` (= land_elev_ft - depth_to_water_ft, in the well's land-elevation datum), `sat_thick_ft` (= wl_elev_ft - base_elev_ft), `is_winter` (Dec-Mar), `is_annual` (the single annual value for the well-year, see below), `outlier_flag`, `measurement_status`, `measurement_method`, `agency`. Only measurements that pass cleaning are included. |
-| `wells_meta.parquet` | 8,475 wells with at least one valid measurement (2,946 KGS WIZARD wells and 5,529 NWIS-only wells, mostly one-off inventory readings). Columns: `well_id` (15-digit USGS/GWSI site number, shared by KGS and USGS), `source`, `source_id`, `lon`, `lat` (NAD83), `county_fips`, `gmd` (from the CONTRACTS county list), `land_elev_ft`, `land_elev_datum`, `well_depth_ft`, `well_depth_suspect`, `base_elev_ft` (best base estimate), `base_source`, `base_usgs_ft`, `base_kgs_ft`, `depth_to_bedrock_ft`, `sat_thick_2009_usgs_ft` (published USGS raster sampled at the well), `n_years` / `first_year` / `last_year` (counted on annual values), `n_meas`, `sat_thick_last_ft`, `sat_flag`, `aquifer_code`, `kgs_gmd` (GMD as stored in WIZARD), `local_well_number` (PLSS), `use_of_water`, `kgs_kid`. |
-| `aquifer_base.json` | 0.02 deg grid (126 x 151 cell centers) over bbox [-102.06, 36.99, -99.55, 40.01]: `base_usgs_ft`, `base_blend_ft`, `hpa_present_2009`, plus sources and method. Layout `values[j][i]` -> `lats[j]`, `lons[i]`. Feet, NGVD29. |
+| `wells_levels.parquet` | 139,745 rows, unique on (well_id, meas_date). Columns: `well_id`, `meas_date`, `source` (KGS_WIZARD / USGS_NWIS), `year` (water year: Dec goes to the next year's Jan; other months keep their calendar year), `depth_to_water_ft` (ft below land surface), `wl_elev_ft` (= land_elev_ft - depth_to_water_ft, in the well's land-elevation datum), `sat_thick_ft` (= wl_elev_ft - base_elev_ft), `is_winter` (Dec-Mar), `is_annual` (the single annual value for the well-year, see below), `outlier_flag`, `foreign_substance` (NWIS qualifier ForeignSubstance on this well-date, carried onto KGS rows too), `measurement_status`, `measurement_method`, `agency`. Only measurements that pass cleaning are included. |
+| `wells_meta.parquet` | 8,471 wells with at least one valid measurement (2,942 KGS WIZARD wells and 5,529 NWIS-only wells, mostly one-off inventory readings). Columns: `well_id` (15-digit USGS/GWSI site number, shared by KGS and USGS), `source`, `source_id`, `lon`, `lat` (NAD83), `county_fips`, `gmd` ("GMD1"/"GMD3"/"GMD4" from the CONTRACTS county list), `gmd_polygon` (official GMD polygon containing the well, USGS ScienceBase polygons from econ's gmd.geojson; null outside all GMDs), `land_elev_ft`, `land_elev_datum`, `well_depth_ft`, `well_depth_suspect`, `base_elev_ft` (best base estimate), `base_source`, `base_usgs_ft`, `base_kgs_ft`, `depth_to_bedrock_ft`, `sat_thick_2009_usgs_ft` (published USGS raster sampled at the well), `n_years` / `first_year` / `last_year` (counted on annual values), `n_meas`, `sat_thick_last_ft`, `sat_flag`, `aquifer_code`, `kgs_gmd` (GMD as stored in WIZARD), `local_well_number` (PLSS), `use_of_water`, `kgs_kid`, `nasadem_ft` (NASADEM ground elevation at the well), `land_elev_minus_dem_ft`, `land_elev_suspect` (\|diff\| > 50 ft), `bedrock_pick_flag` (ok / eq_well_depth / deeper_than_well), `merged_from` (co-located duplicate well ids merged into this one). |
+| `aquifer_base.json` | 0.02 deg grid (125 lons x 151 lats cell centers; lons -102.05..-99.57, lats 37.00..40.00) over bbox [-102.06, 36.99, -99.55, 40.01]: `base_usgs_ft`, `base_blend_ft`, `hpa_present_2009`, plus sources and method. Layout `values[j][i]` -> `lats[j]`, `lons[i]`. Feet, NGVD29. |
 | `sat_thickness_published.json` | USGS published 2009 saturated thickness (ft) on the same grid, for cross-checks. |
 | `wells_summary.json` | All counts in this note, generated by the script. |
 
@@ -33,51 +34,59 @@ Everything is real downloaded data. Nothing was typed in by hand. The only const
 3. **Aquifer base**: USGS OFR 98-393, *Digital map of base of aquifer for High Plains aquifer* (Cederstrand & Becker 1998). It digitizes Gutentag et al. (1984), USGS PP 1400-B, at 1:1,000,000 with 200-ft contours, in ft above NGVD29.
    - Item: https://www.sciencebase.gov/catalog/item/631405f5d34e36012efa35b2 (file `ofr98-393.e00.gz`, an ARC/INFO export read with GDAL AVCE00, Albers NAD83).
    - 139 contour arcs fall in or near the region.
-4. **Published saturated thickness, 2009**: USGS SIR 2012-5177 raster `hp_satthk09` (500 m, EPSG:5070, ft). https://www.sciencebase.gov/catalog/item/631405d0d34e36012efa33aa . Its metadata says it was built from the same Gutentag et al. base. It also says USGS set negative values, and areas with little or no saturated thickness, to 10 ft.
+4. **NASADEM** (NASA SRTM reprocessed, 1 arc-second) via Planetary Computer STAC collection `nasadem`, COGs at https://nasademeuwest.blob.core.windows.net/nasadem-cog/v001/NASADEM_HGT_<tile>.tif , sampled at all 24,135 KGS + NWIS well locations (`wells_dem.py`). Used only to check the reported land altitude. Reported minus NASADEM: median +0.9 ft (NGVD29 wells), -0.0 ft (NAVD88 wells); 1st-99th percentile -41..+29 ft over the processed wells.
+5. **Published saturated thickness, 2009**: USGS SIR 2012-5177 raster `hp_satthk09` (500 m, EPSG:5070, ft). https://www.sciencebase.gov/catalog/item/631405d0d34e36012efa33aa . Its metadata says it was built from the same Gutentag et al. base. It also says USGS set negative values, and areas with little or no saturated thickness, to 10 ft.
 
 ## Merge and de-duplication
 - KGS WIZARD is built from the USGS GWSI database, so a KGS well and a USGS well carry the same 15-digit site number. Wells are joined on that number first.
-- On the 104,008 (well, date) pairs present in both sources, 99.25% of depth values agree within 0.05 ft. KGS is kept as the primary source. The 9,828 NWIS measurements on dates missing from KGS are added with `source=USGS_NWIS`.
+- On the 105,536 (well, date) pairs present in both sources, 99.24% of depth values agree within 0.05 ft. KGS is kept as the primary source. The 9,883 NWIS measurements on dates missing from KGS are added with `source=USGS_NWIS`.
 - NWIS wells whose number is not in KGS are matched to a KGS well within 50 m (EPSG:5070) when the median absolute depth difference on shared dates is 1 ft or less, or when there are no shared dates. 23 wells were merged this way.
-- Same-day duplicates (1,259) are reduced to one row, keeping the first, which is the KGS row.
+- Same-day duplicates (1,262) are reduced to one row, keeping the first, which is the KGS row.
+- **Co-located duplicate wells:** wells closer than 5 m (EPSG:5070) whose winter series agree within 0.5 ft in more than 80% of at least 5 shared winters are merged into the well with more measurements (its own reading wins on shared dates; the other well's readings fill its gaps). 4 pairs merged: 381940100570001 -> ...002, 375847101081805 -> ...804, 375708100523805 -> ...804, 374504100051404 -> ...403 (listed in `wells_summary.json` and `merged_from`). This avoids double weight for one site.
 
 ## Cleaning rules (in order)
 1. **KGS status:** drop A (flagged anomalous by KGS statistics), D (dry), E/F/G/H (flowing), I/J (injection), N, O (obstruction), P (pumping), R (recently pumped), S (nearby pumping), T (nearby recently pumped), V, W, X and Z. Blank (static) and B (only year and month known; day defaults to 1) are kept. **KGS method:** drop E (estimated) and L (geophysical log). In total, 3,019 KGS rows were flagged.
-2. **NWIS:** keep only qualifier `Static` or blank, approval `Approved`, and procedure codes other than E or L. This drops ForeignSubstance, Pumping, Dry, Flowing and GWSWAffected readings: 3,071 rows flagged.
+2. **NWIS:** keep only qualifier `Static`, `ForeignSubstance` or blank, approval `Approved`, and procedure codes other than E or L. This drops Pumping, Dry, Flowing and GWSWAffected readings: 1,524 rows flagged. ForeignSubstance readings (substance such as pump oil on the water surface) are kept with `foreign_substance=True`.
+   **Same rule on KGS rows:** KGS leaves its status blank on the same physical measurements, so the NWIS qualifier of the same well-date is carried onto the KGS row: 9 KGS rows dropped (Pumping etc.), and KGS rows on ForeignSubstance dates get `foreign_substance=True`. 1,499 annual values carry the flag (kept; the model can exclude them with `~foreign_substance`).
 3. Drop 82 wells whose aquifer code is a bedrock aquifer (Dakota, Cretaceous, Permian), because they are not the High Plains aquifer.
 4. Drop depth-to-water below 0 (13 rows), and measurements before 1940 (1,572 rows).
 5. Drop depth-to-water deeper than well depth + 5 ft (88 rows), but only when such readings are under 50% of a well's record. When they are 50% or more, the well depth is wrong rather than the levels (examples: depth 2.5 ft or 0 ft). Those readings are kept and the well gets `well_depth_suspect=True` (31 wells).
 6. **Annual level:** for each well and water year, take the winter (Dec-Mar) measurement closest to Jan 15. December is assigned to the next year. The KGS/DWR annual network measures mostly in January.
-7. **Spike screen:** an annual value more than 40 ft from the well's centred 5-winter rolling median (at least 3 values) is set to `is_annual=False` and `outlier_flag=True`. 30 values were flagged.
+7. **Land altitude check:** wells whose reported land altitude differs from NASADEM by more than 50 ft get `land_elev_suspect=True` and `sat_flag="land_elev_suspect_vs_nasadem"` (99 wells, 19 with annual values). Examples: NWIS 372808101180201 lists 1,061 ft and 370743100582701 lists 909 ft where NASADEM gives 3,068 ft and 2,894 ft; 372308100463301 lists 3,847 ft vs 2,841 ft. Levels are kept but their `wl_elev_ft` / `sat_thick_ft` are wrong by that offset.
+8. **Spike screen:** an annual value more than 40 ft from the well's centred 5-winter rolling median (at least 3 values) is set to `is_annual=False` and `outlier_flag=True`. 30 values were flagged.
 
 ## Aquifer base and saturated thickness
-- `base_usgs_ft`: the contour vertices are densified to about 500 m and then linearly interpolated (Delaunay triangulation). The result is NaN outside the convex hull of the contours.
+- `base_usgs_ft`: the contour vertices are densified to about 500 m and then linearly interpolated (Delaunay triangulation). The contours are clipped to the region plus a ~50-60 km margin (levels 1,400-4,000 ft), so every grid cell is inside the vertex hull and no cell is NaN. Where all three triangle vertices sit on the same contour, the value is exactly that contour level (flat triangle, "terracing"): about 27% of grid cells equal a 200-ft contour level exactly, for example the 8 cells at exactly 2,000 ft near -100.6..-99.6 lon, 37.0-38.2 lat (the lowest values on the grid; lower contours, down to 1,400 ft, lie further east in the margin). That is an interpolation artefact, not clamping, and it is within the source's ±100 ft half-contour-interval resolution; `base_blend_ft` partly removes it near KGS picks.
 - `base_kgs_ft`: LAND_SURFACE_ALTITUDE - DEPTH_TO_BEDROCK from WIZARD.
   - 800 wells have a pick within ±250 ft of the USGS surface. One pick beyond that was dropped as a gross error.
+  - 202 picks equal the well depth exactly and 287 are deeper than the well (`bedrock_pick_flag`), so they are lower bounds or estimates from nearby logs. Their median residual is about -8 ft vs -5 ft for the others (small). They get half weight in the residual IDW below; at the well itself the pick is still used.
   - Pick minus USGS surface: median -5.7 ft, MAD 22.6 ft. The 1:1M, 200-ft-contour surface is unbiased but loses local relief.
 - `base_elev_ft` at a well:
   - the well's own KGS pick when it has one (799 wells with annual levels);
-  - otherwise `base_usgs_ft` plus an IDW-interpolated residual from the KGS picks (p=2, 12 nearest, 15 km radius, with a shrink-to-zero term at 5 km). This is `base_source="USGS_OFR98-393+KGS_residual_IDW"`.
+  - otherwise `base_usgs_ft` plus an IDW-interpolated residual from the KGS picks (p=2, 12 nearest, 15 km radius, with a shrink-to-zero term at 5 km; half weight for flagged picks). This is `base_source="USGS_OFR98-393+KGS_residual_IDW"`.
   - The grid layer `base_blend_ft` uses the same method; `base_usgs_ft` is the pure USGS surface.
 - `sat_thick_ft` = wl_elev_ft - base_elev_ft.
-- **Cross-check against the USGS 2009 published raster:** 983 wells have a 2009 annual value. Our 2009 saturated thickness minus the USGS raster: median +0.9 ft, MAE 21.9 ft, r = 0.93.
-- **`sat_flag`** for the 4,127 wells with annual levels:
+- **Cross-check against the USGS 2009 published raster:** 984 wells have a 2009 annual value. Our 2009 saturated thickness minus the USGS raster: median +0.9 ft, MAE 22.0 ft, r = 0.93.
+- **`sat_flag`** is set for every well. For wells with annual values it uses the annual values; for wells without (mostly NWIS one-off readings) it uses all their non-outlier measurements (before this fix those 3,500+ wells defaulted to `ok`). Priority (last wins): no_base, outside_hpa_2009_raster, thin_or_absent_usgs2009, negative_sat_thick, base_or_land_elev_inconsistent, land_elev_suspect_vs_nasadem. All 8,471 wells: ok 7,034, thin 763, outside raster 366, base_or_land_elev_inconsistent 109, negative 100, land_elev_suspect 99. For the 4,123 wells with annual levels:
 
   | Flag | Wells | Meaning |
   |---|---:|---|
-  | ok | 3,597 | |
-  | thin_or_absent_usgs2009 | 237 | USGS 2009 raster is 10 ft or less |
-  | outside_hpa_2009_raster | 160 | USGS raster has no data here (aquifer absent, e.g. eastern Graham, Gove, Ford, Hamilton) |
-  | negative_sat_thick | 74 | at least one annual value below 0 |
-  | base_or_land_elev_inconsistent | 59 | an annual value below -100 ft. Usually a bad land altitude (e.g. 372833101305101 lists 2,139 ft where the ground is about 2,850 ft), or a well in a paleo-valley or deeper unit the 1:1M base does not resolve. |
+  | ok | 3,579 | |
+  | thin_or_absent_usgs2009 | 235 | USGS 2009 raster is 10 ft or less |
+  | outside_hpa_2009_raster | 159 | USGS raster has no data here (aquifer absent, e.g. eastern Graham, Gove, Ford, Hamilton) |
+  | negative_sat_thick | 75 | at least one annual value below 0 |
+  | land_elev_suspect_vs_nasadem | 19 | reported land altitude more than 50 ft from NASADEM |
+  | base_or_land_elev_inconsistent | 56 | an annual value below -100 ft. Usually a bad land altitude (e.g. 372833101305101 lists 2,139 ft where the ground is about 2,850 ft), or a well in a paleo-valley or deeper unit the 1:1M base does not resolve. |
 
-  Values are not clipped. The model should drop or down-weight wells whose flag is not `ok`. 2,571 annual values (3.7%) are negative.
+  Values are not clipped. The model should drop or down-weight wells whose flag is not `ok`; anything that uses non-annual NWIS snapshots (interpolation of a single campaign) should also drop non-`ok` wells. 2,616 annual values (3.8%) are negative.
 
 ## Coverage
-- **Annual values:** 68,694 for 1940-2026. About 1,000 wells per year since 2000 (2007 is low at 777), and 1,034 in water year 2026 (Jan 2026 campaign).
-- **Wells with at least one annual value:** 4,127 (2,865 KGS).
-- **Wells with 15 or more annual years:** 1,699. Of these, 943 also have a value since 2016.
+- **Annual values:** 68,660 for 1940-2026. About 1,000 wells per year since 2000 (2007 is low at 775), and 1,034 in water year 2026 (Jan 2026 campaign).
+- **Wells with at least one annual value:** 4,123 (2,861 KGS).
+- **Wells with 15 or more annual years:** 1,697. Of these, 942 also have a value since 2016.
 - **Median record length:** 9 years over all wells with an annual value. This is pulled down by NWIS one-off wells: 19 years for KGS wells, and 20 years for wells with 2 or more years.
+
+Table below is from the run before the fix pass (differences after it: at most 1 well per county; Finney 368, Ford 235, Kearny 225/68, Scott 235/84).
 
 | FIPS | County | GMD | Wells (annual) | ≥15 yrs | Active since 2016 | Median yrs | Median slope 2000-26 (ft/yr, wells ≥15 yrs) |
 |---|---|---|---|---|---|---|---|
@@ -111,9 +120,9 @@ Everything is real downloaded data. Nothing was typed in by hand. The only const
 The slope column is an ordinary least-squares sanity check, not a model output. Median slope by GMD: GMD1 -0.29, GMD3 -1.37, GMD4 -0.27 ft/yr.
 
 ## Caveats
-- **Vertical datum:** land altitudes are mostly NGVD29 (7,318 wells), with 1,102 NAVD88 and 55 blank (`land_elev_datum`). No VERTCON conversion was done. In western Kansas, NAVD88 - NGVD29 is roughly +0.5 m (about 1.5-2 ft; not computed here). That is small next to the roughly 22 ft scatter of the base surface, and it cancels in decline rates because each well has a single land altitude. The base surface is NGVD29.
+- **Vertical datum:** land altitudes are mostly NGVD29 (7,317 wells), with 1,099 NAVD88 and 55 blank (`land_elev_datum`). No VERTCON conversion was done. In western Kansas, NAVD88 - NGVD29 is roughly +0.5 m (about 1.5-2 ft; not computed here). That is small next to the roughly 22 ft scatter of the base surface, and it cancels in decline rates because each well has a single land altitude. The base surface is NGVD29.
 - **Base resolution:** the regional base is a 1:1,000,000, 200-ft-contour product. Saturated thickness at a single well is uncertain by roughly ±20-25 ft (from the pick residual MAD and the 2009 raster MAE). Use it with an uncertainty band.
-- **GMD assignment:** `gmd` comes from the county list in CONTRACTS.md, not from official polygons. WIZARD's own GMD flag is in `kgs_gmd`: blank for 331 KGS sites outside any GMD boundary, even inside region counties.
+- **GMD assignment:** `gmd` comes from the county list in CONTRACTS.md (whole counties), the same convention as model/common.py, counties.geojson and every other processed file. The official polygon membership of each well is in `gmd_polygon` (GMD3 3,771, GMD4 1,784, GMD1 1,455, none 1,461), and WIZARD's own GMD flag is in `kgs_gmd`. **Wallace (20199)** is GMD4 in the county list, but the econ polygon check (data/raw/gmd/county_gmd_check.json) puts 90% of its WIMAS irrigated acres in GMD1, so by the contract's own "most irrigated area" rule it would be GMD1. It was left as GMD4 in this fix pass because model/common.py hard-codes the county list and a data-only change would mix conventions; the model owner should decide once and record it in VALIDATION.md.
 - **County assignment:** `county_fips` is the county the well was queried under (KGS / NWIS county code).
 - **NWIS-only wells:** 5,529, mostly single inventory measurements (often at drilling time, any season). They add spatial coverage for one snapshot only. Very few have multi-year records.
 - **Pumping and recovery:** winter levels can still be affected by recovery from late-season pumping. Measurements flagged as pumping or recently pumped were removed, but unflagged recovery effects remain.
