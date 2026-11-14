@@ -1,0 +1,16 @@
+[
+ {
+  "site": "05484500",
+  "name": "Raccoon River at Van Meter, IA",
+  "lon": -93.9497778,
+  "lat": 41.53402778,
+  "role": "Raccoon River intake gauge (primary)"
+ },
+ {
+  "site": "05482000",
+  "name": "Des Moines River at 2nd Ave, Des Moines, IA",
+  "lon": -93.6197222,
+  "lat": 41.61194444,
+  "role": "Des Moines River intake gauge"
+ }
+]
