@@ -1,0 +1,239 @@
+{
+ "generated": "2026-11-14T22:11:02+00:00",
+ "source": "NASA NEX-GDDP-CMIP6 v1.x/v2.0 daily 0.25 deg, via NASA NCCS THREDDS NCSS https://ds.nccs.nasa.gov/thredds/catalog/AMES/NEX/GDDP-CMIP6/catalog.html",
+ "variant": "r1i1p1f1",
+ "models": {
+  "ACCESS-CM2": {
+   "baseline_1995_2014": {
+    "pr_gs_in": 14.582,
+    "tasmax_jja_f": 91.179,
+    "et0_pm_gs_in": 40.219,
+    "et0_hg_gs_in": 39.385
+   },
+   "n_years_hist": 20,
+   "ssp245": {
+    "n_years": 21,
+    "pr_gs_in_future": 14.291,
+    "pr_gs_in_change": -0.291,
+    "pr_gs_in_change_pct": -1.99,
+    "tasmax_jja_f_future": 96.604,
+    "tasmax_jja_f_change": 5.425,
+    "et0_pm_gs_in_future": 44.471,
+    "et0_pm_gs_in_change": 4.251,
+    "et0_pm_gs_in_change_pct": 10.57,
+    "et0_hg_gs_in_future": 42.557,
+    "et0_hg_gs_in_change": 3.172,
+    "et0_hg_gs_in_change_pct": 8.05
+   },
+   "ssp585": {
+    "n_years": 21,
+    "pr_gs_in_future": 14.432,
+    "pr_gs_in_change": -0.15,
+    "pr_gs_in_change_pct": -1.03,
+    "tasmax_jja_f_future": 96.468,
+    "tasmax_jja_f_change": 5.289,
+    "et0_pm_gs_in_future": 43.938,
+    "et0_pm_gs_in_change": 3.719,
+    "et0_pm_gs_in_change_pct": 9.25,
+    "et0_hg_gs_in_future": 42.359,
+    "et0_hg_gs_in_change": 2.974,
+    "et0_hg_gs_in_change_pct": 7.55
+   }
+  },
+  "GFDL-ESM4": {
+   "baseline_1995_2014": {
+    "pr_gs_in": 13.133,
+    "tasmax_jja_f": 91.823,
+    "et0_pm_gs_in": 40.504,
+    "et0_hg_gs_in": 39.543
+   },
+   "n_years_hist": 20,
+   "ssp245": {
+    "n_years": 21,
+    "pr_gs_in_future": 14.736,
+    "pr_gs_in_change": 1.603,
+    "pr_gs_in_change_pct": 12.2,
+    "tasmax_jja_f_future": 94.558,
+    "tasmax_jja_f_change": 2.735,
+    "et0_pm_gs_in_future": 42.769,
+    "et0_pm_gs_in_change": 2.266,
+    "et0_pm_gs_in_change_pct": 5.59,
+    "et0_hg_gs_in_future": 40.992,
+    "et0_hg_gs_in_change": 1.448,
+    "et0_hg_gs_in_change_pct": 3.66
+   },
+   "ssp585": {
+    "n_years": 21,
+    "pr_gs_in_future": 13.435,
+    "pr_gs_in_change": 0.302,
+    "pr_gs_in_change_pct": 2.3,
+    "tasmax_jja_f_future": 95.45,
+    "tasmax_jja_f_change": 3.627,
+    "et0_pm_gs_in_future": 43.618,
+    "et0_pm_gs_in_change": 3.114,
+    "et0_pm_gs_in_change_pct": 7.69,
+    "et0_hg_gs_in_future": 41.953,
+    "et0_hg_gs_in_change": 2.41,
+    "et0_hg_gs_in_change_pct": 6.09
+   }
+  },
+  "MRI-ESM2-0": {
+   "baseline_1995_2014": {
+    "pr_gs_in": 15.428,
+    "tasmax_jja_f": 90.973,
+    "et0_pm_gs_in": 39.574,
+    "et0_hg_gs_in": 38.961
+   },
+   "n_years_hist": 19,
+   "ssp245": {
+    "n_years": 21,
+    "pr_gs_in_future": 16.219,
+    "pr_gs_in_change": 0.791,
+    "pr_gs_in_change_pct": 5.13,
+    "tasmax_jja_f_future": 94.9,
+    "tasmax_jja_f_change": 3.927,
+    "et0_pm_gs_in_future": 41.928,
+    "et0_pm_gs_in_change": 2.355,
+    "et0_pm_gs_in_change_pct": 5.95,
+    "et0_hg_gs_in_future": 41.056,
+    "et0_hg_gs_in_change": 2.095,
+    "et0_hg_gs_in_change_pct": 5.38
+   },
+   "ssp585": {
+    "n_years": 21,
+    "pr_gs_in_future": 14.878,
+    "pr_gs_in_change": -0.551,
+    "pr_gs_in_change_pct": -3.57,
+    "tasmax_jja_f_future": 96.694,
+    "tasmax_jja_f_change": 5.721,
+    "et0_pm_gs_in_future": 43.223,
+    "et0_pm_gs_in_change": 3.649,
+    "et0_pm_gs_in_change_pct": 9.22,
+    "et0_hg_gs_in_future": 42.199,
+    "et0_hg_gs_in_change": 3.238,
+    "et0_hg_gs_in_change_pct": 8.31
+   }
+  }
+ },
+ "scenarios": [
+  "ssp245",
+  "ssp585"
+ ],
+ "baseline_period": [
+  1995,
+  2014
+ ],
+ "future_period": [
+  2035,
+  2055
+ ],
+ "region": "0.25 deg cells with centres inside the 26 GMD1/3/4 counties",
+ "n_cells": 95,
+ "season": "Apr 1 - Sep 30 (precip, ET0); Jun-Aug (tasmax)",
+ "et0_preferred": "et0_pm_gs_in",
+ "units": {
+  "pr_gs_in": "inches Apr-Sep",
+  "tasmax_jja_f": "deg F (mean daily max Jun-Aug)",
+  "et0_pm_gs_in": "inches Apr-Sep, FAO-56 Penman-Monteith",
+  "et0_hg_gs_in": "inches Apr-Sep, Hargreaves-Samani",
+  "*_change": "future mean minus baseline mean (same units)",
+  "*_change_pct": "percent change"
+ },
+ "method": "Per model: region mean of per-cell season totals each year; change = mean(2035-2055) - mean(1995-2014) for the same model (delta method, so model bias largely cancels). Ensemble = mean/min/max across models.",
+ "fetch_failures": 1,
+ "ensemble": {
+  "ssp245": {
+   "et0_hg_gs_in_change": {
+    "mean": 2.238,
+    "min": 1.448,
+    "max": 3.172,
+    "n_models": 3
+   },
+   "et0_hg_gs_in_change_pct": {
+    "mean": 5.697,
+    "min": 3.66,
+    "max": 8.05,
+    "n_models": 3
+   },
+   "et0_pm_gs_in_change": {
+    "mean": 2.957,
+    "min": 2.266,
+    "max": 4.251,
+    "n_models": 3
+   },
+   "et0_pm_gs_in_change_pct": {
+    "mean": 7.37,
+    "min": 5.59,
+    "max": 10.57,
+    "n_models": 3
+   },
+   "pr_gs_in_change": {
+    "mean": 0.701,
+    "min": -0.291,
+    "max": 1.603,
+    "n_models": 3
+   },
+   "pr_gs_in_change_pct": {
+    "mean": 5.113,
+    "min": -1.99,
+    "max": 12.2,
+    "n_models": 3
+   },
+   "tasmax_jja_f_change": {
+    "mean": 4.029,
+    "min": 2.735,
+    "max": 5.425,
+    "n_models": 3
+   }
+  },
+  "ssp585": {
+   "et0_hg_gs_in_change": {
+    "mean": 2.874,
+    "min": 2.41,
+    "max": 3.238,
+    "n_models": 3
+   },
+   "et0_hg_gs_in_change_pct": {
+    "mean": 7.317,
+    "min": 6.09,
+    "max": 8.31,
+    "n_models": 3
+   },
+   "et0_pm_gs_in_change": {
+    "mean": 3.494,
+    "min": 3.114,
+    "max": 3.719,
+    "n_models": 3
+   },
+   "et0_pm_gs_in_change_pct": {
+    "mean": 8.72,
+    "min": 7.69,
+    "max": 9.25,
+    "n_models": 3
+   },
+   "pr_gs_in_change": {
+    "mean": -0.133,
+    "min": -0.551,
+    "max": 0.302,
+    "n_models": 3
+   },
+   "pr_gs_in_change_pct": {
+    "mean": -0.767,
+    "min": -3.57,
+    "max": 2.3,
+    "n_models": 3
+   },
+   "tasmax_jja_f_change": {
+    "mean": 4.879,
+    "min": 3.627,
+    "max": 5.721,
+    "n_models": 3
+   }
+  }
+ },
+ "power_1995_2014_region_mean": {
+  "precip_gs_in": 15.252,
+  "et0_gs_in": 46.242,
+  "tmax_jja_f": 91.498
+ }
+}
