@@ -113,14 +113,44 @@ def scores(o, p, plo, phi, prob, base_o):
                               csi=hits / (hits + miss + fa) if hits + miss + fa else None))
 
 
-def evaluate(d, models, train_mask, test_mask, label):
+def widen(q: np.ndarray, k: float) -> np.ndarray:
+    """Scale the spread of log-change quantiles around their median by k (k > 1 widens)."""
+    med = q[:, [TAUS.index(0.5)]]
+    return med + k * (q - med)
+
+
+K_GRID = np.round(np.arange(1.0, 5.01, 0.05), 2)
+
+
+def calibrate_k(d, models, mask) -> dict:
+    """Per lead, smallest spread factor k giving >= 80% coverage of [q10, q90] on the rows in `mask`
+    (the 2023-2025 test years for the 2016-2022 models). Applied to later issues only."""
+    X = d[FEATS]
+    l0 = d["lno3"].values
+    ks = {}
+    for h in H:
+        o = d["lno3"].shift(-h).values
+        ok = mask & np.isfinite(l0) & np.isfinite(o) & d["rain_7"].notna().values
+        q = predict_q(models[h], X[ok])
+        y = o[ok] - l0[ok]
+        ks[h] = float(K_GRID[-1])
+        for k in K_GRID:
+            w = widen(q, k)
+            if np.mean((y >= w[:, TAUS.index(0.1)]) & (y <= w[:, TAUS.index(0.9)])) >= 0.80:
+                ks[h] = float(k)
+                break
+    return ks
+
+
+def evaluate(d, models, train_mask, test_mask, label, kcal=None):
     res = {}
     X = d[FEATS]
     l0 = d["lno3"].values
     for h in H:
         o = np.exp(d["lno3"].shift(-h).values)
         ok = test_mask & np.isfinite(l0) & np.isfinite(o) & d["rain_7"].notna().values
-        lq = l0[:, None] + predict_q(models[h], X)
+        qraw = predict_q(models[h], X)
+        lq = l0[:, None] + qraw
         cq = l0[:, None] + clim_change(d, train_mask, h)
         pers_prob = (np.exp(l0) > MCL).astype(float)
         i10, i50, i90 = TAUS.index(0.1), TAUS.index(0.5), TAUS.index(0.9)
@@ -132,7 +162,14 @@ def evaluate(d, models, train_mask, test_mask, label):
                                pers_prob[ok], o),
             climatology_of_change=scores(o[ok], np.exp(cq[ok, i50]), np.exp(cq[ok, i10]), np.exp(cq[ok, i90]),
                                          prob_over(cq[ok]), o))
-        for k in ("gbm", "climatology_of_change"):
+        if kcal is not None:  # spread calibrated on an EARLIER period (out-of-sample here)
+            lw = l0[:, None] + widen(qraw, kcal[h])
+            r["gbm_calibrated"] = scores(o[ok], np.exp(lw[ok, i50]), np.exp(lw[ok, i10]), np.exp(lw[ok, i90]),
+                                         prob_over(lw[ok]), o)
+            r["gbm_calibrated"]["spread_factor_k"] = kcal[h]
+        for k in ("gbm", "climatology_of_change", "gbm_calibrated"):
+            if k not in r:
+                continue
             r[k]["skill_vs_persistence_mse"] = float(1 - r[k]["RMSE"] ** 2 / r["persistence"]["RMSE"] ** 2)
             r[k]["brier_skill_vs_persistence"] = float(1 - r[k]["brier_over10"] / r["persistence"]["brier_over10"]) \
                 if r["persistence"]["brier_over10"] > 0 else None
@@ -144,6 +181,10 @@ def evaluate(d, models, train_mask, test_mask, label):
     print(f"  [{label}] h14 RMSE gbm {s14['gbm']['RMSE']:.2f} pers {s14['persistence']['RMSE']:.2f} "
           f"clim {s14['climatology_of_change']['RMSE']:.2f} | cov80 {s14['gbm']['coverage80']:.2f} | "
           f"Brier gbm {s14['gbm']['brier_over10']:.3f} pers {s14['persistence']['brier_over10']:.3f}")
+    if kcal is not None:
+        print(f"  [{label}] calibrated cov80 h7 {s7['gbm_calibrated']['coverage80']:.2f} "
+              f"h14 {s14['gbm_calibrated']['coverage80']:.2f}; Brier h7 {s7['gbm_calibrated']['brier_over10']:.3f} "
+              f"h14 {s14['gbm_calibrated']['brier_over10']:.3f}")
     return res
 
 
@@ -188,16 +229,19 @@ def main():
         test = (yr >= 2023) & (yr <= 2025)
         m_val = fit_models(d, train)
         ev_test = evaluate(d, m_val, train, test, "test 2023-2025")
-        # live check on 2026 with models trained 2016-2025 (targets must lie before the issue date)
+        kcal = calibrate_k(d, m_val, test)
+        print("  spread factor k by lead (calibrated on 2023-2025):", kcal)
+        # live check on 2026 with models trained 2016-2025 (targets must lie before the issue date),
+        # intervals widened with the 2023-2025 k: an out-of-sample test of the calibration
         tr2 = (yr >= 2016) & (yr <= 2025)
         m_25 = fit_models(d, tr2)
-        ev_live = evaluate(d, m_25, tr2, yr == 2026, "live 2026")
+        ev_live = evaluate(d, m_25, tr2, yr == 2026, "live 2026", kcal=kcal)
         # operational models: all data with known targets (y_h NaN automatically excluded)
         m_op = fit_models(d, yr >= 2016)
         it = d.index[d.date == last_no3][0]
         x = d.loc[[it], FEATS]
         l0 = float(d.loc[it, "lno3"])
-        lq = np.vstack([l0 + predict_q(m_op[h], x)[0] for h in H])
+        lq = np.vstack([l0 + widen(predict_q(m_op[h], x), kcal[h])[0] for h in H])
         pr = prob_over(lq)
         i10, i50, i90 = TAUS.index(0.1), TAUS.index(0.5), TAUS.index(0.9)
         dates = [str((last_no3 + pd.Timedelta(days=h)).date()) for h in H]
@@ -230,7 +274,8 @@ def main():
                 f"(chance on day 14: {100 * pr[-1]:.0f}%). "
                 f"Soil moisture is {describe(gwp)} for this time of year (root-zone wetness at the "
                 f"{gwp:.0f}th percentile of 2016-2025), the last 7 days brought {rain7:.0f} mm of rain "
-                f"({describe(r7p)}), and satellite bare cropland is at the {bp:.0f}th percentile. "
+                f"({describe(r7p)}), and satellite bare cropland is at the {bp:.0f}th percentile"
+                f"{' (estimated: the latest usable MODIS image is ' + str(int(gp.loc[last_pow, 'cover_age_days'])) + ' days old)' if gp.loc[last_pow, 'cover_age_days'] > F.FRESH_AGE else ''}. "
                 "No weather forecast is used: a big storm would push nitrate outside this range. " + skill_txt)
         so = dict(issued=str(pd.Timestamp.now(tz="UTC").date()), issue_basis_date=str(last_no3.date()), site=site,
                   name=name, last_obs=dict(date=str(last_no3.date()), value=round(last_val, 2)),
@@ -252,9 +297,15 @@ def main():
                              test_2023_2025_h14=ev_test["h14"]["gbm"]["skill_vs_persistence_mse"],
                              coverage80_h7=ev_test["h7"]["gbm"]["coverage80"],
                              coverage80_h14=ev_test["h14"]["gbm"]["coverage80"]),
+                  interval_spread_factor_by_lead=kcal,
+                  interval_note=("80% band = quantile-GBM band widened by a lead-specific factor k calibrated to "
+                                 "80% coverage on 2023-2025 (raw bands covered only ~60-75%)."),
                   weather_forecast_used=False, driver_lag_days=lag, text=text)
         out["sites"][site] = so
-        metrics_out["sites"][site] = dict(driver_lag_days=lag, test_2023_2025=ev_test, live_2026=ev_live)
+        metrics_out["sites"][site] = dict(driver_lag_days=lag, spread_factor_k_by_lead=kcal,
+                                          test_2023_2025=ev_test, live_2026=ev_live,
+                                          note=("test: models trained 2016-2022 (raw intervals). live_2026: models "
+                                                "trained 2016-2025; gbm_calibrated uses k calibrated on 2023-2025."))
         print("  ", text)
     prim = out["sites"]["05484500"]
     top = {k: prim[k] for k in ["issued", "site", "last_obs", "dates", "p10", "p50", "p90", "prob_over10",

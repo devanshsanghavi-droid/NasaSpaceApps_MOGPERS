@@ -18,20 +18,29 @@ BASE_PARAMS = dict(learning_rate=0.03, feature_fraction=0.7, bagging_fraction=0.
 
 
 class QGBM:
-    def __init__(self, booster, init, feats, alpha):
-        self.booster, self.init, self.feats, self.alpha = booster, float(init), list(feats), alpha
+    """prediction = init + [base model prediction] + booster(X). Tail quantiles (0.1/0.9) are boosted as
+    offsets from the median model (`base`): with a unit Hessian the pinball objective moves a quantile
+    by at most lr*alpha (or lr*(1-alpha)) per tree, so starting from a constant would leave the tails stuck
+    near the unconditional quantile. Sum of monotone functions stays monotone."""
+
+    def __init__(self, booster, init, feats, alpha, base=None):
+        self.booster, self.init, self.feats, self.alpha, self.base = booster, float(init), list(feats), alpha, base
 
     def predict(self, X, num_iteration=None):
-        return self.init + self.booster.predict(X[self.feats], num_iteration=num_iteration)
+        b = self.base.predict(X) if self.base is not None else 0.0
+        return self.init + b + self.booster.predict(X[self.feats], num_iteration=num_iteration)
 
-    def save(self, path):
+    def save(self, path, base_file=None):
         self.booster.save_model(str(path))
-        json.dump(dict(init=self.init, feats=self.feats, alpha=self.alpha), open(str(path) + ".meta.json", "w"))
+        json.dump(dict(init=self.init, feats=self.feats, alpha=self.alpha, base_file=base_file),
+                  open(str(path) + ".meta.json", "w"))
 
     @staticmethod
     def load(path):
+        from pathlib import Path
         meta = json.load(open(str(path) + ".meta.json"))
-        return QGBM(lgb.Booster(model_file=str(path)), meta["init"], meta["feats"], meta["alpha"])
+        base = QGBM.load(Path(path).parent / meta["base_file"]) if meta.get("base_file") else None
+        return QGBM(lgb.Booster(model_file=str(path)), meta["init"], meta["feats"], meta["alpha"], base)
 
 
 def pinball_obj(alpha):
@@ -43,10 +52,12 @@ def pinball_obj(alpha):
 
 
 def fit(X, y, feats, alpha, monotone, num_leaves=15, min_child_samples=50, n_estimators=400, seed=7,
-        params=None):
-    init = float(np.quantile(y, alpha))
+        params=None, base=None):
+    y = np.asarray(y, dtype=float)
+    off = base.predict(X) if base is not None else 0.0
+    init = float(np.quantile(y - off, alpha))
     p = dict(BASE_PARAMS if params is None else params, objective=pinball_obj(alpha), num_leaves=num_leaves,
              min_child_samples=min_child_samples, monotone_constraints=list(monotone), seed=seed)
-    ds = lgb.Dataset(X[feats], np.asarray(y) - init, free_raw_data=False)
+    ds = lgb.Dataset(X[feats], y - off - init, free_raw_data=False)
     b = lgb.train(p, ds, num_boost_round=n_estimators)
-    return QGBM(b, init, feats, alpha)
+    return QGBM(b, init, feats, alpha, base)

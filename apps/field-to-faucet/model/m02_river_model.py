@@ -37,9 +37,9 @@ GRID = dict(num_leaves=[7, 15], min_child_samples=[50, 150], n_estimators=[150, 
             longmem=[False, True], cdl=[False, True])
 
 
-def lgb_fit(X, y, feats, alpha, num_leaves, min_child_samples, n_estimators, seed=7):
+def lgb_fit(X, y, feats, alpha, num_leaves, min_child_samples, n_estimators, seed=7, base=None):
     return Q.fit(X, y, feats, alpha, F.monotone_vector(feats), num_leaves, min_child_samples, n_estimators,
-                 seed=seed, params=BASE_PARAMS)
+                 seed=seed, params=BASE_PARAMS, base=base)
 
 
 # ------------------------------------------------------------------ metrics
@@ -86,7 +86,7 @@ def runs(mask: np.ndarray):
     return best
 
 
-def event_block(df: pd.DataFrame, col: str, year: int):
+def event_block(df: pd.DataFrame, col: str, year: int, col90: str | None = None):
     g = df[df.date.dt.year == year]
     obs_ok = g.obs.notna()
     o = g.obs.values; p = g[col].values
@@ -105,7 +105,29 @@ def event_block(df: pd.DataFrame, col: str, year: int):
     out["pred_first_last_over10"] = [str(pp.min().date()), str(pp.max().date())] if len(pp) else None
     m = obs_ok.values & np.isfinite(p)
     out["hits_on_obs_days"] = exceed(o[m], p[m])
+    if col90 is not None:  # "plausible high" reading: upper end of the 80% band above 10
+        p9 = g[col90].values
+        out["p90_days_over10_on_obs_days"] = int(((p9 > MCL) & obs_ok.values).sum())
     return out
+
+
+def residual_diagnostics(out: pd.DataFrame) -> dict:
+    """Out-of-sample log residual ln(obs/p50) by year (train years use LOYO predictions) and by flow tercile."""
+    g = out[out.obs.notna() & (out.obs > 0)].copy()
+    g["pred"] = np.where(g.split == "train", g.gbm_loyo_p50, g.p50)
+    g = g[np.isfinite(g.pred) & (g.pred > 0)]
+    g["lr"] = np.log(g.obs / g.pred)
+    g["qt"] = pd.qcut(np.log(g.q_cfs), 3, labels=["low_flow", "mid_flow", "high_flow"])
+    res = {}
+    for y, gy in g.groupby(g.date.dt.year):
+        d = dict(median_log_resid=float(gy.lr.median()), ratio_obs_over_pred=float(np.exp(gy.lr.median())), n=int(len(gy)))
+        for q, gq in gy.groupby("qt", observed=True):
+            d[str(q)] = float(gq.lr.median())
+        res[str(int(y))] = d
+    tr = g[g.split == "train"].groupby(g.date.dt.year).lr.median()
+    return dict(by_year=res, train_loyo_sd_of_annual_median=float(tr.std()),
+                note=("Out-of-sample residuals; 2016-2022 from leave-one-year-out fits, 2023+ from the 2016-2022 "
+                      "model. A positive value means the river carried more nitrate than the drivers explain."))
 
 
 # ------------------------------------------------------------------ baselines
@@ -165,8 +187,10 @@ def oof_quantiles(g, feats, train, hp):
     oof = np.full((len(g), 3), np.nan)
     for yr in TRAIN_YEARS:
         tr = m_obs & (years != yr); te = train & (years == yr) & g[feats].notna().any(axis=1).values
+        b50 = lgb_fit(g[tr], y[tr], feats, 0.5, hp["num_leaves"], hp["min_child_samples"], hp["n_estimators"])
         for j, a in enumerate([0.1, 0.5, 0.9]):
-            b = lgb_fit(g[tr], y[tr], feats, a, hp["num_leaves"], hp["min_child_samples"], hp["n_estimators"])
+            b = b50 if a == 0.5 else lgb_fit(g[tr], y[tr], feats, a, hp["num_leaves"], hp["min_child_samples"],
+                                             hp["n_estimators"], base=b50)
             oof[te, j] = b.predict(g.loc[te, feats])
     return oof
 
@@ -200,9 +224,11 @@ def main():
         y = g.lno3.values
         m_fit = train & valid_x & np.isfinite(y)
         boosters = {}
-        for a in [0.1, 0.5, 0.9]:
-            b = lgb_fit(g[m_fit], y[m_fit], feats, a, hp["num_leaves"], hp["min_child_samples"], hp["n_estimators"])
-            b.save(MODELS / f"gbm_{site}_q{int(a * 100):02d}.txt")
+        for a in [0.5, 0.1, 0.9]:  # median first; tails are boosted as offsets from it
+            b = lgb_fit(g[m_fit], y[m_fit], feats, a, hp["num_leaves"], hp["min_child_samples"], hp["n_estimators"],
+                        base=None if a == 0.5 else boosters[0.5])
+            b.save(MODELS / f"gbm_{site}_q{int(a * 100):02d}.txt",
+                   base_file=None if a == 0.5 else f"gbm_{site}_q50.txt")
             boosters[a] = b
         X = g[feats]
         raw = np.column_stack([boosters[a].predict(X) for a in [0.1, 0.5, 0.9]])
@@ -275,8 +301,9 @@ def main():
             sm["test_by_year"][str(yr)] = {mn: {k: v for k, v in metric_block(o_all[mm], out[c5].values[mm]).items()
                                                if k in ("n", "NSE", "KGE", "RMSE", "bias", "r")}
                                           for mn, (c5, _, _) in mod_cols.items()}
-        sm["crisis_2025"] = {mn: event_block(out, c5, 2025) for mn, (c5, _, _) in mod_cols.items()}
-        sm["live_2026"] = {mn: event_block(out, c5, 2026) for mn, (c5, _, _) in mod_cols.items()}
+        sm["crisis_2025"] = {mn: event_block(out, c5, 2025, c9) for mn, (c5, _, c9) in mod_cols.items()}
+        sm["live_2026"] = {mn: event_block(out, c5, 2026, c9) for mn, (c5, _, c9) in mod_cols.items()}
+        sm["residual_diagnostics"] = residual_diagnostics(out)
         sm["by_year_days_over10"] = {}
         for yr in range(2016, 2027):
             gg = out[out.date.dt.year == yr]

@@ -9,7 +9,8 @@ degeneracy between the pool size and the output coefficient `a`).
   soil pool: S <- S + M + Fert - U - L - d*S
              M    = theta**(T-20) for T > 0 (mineralization, theta = 1.07, i.e. Q10 ~ 2), else 0
              Fert = fert * corn_share * [ (1-ff) * spring(Apr 10-May 31) + ff * fall(Nov 1-30) ]
-             U    = u * living_share * GWETROOT * S      (water-limited uptake by living cover)
+             U    = u * living_share * GWETROOT * f(T) * S  (uptake by living cover, water- and
+                                                     temperature-limited; f(T) = theta**(T-20) for T > 0, else 0)
              L    = k * S * D                            (leaching with drainage water)
   river:     R <- R + L - R/tau_r ;  O = R/tau_r
   concentration C = c0 + a * O / (Q/Qmed)**beta          (mg/L)
@@ -51,7 +52,7 @@ def simulate(theta, dr, qmed, spin_days=365, n_spin=3):
     snowfall = np.where(T <= 0, P, 0.0)
     rain = P - snowfall
     gwp = gw ** p
-    upt = u * liv * gw
+    upt = u * liv * gw * M  # M = temperature factor (also used for mineralization)
     O = np.empty(n)
     S, W, R, snow = 50.0, 10.0, 1.0, 0.0
     # spin-up: cycle through the first `spin_days` n_spin times
