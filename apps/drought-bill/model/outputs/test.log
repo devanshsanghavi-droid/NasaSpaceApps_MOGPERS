@@ -1,0 +1,32 @@
+model done
+baseline_mean done
+baseline_hazard_only done
+model {'n': 2525, 'mae': 15.178, 'rmse': 31.239, 'r2': 0.356, 'spearman': 0.783, 'total_bias_pct': -32.599}
+baseline_mean {'n': 2525, 'mae': 22.111, 'rmse': 36.382, 'r2': 0.127, 'spearman': 0.402, 'total_bias_pct': -17.899}
+baseline_hazard_only {'n': 2525, 'mae': 17.281, 'rmse': 35.442, 'r2': 0.171, 'spearman': 0.705, 'total_bias_pct': -42.78}
+{
+"2021": {
+"pred_total_usd": 1425840986.4901454,
+"lo": 1215809933.9575233,
+"hi": 1826813148.8574364,
+"actual_total_usd": 1294371083.69
+},
+"2022": {
+"pred_total_usd": 2120574319.1640797,
+"lo": 1768522252.649554,
+"hi": 2870062622.3295197,
+"actual_total_usd": 3736831475.96
+},
+"2023": {
+"pred_total_usd": 2160256916.205615,
+"lo": 1776685385.8029397,
+"hi": 2906545872.332805,
+"actual_total_usd": 4169084689.9500003
+},
+"2024": {
+"pred_total_usd": 1119194854.0864105,
+"lo": 877268155.6599962,
+"hi": 1405698792.943211,
+"actual_total_usd": 927033735.1800001
+}
+}

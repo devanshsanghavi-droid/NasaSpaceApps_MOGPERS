@@ -16,6 +16,7 @@ Outputs: model/outputs/county_sim.parquet, model/outputs/sim_county_crop.parquet
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import pickle
 import sys
@@ -151,6 +152,14 @@ def main(B=100, B_future=30):
         t = point.add_prefix(f"{which}_").join(lo.add_prefix(f"{which}_").add_suffix("_lo")).join(
             hi.add_prefix(f"{which}_").add_suffix("_hi"))
         cs.append(t)
+    # region / state totals per bootstrap draw (for correctly correlated intervals on totals)
+    st_of = data.drop_duplicates("fips").set_index("fips").state_abbr
+    tot = []
+    for b in range(B + 1):
+        m = allstats[b][0]["mean"]
+        v = (m * acres_pr.reindex(m.index)).groupby(st_of.reindex(m.index)).sum()
+        tot.append(pd.DataFrame({"boot": b, "state": v.index, "expected_usd": v.to_numpy()}))
+    pd.concat(tot).to_parquet(OUT / "sim_totals_boot.parquet", index=False)
     county = cs[0].join(cs[1], how="left")
     county.index.name = "fips"
     county = county.reset_index()
@@ -159,7 +168,27 @@ def main(B=100, B_future=30):
     pr0.reset_index().to_parquet(OUT / "sim_principal_by_year.parquet", index=False)
     print(f"historical sim done {time.time() - t0:.0f}s", flush=True)
 
-    # ------------------------------------------------------------ 2045
+    # county attributes
+    pr_rc = rc.groupby("fips")[["liab_recent", "acres_recent", "prem_recent", "subs_recent"]].sum()
+    pr_rc["liab_per_ac"] = pr_rc.liab_recent / pr_rc.acres_recent
+    pr_rc["subsidy_share"] = pr_rc.subs_recent / pr_rc.prem_recent
+    county = county.merge(pr_rc.reset_index(), on="fips", how="left")
+    county.to_parquet(OUT / "county_sim_hist.parquet", index=False)
+    hist_means = [(s_[0]["mean"], s_[1]["mean"]) for s_ in allstats]
+    with gzip.open(OUT / "sim_state.pkl.gz", "wb", compresslevel=6) as fh:  # ~40 MB; regenerable, do not commit
+        pickle.dump({"cfg": cfg, "models": models, "sf": sf, "acres_pr": acres_pr, "hist_means": hist_means}, fh)
+    print(f"historical done {time.time() - t0:.0f}s; counties={len(county)}", flush=True)
+    future(B_future)
+
+
+def future(B_future=30):
+    """2045 simulation with the saved bootstrap models (re-runnable when more CMIP6 GCMs land)."""
+    t0 = time.time()
+    with gzip.open(OUT / "sim_state.pkl.gz", "rb") as fh:
+        st_ = pickle.load(fh)
+    cfg, models, sf, acres_pr, hist_means = st_["cfg"], st_["models"], st_["sf"], st_["acres_pr"], st_["hist_means"]
+    feat = pd.read_parquet(OUT / "hazard_features.parquet")
+    county = pd.read_parquet(OUT / "county_sim_hist.parquet")
     fut_rows = []
     dp = PROC / "cmip6_deltas.parquet"
     if dp.exists():
@@ -174,32 +203,34 @@ def main(B=100, B_future=30):
         cs_obs["clim_prcp_jja_mm"] = bs.loc[cs_obs.cell_id, "prcp_jja_mm_mu"].to_numpy()
         dj = daily_jja_arrays(daily)
         sub = models[:1] + models[1:B_future + 1]
-        hist_stats = {}
+        hcols = [c for c in feat.columns if c not in ("fips", "year", "cell_id")]
+        base = sf.drop(columns=[c for c in hcols if c in sf.columns])
+        feat_shift = []
         for (gcm, scen), dg in deltas.groupby(["gcm", "scenario"]):
             dd = dg.set_index("fips")
             fs = perturb_county_season(cs_obs, dd, emu, daily_jja=dj)
             fz = standardise(fs, bs)
             fz = fz[fz.fips.isin(dd.index)]
             ff = fz.rename(columns={"year": "hazard_year"})
-            hcols = [c for c in feat.columns if c not in ("fips", "year", "cell_id")]
-            base = sf.drop(columns=[c for c in hcols if c in sf.columns])
             sff = base.merge(ff[["fips", "hazard_year"] + [c for c in hcols if c in ff.columns]],
                              on=["fips", "hazard_year"], how="inner")
-            for bi, (m, st) in enumerate(sub):
-                lf = predict_rows(cfg, m, st, sff)
+            fsum = ff.groupby("fips")[["hazard_z", "edd30_jja", "spi_jja", "gwetroot_jja", "vpd_jja_kpa"]].mean()
+            feat_shift.append(fsum.assign(gcm=gcm, scenario=scen).reset_index())
+            for bi, (m, stt) in enumerate(sub):
+                lf = predict_rows(cfg, m, stt, sff)
                 pr_ac, corn = summarise(sff, lf, acres_pr)
                 fut_rows.append(pd.DataFrame({"fips": pr_ac.index, "gcm": gcm, "scenario": scen, "boot": bi,
-                                              "principal_mean": pr_ac.mean(1).to_numpy(),
+                                              "principal_mean": pr_ac.mean(axis=1).to_numpy(),
                                               "principal_p90": np.percentile(pr_ac.to_numpy(), 90, axis=1),
-                                              "corn_mean": corn.mean(1).reindex(pr_ac.index).to_numpy()}))
+                                              "corn_mean": corn.mean(axis=1).reindex(pr_ac.index).to_numpy()}))
             print(f"  {gcm} {scen} done {time.time() - t0:.0f}s", flush=True)
+        pd.concat(feat_shift).to_parquet(OUT / "sim_future_features.parquet", index=False)
         fut = pd.concat(fut_rows, ignore_index=True)
-        # matching historical (same bootstrap models) for change ratios
         hist = []
         for bi in range(len(sub)):
-            s = allstats[bi]
-            hist.append(pd.DataFrame({"fips": s[0].index, "boot": bi, "hist_principal_mean": s[0]["mean"].to_numpy(),
-                                      "hist_corn_mean": s[1]["mean"].reindex(s[0].index).to_numpy()}))
+            hp, hc = hist_means[bi]
+            hist.append(pd.DataFrame({"fips": hp.index, "boot": bi, "hist_principal_mean": hp.to_numpy(),
+                                      "hist_corn_mean": hc.reindex(hp.index).to_numpy()}))
         fut = fut.merge(pd.concat(hist), on=["fips", "boot"], how="left")
         fut.to_parquet(OUT / "sim_future.parquet", index=False)
         for scen, g in fut.groupby("scenario"):
@@ -213,20 +244,17 @@ def main(B=100, B_future=30):
             county = county.merge(pd.DataFrame({
                 f"corn_2045_{scen}": c0, f"corn_2045_{scen}_lo": callv.quantile(0.05),
                 f"corn_2045_{scen}_hi": callv.quantile(0.95)}).reset_index(), on="fips", how="left")
+        county["n_gcms"] = deltas.gcm.nunique()
     else:
         print("[warn] cmip6_deltas.parquet missing: 2045 fields will be null")
-    # county attributes
-    pr_rc = rc.groupby("fips")[["liab_recent", "acres_recent", "prem_recent", "subs_recent"]].sum()
-    pr_rc["liab_per_ac"] = pr_rc.liab_recent / pr_rc.acres_recent
-    pr_rc["subsidy_share"] = pr_rc.subs_recent / pr_rc.prem_recent
-    county = county.merge(pr_rc.reset_index(), on="fips", how="left")
     county.to_parquet(OUT / "county_sim.parquet", index=False)
-    print(f"done {time.time() - t0:.0f}s; counties={len(county)}")
+    print(f"future done {time.time() - t0:.0f}s")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--B", type=int, default=100)
     ap.add_argument("--B_future", type=int, default=30)
+    ap.add_argument("--future-only", action="store_true")
     a = ap.parse_args()
-    main(a.B, a.B_future)
+    future(a.B_future) if a.future_only else main(a.B, a.B_future)

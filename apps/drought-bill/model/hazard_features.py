@@ -204,11 +204,14 @@ def fit_wetness_emulator(cy_obs, bs):
 def perturb_county_season(cs_obs, deltas, emu, daily_jja=None):
     """Future seasonal aggregates per county-year by the delta method.
 
-    cs_obs: observed county-season table (fips, year, cell_id, seasonal aggregates).
-    deltas: DataFrame indexed by fips with d_prcp_jja_pct, d_tmax_jja_c, d_tmin_jja_c, d_vpd_jja and, if present,
-            d_prcp_mj_pct / d_tmax_mj_c etc. Missing month-specific deltas fall back to the JJA delta for temperature
-            and to NO change for May-June precipitation (documented).
-    daily_jja: dict with arrays to recompute EDD from shifted daily Tmax/Tmin (preserves the daily distribution).
+    cs_obs: observed county-season table (fips, year, cell_id, seasonal aggregates, clim_prcp_mj_mm, clim_prcp_jja_mm).
+    deltas: DataFrame indexed by fips with NEX-GDDP-CMIP6 changes: d_prcp_{jun,jul,aug}_pct (else d_prcp_jja_pct),
+            d_tmax_{jun,jul,aug}_c / d_tmin_..._c (else the JJA deltas), d_vpd_jja (may be NaN).
+    Choices (documented in notes/model.md): monthly precipitation sums are scaled by the monthly delta (exact for a
+    multiplicative delta); May has no CMIP6 delta here, so May precipitation is unchanged and May-June totals change
+    only through June; daily Tmax/Tmin are shifted by the monthly deltas and EDD is recomputed from the daily values;
+    VPD uses the CMIP6 delta if present, else constant relative humidity; root-zone wetness is shifted with the
+    within-cell emulator fitted to NASA POWER.
     """
     f = cs_obs.copy()
     D = deltas.reindex(f.fips.to_numpy())
@@ -217,45 +220,36 @@ def perturb_county_season(cs_obs, deltas, emu, daily_jja=None):
     for mname in ["jun", "jul", "aug"]:
         col = f"d_prcp_{mname}_pct"
         fac[mname] = 1 + (D[col].to_numpy() / 100.0 if col in D else dp_jja)
-    if "d_prcp_mj_pct" in D:
-        fac_mj = 1 + D["d_prcp_mj_pct"].to_numpy() / 100.0
-    elif "d_prcp_may_pct" in D and "d_prcp_jun_pct" in D:
-        fac_mj = None
-    else:
-        fac_mj = np.ones(len(f))
-    # precipitation sums scale exactly under a multiplicative monthly delta
-    pj, pl, pa = (f.prcp_jun_mm.to_numpy() * fac["jun"], f.prcp_jul_mm.to_numpy() * fac["jul"],
-                  f.prcp_aug_mm.to_numpy() * fac["aug"])
-    if fac_mj is None:
-        pmj = f.prcp_may_mm.to_numpy() * (1 + D["d_prcp_may_pct"].to_numpy() / 100) + pj
-    else:
-        pmj = f.prcp_mj_mm.to_numpy() * fac_mj
-    new = {
-        "prcp_jun_mm": pj, "prcp_jul_mm": pl, "prcp_aug_mm": pa, "prcp_jja_mm": pj + pl + pa, "prcp_mj_mm": pmj,
-    }
+    pj_obs = f.prcp_jun_mm.to_numpy()
+    pj, pl, pa = pj_obs * fac["jun"], f.prcp_jul_mm.to_numpy() * fac["jul"], f.prcp_aug_mm.to_numpy() * fac["aug"]
+    pmj = f.prcp_mj_mm.to_numpy() - pj_obs + pj
+    new = {"prcp_jun_mm": pj, "prcp_jul_mm": pl, "prcp_aug_mm": pa, "prcp_jja_mm": pj + pl + pa, "prcp_mj_mm": pmj}
     dtx = D["d_tmax_jja_c"].to_numpy()
     dtn = D["d_tmin_jja_c"].to_numpy() if "d_tmin_jja_c" in D else dtx
-    dtx_mj = D["d_tmax_mj_c"].to_numpy() if "d_tmax_mj_c" in D else dtx
+    dtx_mj = D["d_tmax_jun_c"].to_numpy() if "d_tmax_jun_c" in D else dtx  # June delta for May-June Tmax
     new["tmax_jja_c"] = f.tmax_jja_c.to_numpy() + dtx
+    new["tmin_jja_c"] = f.tmin_jja_c.to_numpy() + dtn
     new["tmax_mj_c"] = f.tmax_mj_c.to_numpy() + dtx_mj
     dv = D["d_vpd_jja"].to_numpy() if "d_vpd_jja" in D else np.full(len(f), np.nan)
-    new["vpd_jja_kpa"] = f.vpd_jja_kpa.to_numpy() + np.nan_to_num(dv, nan=0.0)
-    # EDD: shift daily Tmax/Tmin and recompute the sine degree-days
+    tx, tn = f.tmax_jja_c.to_numpy(), f.tmin_jja_c.to_numpy()
+    ratio = (es_kpa(tx + dtx) + es_kpa(tn + dtn)) / (es_kpa(tx) + es_kpa(tn))
+    new["vpd_jja_kpa"] = np.where(np.isfinite(dv), f.vpd_jja_kpa.to_numpy() + np.nan_to_num(dv),
+                                  f.vpd_jja_kpa.to_numpy() * ratio)
     if daily_jja is not None:
-        new["edd30_jja"], new["edd30_jul"] = shifted_edd(daily_jja, f, dtx, dtn)
+        mx = np.column_stack([D[f"d_tmax_{m}_c"].to_numpy() if f"d_tmax_{m}_c" in D else dtx
+                              for m in ("jun", "jul", "aug")])
+        mn = np.column_stack([D[f"d_tmin_{m}_c"].to_numpy() if f"d_tmin_{m}_c" in D else dtn
+                              for m in ("jun", "jul", "aug")])
+        new["edd30_jja"], new["edd30_jul"] = shifted_edd(daily_jja, f, mx, mn)
     else:
         d_edd = D["d_edd30_jja"].to_numpy()
         new["edd30_jja"] = f.edd30_jja.to_numpy() + d_edd
         new["edd30_jul"] = f.edd30_jul.to_numpy() + d_edd / 3
     for k, v in new.items():
         f[k] = v
-    # root-zone wetness via the emulator (fractional precip change relative to that year's observed value is
-    # converted to a change in fraction-of-climatology units using the observed base mean)
-    base_mj = cs_obs.prcp_mj_mm.to_numpy()
-    base_jja = cs_obs.prcp_jja_mm.to_numpy()
     dx = {
-        "prcp_mj_frac": (pmj - base_mj) / cs_obs["clim_prcp_mj_mm"].to_numpy(),
-        "prcp_jja_frac": (new["prcp_jja_mm"] - base_jja) / cs_obs["clim_prcp_jja_mm"].to_numpy(),
+        "prcp_mj_frac": (pmj - cs_obs.prcp_mj_mm.to_numpy()) / cs_obs["clim_prcp_mj_mm"].to_numpy(),
+        "prcp_jja_frac": (new["prcp_jja_mm"] - cs_obs.prcp_jja_mm.to_numpy()) / cs_obs["clim_prcp_jja_mm"].to_numpy(),
         "tmax_jja_anom": dtx,
         "tmax_mj_anom": dtx_mj,
     }
@@ -279,8 +273,9 @@ def daily_jja_arrays(daily):
             "year": first.year.to_numpy(), "month": first.month.to_numpy()}
 
 
-def shifted_edd(dj, f, dtx, dtn):
-    """EDD30 Jun-Aug and July for each county-year row of f after shifting daily Tmax/Tmin by the county deltas."""
+def shifted_edd(dj, f, dtx_m, dtn_m):
+    """EDD30 Jun-Aug and July for each county-year row of f after shifting daily Tmax/Tmin by the county's monthly
+    (Jun, Jul, Aug) deltas; dtx_m / dtn_m have shape (rows, 3)."""
     yrs = np.unique(dj["year"])
     yidx = {y: i for i, y in enumerate(yrs)}
     out_jja = np.full(len(f), np.nan)
@@ -288,15 +283,17 @@ def shifted_edd(dj, f, dtx, dtn):
     fips = f.fips.to_numpy()
     cell = f.cell_id.to_numpy()
     year = f.year.to_numpy()
+    mi = dj["month"] - 6
     jul = dj["month"] == 7
+    ypos = np.searchsorted(yrs, dj["year"])
     cache = {}
     for i in range(len(f)):
         key = fips[i]
         if key not in cache:
             ci = dj["cells"][cell[i]]
-            e = sine_dd_above(dj["tmin"][ci] + dtn[i], dj["tmax"][ci] + dtx[i], 30.0)
-            sj = np.bincount(np.searchsorted(yrs, dj["year"]), weights=e, minlength=len(yrs))
-            sl = np.bincount(np.searchsorted(yrs, dj["year"][jul]), weights=e[jul], minlength=len(yrs))
+            e = sine_dd_above(dj["tmin"][ci] + dtn_m[i][mi], dj["tmax"][ci] + dtx_m[i][mi], 30.0)
+            sj = np.bincount(ypos, weights=e, minlength=len(yrs))
+            sl = np.bincount(ypos[jul], weights=e[jul], minlength=len(yrs))
             cache[key] = (sj, sl)
         sj, sl = cache[key]
         out_jja[i] = sj[yidx[year[i]]]

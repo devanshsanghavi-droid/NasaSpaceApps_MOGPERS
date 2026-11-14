@@ -58,6 +58,13 @@ CANDIDATES += [  # second batch, added after batch 1 (still CV inside 2001-2020 
     {"name": "ratio_haz_static_a1", "kind": "ratio", "hazard": "full", "static": True, "k": 5.0, "alpha_r": 1.0},
     {"name": "ratio_haz_static_a05", "kind": "ratio", "hazard": "full", "static": True, "k": 5.0, "alpha_r": 0.5},
 ]
+CANDIDATES += [  # third (last) batch: batch 2 showed lower Tweedie power and the shrunk ratio factor both help
+    {"name": "lgb_haz_static_tvp11", "kind": "lgb", "hazard": "full", "static": True, "tvp": 1.1},
+    {"name": "ratio_haz_static_a05_tvp12", "kind": "ratio", "hazard": "full", "static": True, "k": 5.0,
+     "alpha_r": 0.5, "tvp": 1.2},
+    {"name": "ratio_haz_static_a03_tvp12", "kind": "ratio", "hazard": "full", "static": True, "k": 5.0,
+     "alpha_r": 0.3, "tvp": 1.2},
+]
 ABLATIONS = [  # reported, never used for selection of the headline model
     {"name": "ablation_plus_usdm", "kind": "lgb", "hazard": "full", "static": True, "usdm": True},
 ]
@@ -300,9 +307,69 @@ def stage_test(B=100):
     print(json.dumps(out["by_year"], indent=0))
 
 
+def stage_ablation():
+    """Ablations of the SELECTED model, reported only (never used for selection): + MODIS NDVI/VCI (in-season,
+    outcome-like, so not usable for the climatological bill), + USDM (non-NASA comparison), JJA-only hazard features
+    (drops the May-June features), and hazard-only features. Each is scored by LOYO CV in 2001-2020 and on the
+    2021-2024 test years."""
+    from hazard_features import HAZARD_FEATURES
+    import lossmodel as LM
+    cfgs = json.load(open(OUT / "model_config.json"))
+    main = cfgs["main"]
+    data = load_crop_panel()
+    years = list(range(2001, TRAIN_END + 1))
+    jja_only = [f for f in HAZARD_FEATURES if not any(k in f for k in ("_mj", "mjja"))]
+    variants = {
+        "selected": dict(main),
+        "selected_plus_modis": {**main, "modis": True},
+        "selected_plus_usdm": {**main, "usdm": True},
+        "selected_jja_only_hazard": {**main, "hazard": "jja_only"},
+        "selected_no_static": {**main, "static": False},
+    }
+    orig = LM.feature_list
+
+    def fl(cfg):
+        f = orig({**cfg, "hazard": "full"} if cfg.get("hazard") == "jja_only" else cfg)
+        if cfg.get("hazard") == "jja_only":
+            f = [x for x in f if x not in HAZARD_FEATURES or x in jja_only]
+        return f
+    LM.feature_list = fl
+    train = data[data.year <= TRAIN_END]
+    test = data[data.year.isin(TEST_YEARS)]
+    out = {"note": "MODIS rows exist 2001-2025; rows with missing MODIS are left to LightGBM's missing-value handling.",
+           "jja_only_features": jja_only, "variants": {}}
+    for nm, cfg in variants.items():
+        oof = loyo(cfg, data, years)
+        pc = to_principal(oof)
+        cvm = county_metrics(pc)
+        cvm["year_total_median_ape"] = float(year_totals(pc).ape.median())
+        p, _ = fit_predict(cfg, train, test)
+        pt = to_principal(test.assign(pred=p))
+        tm = county_metrics(pt)
+        tm["by_year_totals_musd"] = {int(y): [round(g.pred_usd.sum() / 1e6, 1), round(g.actual_usd.sum() / 1e6, 1)]
+                                     for y, g in pt.groupby("year")}
+        out["variants"][nm] = {"cfg": cfg, "cv_2001_2020": cvm, "test_2021_2024": tm}
+        print(nm, "cv rmse", round(cvm["rmse"], 3), "test rmse", round(tm["rmse"], 3), tm["by_year_totals_musd"],
+              flush=True)
+    # MODIS vs NASA POWER hazard agreement (independent satellite check of the hazard signal)
+    pp = pd.read_parquet(OUT / "panel.parquet")
+    pp = pp[(pp.crop == "principal") & pp.vci_jul_aug.notna() & (pp.year <= 2024)]
+    out["modis_vs_hazard"] = {
+        "n": int(len(pp)),
+        "spearman_vci_vs_hazard_z": float(stats.spearmanr(pp.vci_jul_aug, pp.hazard_z).correlation),
+        "spearman_vci_vs_hazard_z_mjja": float(stats.spearmanr(pp.vci_jul_aug, pp.hazard_z_mjja).correlation),
+        "spearman_vci_vs_lcr_drought": float(stats.spearmanr(pp.vci_jul_aug, pp.lcr_drought.fillna(0)).correlation),
+        "spearman_hazard_z_vs_lcr_drought": float(stats.spearmanr(pp.hazard_z, pp.lcr_drought.fillna(0)).correlation),
+    }
+    save_json(out, OUT / "ablations.json", 1)
+    v = json.load(open(OUT / "validation.json"))
+    v["ablations"] = out
+    save_json(v, OUT / "validation.json", 1)
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", choices=["cv", "test"], required=True)
+    ap.add_argument("--stage", choices=["cv", "test", "ablation"], required=True)
     ap.add_argument("--B", type=int, default=100)
     a = ap.parse_args()
-    stage_cv() if a.stage == "cv" else stage_test(a.B)
+    {"cv": stage_cv, "test": lambda: stage_test(a.B), "ablation": stage_ablation}[a.stage]()

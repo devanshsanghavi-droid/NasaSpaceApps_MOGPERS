@@ -301,7 +301,7 @@ def compute():
     out = []
     for scen in ("ssp245", "ssp585"):
         fut = pm[pm.scenario == scen].set_index(["fips", "gcm"])
-        j = fut.join(hist, rsuffix="_h", how="inner")
+        j = fut.merge(hist, left_index=True, right_index=True, suffixes=("", "_h"), how="inner")
         if j.empty:
             continue
         d = pd.DataFrame(index=j.index)

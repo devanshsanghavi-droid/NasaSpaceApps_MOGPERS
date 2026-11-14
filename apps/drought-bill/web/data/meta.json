@@ -1,0 +1,109 @@
+{
+ "generated_at": "2026-11-14T23:00:05+00:00",
+ "mock": false,
+ "region": {
+  "states": [
+   "IA",
+   "NE",
+   "KS",
+   "MO",
+   "IL",
+   "SD",
+   "MN"
+  ]
+ },
+ "data_sources": [
+  {
+   "name": "NASA POWER daily (MERRA-2 bias-corrected precipitation, temperature, root-zone soil wetness)",
+   "nasa": true,
+   "role": "Drought hazard features for every county and year 1981-2025 (the model's inputs)",
+   "url": "https://power.larc.nasa.gov/"
+  },
+  {
+   "name": "NASA NEX-GDDP-CMIP6 (via Microsoft Planetary Computer)",
+   "nasa": true,
+   "role": "2045 climate shift (2035-2054 vs 1995-2014 deltas)",
+   "url": "https://planetarycomputer.microsoft.com/dataset/nasa-nex-gddp-cmip6"
+  },
+  {
+   "name": "NASA MODIS MOD13Q1 NDVI (via Microsoft Planetary Computer)",
+   "nasa": true,
+   "role": "Independent check and ablation of the hazard signal (not used in the headline model)",
+   "url": "https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061"
+  },
+  {
+   "name": "USDA RMA Cause of Loss and Summary of Business",
+   "nasa": false,
+   "role": "Insured drought losses, liability, premiums and subsidies (the outcome)",
+   "url": "https://www.rma.usda.gov/tools-reports/summary-of-business"
+  },
+  {
+   "name": "USDA NASS Cropland Data Layer",
+   "nasa": false,
+   "role": "Crop-rotation diversity",
+   "url": "https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php"
+  },
+  {
+   "name": "USDA NRCS SSURGO (Soil Data Access)",
+   "nasa": false,
+   "role": "Soil available water storage",
+   "url": "https://sdmdataaccess.sc.egov.usda.gov/"
+  },
+  {
+   "name": "USDA NASS Census of Agriculture 2017/2022",
+   "nasa": false,
+   "role": "Irrigated share",
+   "url": "https://www.nass.usda.gov/AgCensus/"
+  },
+  {
+   "name": "US Drought Monitor",
+   "nasa": false,
+   "role": "Comparison only (ablation); not used in the headline model",
+   "url": "https://droughtmonitor.unl.edu/"
+  },
+  {
+   "name": "US Census cartographic boundaries 2023",
+   "nasa": false,
+   "role": "County shapes",
+   "url": "https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html"
+  }
+ ],
+ "caveats": [
+  "Dollars are nominal; the expected bill uses each county's 2020-2024 average liability per insured acre, so it reflects 2020-2024 crop prices.",
+  "Principal crops only (corn, soybeans, wheat, sorghum). RMA 'all crops' totals include rainfall-index pasture acres and other crops and are not used.",
+  "Drought = RMA cause-of-loss code 11 only; heat, hot wind and area-plan (SCO/ECO) payouts are excluded, so the drought bill is a lower bound of weather-driven losses.",
+  "RMA 2025 data are provisional and are not used for training, testing or the bill.",
+  "NASA POWER weather is on a ~50 km MERRA-2 grid; counties in the same cell share weather.",
+  "Out-of-time test: trained 2001-2020, tested 2021-2024. Intervals are bootstrap parameter intervals, not full predictive intervals (see hindcast.json for their coverage).",
+  "Taxpayer share is an actuarial approximation (subsidy share x expected losses); it excludes delivery (A&O) reimbursements and underwriting gains.",
+  "Rotation diversity: county insurance data show no robust drought-protection effect of rotation diversity; the slider uses the field-trial range (Bowles et al. 2020) as a labelled scenario.",
+  "2045: NEX-GDDP-CMIP6 deltas from 3 GCM(s) (ACCESS-CM2, GFDL-ESM4, MPI-ESM1-2-HR; 10 sampled years per 20-year period) applied to observed 1981-2024 NASA POWER weather (delta method; root-zone wetness shifted with an emulator fitted to NASA POWER; year-to-year variability held at today's). The rise is driven mostly by more extreme heat (EDD > 30 C); the loss model learned heat effects from years when heat came with drought, so the size of the rise is uncertain and the GCM spread is wide. No adaptation is assumed.",
+  "Precipitation is NASA POWER (MERRA-2), not GPM IMERG: the IMERG host was not reachable from the build environment."
+ ],
+ "validation": {
+  "model": {
+   "n": 2525,
+   "mae": 15.178107834108445,
+   "rmse": 31.238608391257287,
+   "r2": 0.35605524936470745,
+   "spearman": 0.7833220293969625,
+   "total_bias_pct": -32.59947930746335
+  },
+  "baseline_mean": {
+   "n": 2525,
+   "mae": 22.11148078118178,
+   "rmse": 36.382204549696304,
+   "r2": 0.12653949561110978,
+   "spearman": 0.40173173722935696,
+   "total_bias_pct": -17.89913619095699
+  },
+  "baseline_hazard_only": {
+   "n": 2525,
+   "mae": 17.280972070703463,
+   "rmse": 35.44211989646038,
+   "r2": 0.17109524601540327,
+   "spearman": 0.7051372286432236,
+   "total_bias_pct": -42.780429151046256
+  }
+ }
+}

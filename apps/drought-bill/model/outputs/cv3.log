@@ -1,0 +1,4 @@
+lgb_haz_static_tvp11             rmse=16.719 mae=6.410 r2=0.703 sp=0.763 wy_sp=0.651 yrAPE_med=34.9 bias=-11.3 corn_rmse=27.654 (14.8s)
+ratio_haz_static_a05_tvp12       rmse=15.753 mae=6.223 r2=0.736 sp=0.773 wy_sp=0.669 yrAPE_med=37.3 bias=-5.5 corn_rmse=25.749 (82.8s)
+ratio_haz_static_a03_tvp12       rmse=15.908 mae=6.237 r2=0.731 sp=0.772 wy_sp=0.667 yrAPE_med=36.9 bias=-8.7 corn_rmse=26.198 (81.2s)
+selected: ratio_haz_static_a05_tvp12

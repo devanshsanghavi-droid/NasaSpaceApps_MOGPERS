@@ -43,11 +43,8 @@ def load():
     c = cdl[["fips", "year"] + keep]
     lag = c.assign(year=c.year + 1).add_suffix("_lag").rename(columns={"fips_lag": "fips", "year_lag": "year"})
     cur = c.add_suffix("_cur").rename(columns={"fips_cur": "fips", "year_cur": "year"})
-    lead = c[["fips", "year", "div_shannon_5y"]].assign(year=c.year - 5).rename(
-        columns={"div_shannon_5y": "div_shannon_5y_lead5"})
     d = p[(p.year <= 2024) & (p.liability_usd > 0)].copy()
-    d = d.merge(lag, on=["fips", "year"], how="left").merge(cur, on=["fips", "year"], how="left").merge(
-        lead, on=["fips", "year"], how="left")
+    d = d.merge(lag, on=["fips", "year"], how="left").merge(cur, on=["fips", "year"], how="left")
     lpa = d[d.crop != "principal"].groupby("year").apply(lambda g: g.liability_usd.sum() / g.insured_acres.sum())
     d["w"] = d.liability_usd / d.year.map(lpa)
     d["lcr"] = d.lcr_drought.clip(lower=0)
@@ -247,267 +244,321 @@ def dml(d, y="lcr", D="div_shannon_5y_lag", mundlak=False, forest=False):
 
 
 # ------------------------------------------------------------------ main
-def main():
-    d0 = load()
-    res = {"question": "Does higher rotation diversity (CDL 5-yr Shannon, window ending t-1) reduce drought loss "
-                       "cost (RMA drought indemnity / liability) in county x year data?",
-           "treatment": "div_shannon_5y of the CDL window ending t-1 (mean per-pixel Shannon entropy of crop classes)",
-           "hazard": "NASA POWER hazard_z (JJA composite; z of -SPI, EDD>30C, -root-zone wetness)",
-           "bowles_2020": BOWLES}
-    corn = d0[(d0.crop == "corn") & (d0.insured_acres >= 1000)].copy()
-    corn = corn[corn.div_shannon_5y_lag.notna() & (corn.n_px_lag >= 500)]
-    mu_D = corn.div_shannon_5y_lag.mean()
-    for dd in (corn,):
-        dd["Dc"] = dd.div_shannon_5y_lag - mu_D
-    corn["aws_c"] = (corn.aws0_150_mm - 236) / 47
-    corn["clim_prcp_c"] = (corn.clim_prcp_jja_mm - corn.clim_prcp_jja_mm.mean()) / corn.clim_prcp_jja_mm.std()
-    corn["clim_edd_c"] = (corn.clim_edd30_jja - corn.clim_edd30_jja.mean()) / corn.clim_edd30_jja.std()
+TREATMENTS = {  # primary first (CDL module guidance: Shannon rewards evenness, so a clean corn-soy alternation
+    # scores 0.673 and the "how many crops" measures match Bowles' 2-crop vs 3-5 crop contrast better)
+    "share_3plus": {"col": "share_3plus", "unit": "share of cropland pixels with >= 3 crop classes in the 5-yr window",
+                    "per": 0.1, "per_label": "+10 percentage points of cropland in 3+ crop rotations"},
+    "n_crops_5y": {"col": "n_crops_5y", "unit": "mean distinct crop classes per pixel in the 5-yr window",
+                   "per": 0.1, "per_label": "+0.1 crops per pixel"},
+    "div_shannon_5y": {"col": "div_shannon_5y", "unit": "mean per-pixel Shannon entropy (5-yr window)",
+                       "per": 0.1, "per_label": "+0.1 Shannon"},
+}
+PRIMARY = "share_3plus"
 
-    # ---------------- descriptives / confounding
-    cm = corn.groupby("fips").agg(D=("div_shannon_5y_lag", "mean"), lcr=("lcr", "mean"), aws=("aws0_150_mm", "first"),
+
+def prep(d0, crop, min_acres, col, lagname="lag"):
+    d = d0[(d0.crop == crop) & (d0.insured_acres >= min_acres)].copy()
+    d = d[d[f"{col}_{lagname}"].notna() & (d[f"n_px_{lagname}"] >= 500)]
+    d["Draw"] = d[f"{col}_{lagname}"]
+    d["Dc"] = d.Draw - d.Draw.mean()
+    d["corn_share_lag"] = d[f"corn_share_{lagname}"]
+    d["aws_c"] = (d.aws0_150_mm - 236) / 47
+    d["clim_prcp_c"] = (d.clim_prcp_jja_mm - d.clim_prcp_jja_mm.mean()) / d.clim_prcp_jja_mm.std()
+    d["clim_edd_c"] = (d.clim_edd30_jja - d.clim_edd30_jja.mean()) / d.clim_edd30_jja.std()
+    return d
+
+
+def describe(corn):
+    cm = corn.groupby("fips").agg(D=("Draw", "mean"), lcr=("lcr", "mean"), aws=("aws0_150_mm", "first"),
                                   irr=("irr", "mean"), clim_prcp=("clim_prcp_jja_mm", "first"),
                                   clim_edd=("clim_edd30_jja", "first"), lon=("lon", "first"),
-                                  state=("state_abbr", "first"), H=("H", "mean"))
-    sp = lambda a, b: float(stats.spearmanr(cm[a], cm[b]).correlation)  # noqa: E731
-    within = corn.div_shannon_5y_lag - corn.groupby("fips").div_shannon_5y_lag.transform("mean")
-    res["descriptives"] = {
+                                  state=("state_abbr", "first"), H=("H", "mean"), cc=("share_cont_corn_lag", "mean"),
+                                  cs=("corn_share_lag", "mean"))
+    sp = lambda a, b: float(stats.spearmanr(cm[a], cm[b], nan_policy="omit").correlation)  # noqa: E731
+    within = corn.Draw - corn.groupby("fips").Draw.transform("mean")
+    hi = corn[corn.H > HIGH]
+    return {
         "n_county_years": int(len(corn)), "n_counties": int(corn.fips.nunique()),
         "years": [int(corn.year.min()), int(corn.year.max())],
-        "D_mean": float(mu_D), "D_sd_total": float(corn.div_shannon_5y_lag.std()),
+        "D_mean": float(corn.Draw.mean()), "D_sd_total": float(corn.Draw.std()),
         "D_sd_between_counties": float(cm.D.std()), "D_sd_within_county": float(within.std()),
-        "D_within_share_of_variance": float(within.var() / corn.div_shannon_5y_lag.var()),
-        "D_p10_p50_p90": [float(x) for x in corn.div_shannon_5y_lag.quantile([.1, .5, .9])],
+        "D_within_share_of_variance": float(within.var() / corn.Draw.var()),
+        "D_p10_p50_p90": [float(x) for x in corn.Draw.quantile([.1, .5, .9])],
         "spearman_county_means": {"D_vs_mean_corn_lcr": sp("D", "lcr"), "D_vs_aws": sp("D", "aws"),
                                   "D_vs_irrigated_share": sp("D", "irr"), "D_vs_clim_jja_prcp": sp("D", "clim_prcp"),
                                   "D_vs_clim_edd30": sp("D", "clim_edd"), "D_vs_longitude": sp("D", "lon"),
-                                  "D_vs_mean_hazard": sp("D", "H")},
-        "D_by_state": {s: [float(x) for x in g.D.quantile([.1, .5, .9])] for s, g in cm.groupby("state")},
+                                  "D_vs_mean_hazard": sp("D", "H"), "D_vs_corn_share": sp("D", "cs"),
+                                  "D_vs_share_cont_corn": sp("D", "cc")},
+        "D_by_state_p10_p50_p90": {s: [float(x) for x in g.D.quantile([.1, .5, .9])] for s, g in cm.groupby("state")},
         "high_hazard_county_years": int((corn.H > HIGH).sum()),
-        "high_hazard_by_year": {int(k): int(v) for k, v in corn[corn.H > HIGH].groupby("year").size().items()},
+        "high_hazard_by_year": {int(k): int(v) for k, v in hi.groupby("year").size().items()},
+        "raw_spearman_D_lcr_high_hazard_years": float(stats.spearmanr(hi.Draw, hi.lcr).correlation),
     }
-    # pooled raw correlation of D with lcr in high-hazard years, then with controls (no FE)
-    hi = corn[corn.H > HIGH]
-    res["descriptives"]["raw_spearman_D_lcr_high_hazard"] = float(stats.spearmanr(hi.Dc, hi.lcr).correlation)
 
+
+def run_treatment(d0, tname, do_dml=True, forest=False):
+    T = TREATMENTS[tname]
+    col, per = T["col"], T["per"]
+    corn = prep(d0, "corn", 1000, col)
+    out = {"treatment": tname, "unit": T["unit"], "per": per, "per_label": T["per_label"],
+           "descriptives": describe(corn)}
     specs = {}
-    # (1) pooled, state-year FE + controls (between + within variation; confounded by geography)
     specs["ols_stateyearFE_controls"] = interaction_model(corn, fe=("sy",))
-    # (2) county FE + state-year FE (within-county variation only) -- headline
     specs["ols_countyFE_stateyearFE"] = interaction_model(corn)
-    # (3) PPML (proportional effect) with the same FE
     specs["ppml_countyFE_stateyearFE"] = interaction_model(corn, kind="ppml")
     specs["ppml_stateyearFE_controls"] = interaction_model(corn, fe=("sy",), kind="ppml")
-    # (4) spring-inclusive hazard
     specs["ols_countyFE_H_mjja"] = interaction_model(corn, H="H2")
-    # (5) alternative treatments
-    for alt, sign in [("n_crops_5y_lag", 1), ("share_3plus_lag", 1), ("share_cont_corn_lag", 1)]:
-        c2 = corn.copy()
-        c2["Dc"] = c2[alt] - c2[alt].mean()
-        specs[f"ols_countyFE_T_{alt}"] = interaction_model(c2.dropna(subset=["Dc"]))
-    # (6) contemporaneous window (ends in t; includes the crop planted in year t before the summer hazard) adds 2012
-    c3 = d0[(d0.crop == "corn") & (d0.insured_acres >= 1000) & d0.div_shannon_5y_cur.notna()].copy()
-    c3["Dc"] = c3.div_shannon_5y_cur - c3.div_shannon_5y_cur.mean()
-    c3["corn_share_lag"] = c3.corn_share_cur
-    c3["aws_c"] = (c3.aws0_150_mm - 236) / 47
-    specs["ols_countyFE_contemporaneous_D_incl2012"] = interaction_model(c3)
-    specs["ppml_countyFE_contemporaneous_D_incl2012"] = interaction_model(c3, kind="ppml")
-    # (7) principal crops outcome (secondary)
-    pr = d0[(d0.crop == "principal") & (d0.insured_acres >= 2000) & d0.div_shannon_5y_lag.notna()].copy()
-    pr["Dc"] = pr.div_shannon_5y_lag - mu_D
-    pr["aws_c"] = (pr.aws0_150_mm - 236) / 47
-    specs["ols_countyFE_principal_crops"] = interaction_model(pr)
-    # (8) unweighted
     c4 = corn.copy()
     c4["w"] = 1.0
     specs["ols_countyFE_unweighted"] = interaction_model(c4)
-
-    # ---------------- placebos
+    pr = prep(d0, "principal", 2000, col)
+    specs["ols_countyFE_principal_crops"] = interaction_model(pr)
+    c3 = prep(d0, "corn", 1000, col, lagname="cur")
+    specs["ols_countyFE_contemporaneous_window_incl2012"] = interaction_model(c3)
+    # overlap / common support
+    q = corn.groupby("state_abbr").Draw.quantile([0.05, 0.95]).unstack()
+    lo_cs, hi_cs = float(q[0.05].max()), float(q[0.95].min())
+    inside = corn.Draw.between(lo_cs, hi_cs)
+    Xc = sm.add_constant(pd.concat([pd.get_dummies(corn.sy, dtype=float, drop_first=True),
+                                    corn[["aws_c", "irr", "clim_prcp_c", "clim_edd_c", "corn_share_lag"]]], axis=1)
+                         .fillna(0))
+    r2_ctrl = sm.OLS(corn.Draw, Xc).fit().rsquared
+    Xf = sm.add_constant(pd.concat([fe_dummies(corn, ("fips", "sy")), corn[["corn_share_lag"]]], axis=1).fillna(0))
+    r2_fe = sm.OLS(corn.Draw, Xf).fit().rsquared
+    out["overlap"] = {"state_p05_p95": {s: [float(a), float(b)] for s, (a, b) in q.iterrows()},
+                      "common_support_interval": [lo_cs, hi_cs] if lo_cs < hi_cs else None,
+                      "share_rows_inside_by_state": inside.groupby(corn.state_abbr).mean().to_dict(),
+                      "share_rows_inside_total": float(inside.mean()),
+                      "r2_D_on_stateyearFE_and_controls": float(r2_ctrl),
+                      "r2_D_on_countyFE_stateyearFE": float(r2_fe),
+                      "residual_sd_D_after_countyFE": float(np.sqrt(1 - r2_fe) * corn.Draw.std())}
+    if lo_cs < hi_cs and inside.sum() > 500:
+        specs["ols_countyFE_common_support"] = interaction_model(corn[inside].copy())
+    # placebos
     plac = {}
-    # low-hazard years only: D should not matter for drought losses
-    lo = corn[corn.H < LOW].copy()
+    lo = corn[corn.H < LOW]
     m, dd = fe_ols(lo, "lcr", ["Dc", "corn_share_lag"])
     plac["low_hazard_years_D_on_drought_lcr"] = {**coef(m, "Dc"), "n": int(m.nobs),
-                                                 "mean_y": float(np.average(dd.lcr, weights=dd.w))}
-    hi = corn[corn.H > HIGH].copy()
+                                                 "mean_y": float(np.average(dd.lcr, weights=dd.w)),
+                                                 "pct_per_unit": float(100 * per * m.params["Dc"] /
+                                                                       np.average(dd.lcr, weights=dd.w))}
+    hi = corn[corn.H > HIGH]
     m, dd = fe_ols(hi, "lcr", ["Dc", "corn_share_lag"])
-    plac["high_hazard_years_D_on_drought_lcr_(for_contrast)"] = {**coef(m, "Dc"), "n": int(m.nobs),
-                                                                 "mean_y": float(np.average(dd.lcr, weights=dd.w))}
-    # excess-moisture losses
+    plac["high_hazard_years_only_D_on_drought_lcr_(contrast)"] = {**coef(m, "Dc"), "n": int(m.nobs),
+                                                                  "mean_y": float(np.average(dd.lcr, weights=dd.w))}
     o = interaction_model(corn, y="lcr_ex")
     plac["excess_moisture_lcr_interaction_model"] = {k: v for k, v in o.items() if k != "_model"}
-    m, dd = fe_ols(corn, "lcr_ex", ["Dc", "corn_share_lag"])
-    plac["excess_moisture_lcr_D_all_years"] = {**coef(m, "Dc"), "n": int(m.nobs)}
-    # lead test: D of the window t+1..t+5 (disjoint from t-5..t-1) should not predict year-t loss given lagged D
-    c5 = corn[corn.div_shannon_5y_lead5.notna()].copy()
-    c5["Dlead_c"] = c5.div_shannon_5y_lead5 - mu_D
+    c5 = corn.merge(d0[["fips", "year", f"{col}_lead5"]].drop_duplicates(["fips", "year"]), on=["fips", "year"],
+                    how="left") if f"{col}_lead5" not in corn else corn.copy()
+    c5 = c5[c5[f"{col}_lead5"].notna()].copy()
+    c5["Dlead_c"] = c5[f"{col}_lead5"] - corn.Draw.mean()
     c5["DleadH"] = c5.Dlead_c * c5.H
     o = interaction_model(c5, extra=("Dlead_c", "DleadH"))
     plac["lead_test_window_t+1_to_t+5"] = {k: v for k, v in o.items() if k != "_model"}
-    res["placebos"] = plac
-
-    # ---------------- overlap / common support
-    q = corn.groupby("state_abbr").div_shannon_5y_lag.quantile([0.05, 0.95]).unstack()
-    lo_cs, hi_cs = float(q[0.05].max()), float(q[0.95].min())
-    # use states with enough mass: common support = overlap of the central 90% of each state's distribution, but
-    # require at least 25% of the state's rows inside it; otherwise drop the state
-    inside = corn.div_shannon_5y_lag.between(lo_cs, hi_cs)
-    share_in = inside.groupby(corn.state_abbr).mean()
-    res["overlap"] = {"state_p05_p95": {s: [float(a), float(b)] for s, (a, b) in q.iterrows()},
-                      "common_support_interval": [lo_cs, hi_cs], "share_rows_inside_by_state": share_in.to_dict(),
-                      "share_rows_inside_total": float(inside.mean())}
-    if inside.sum() > 500:
-        ct = corn[inside].copy()
-        specs["ols_countyFE_common_support"] = interaction_model(ct)
-    # residual variation of D after controls (how much is left to identify from)
-    Xc = pd.get_dummies(corn.sy, dtype=float, drop_first=True)
-    Xc[["aws_c", "irr", "clim_prcp_c", "clim_edd_c", "corn_share_lag"]] = corn[
-        ["aws_c", "irr", "clim_prcp_c", "clim_edd_c", "corn_share_lag"]]
-    r2_ctrl = sm.OLS(corn.div_shannon_5y_lag, Xc.fillna(0)).fit().rsquared
-    Xf = pd.concat([Xc.iloc[:, :0], fe_dummies(corn, ("fips", "sy")),
-                    Xc[["aws_c", "irr", "clim_prcp_c", "clim_edd_c", "corn_share_lag"]]], axis=1).fillna(0)
-    Xf = sm.add_constant(Xf)
-    Xc = sm.add_constant(Xc)
-    r2_fe = sm.OLS(corn.div_shannon_5y_lag, Xf).fit().rsquared
-    res["overlap"]["r2_D_on_controls_stateyearFE"] = float(r2_ctrl)
-    res["overlap"]["r2_D_on_controls_countyFE"] = float(r2_fe)
-
-    # ---------------- sensitivity (Cinelli-Hazlett) on the headline FE interaction
+    out["placebos"] = plac
+    # sensitivity (Cinelli-Hazlett) on the FE interaction and the pooled interaction
     head = specs["ols_countyFE_stateyearFE"]
-    hm = head["_model"]
-    sens = {"coefficient": "D_x_H (county FE + state-year FE, corn)",
-            **robustness_value(head["t_DH"], head["df_resid"]),
-            "benchmark_H_x_irrigation": benchmark_bound(hm, "DH", "H_irr"),
-            "benchmark_H_x_irrigation_3x": benchmark_bound(hm, "DH", "H_irr", kd=3, ky=3),
-            "benchmark_H_x_aws": benchmark_bound(hm, "DH", "H_aws")}
     pm = specs["ols_stateyearFE_controls"]
-    sens["pooled_spec"] = {"coefficient": "D_x_H (state-year FE + controls, corn)",
-                           **robustness_value(pm["t_DH"], pm["df_resid"]),
-                           "benchmark_irrigation": benchmark_bound(pm["_model"], "DH", "H_irr"),
-                           "benchmark_irrigation_3x": benchmark_bound(pm["_model"], "DH", "H_irr", kd=3, ky=3)}
-    res["sensitivity"] = sens
-
-    # ---------------- DML
-    dmlres = {}
-    for nm, kw in ([] if "--no-dml" in sys.argv else [("linear_dml", {}), ("linear_dml_mundlak", {"mundlak": True}), ("causal_forest_dml", {"forest": True}),
-                   ("causal_forest_dml_mundlak", {"forest": True, "mundlak": True})]):
-        try:
-            dmlres[nm] = dml(corn, **kw)
-            print(nm, {k: v for k, v in dmlres[nm].items() if k in ("high_hazard", "low_hazard")}, flush=True)
-        except Exception as e:  # noqa: BLE001
-            dmlres[nm] = {"error": repr(e)}
-            print(nm, "failed", e)
-    res["dml"] = dmlres
-
-    # ---------------- relative effects, Bowles comparison
+    out["sensitivity"] = {
+        "fe_spec": {"coefficient": "D_x_H (county FE + state-year FE)", **robustness_value(head["t_DH"], head["df_resid"]),
+                    "benchmark_H_x_irrigation_1x": benchmark_bound(head["_model"], "DH", "H_irr"),
+                    "benchmark_H_x_irrigation_3x": benchmark_bound(head["_model"], "DH", "H_irr", kd=3, ky=3),
+                    "benchmark_H_x_aws_1x": benchmark_bound(head["_model"], "DH", "H_aws")},
+        "pooled_spec": {"coefficient": "D_x_H (state-year FE + controls)", **robustness_value(pm["t_DH"], pm["df_resid"]),
+                        "benchmark_H_x_irrigation_1x": benchmark_bound(pm["_model"], "DH", "H_irr"),
+                        "benchmark_H_x_irrigation_3x": benchmark_bound(pm["_model"], "DH", "H_irr", kd=3, ky=3)}}
+    # DML
+    if do_dml:
+        dm = {}
+        runs = [("linear_dml", {}), ("linear_dml_mundlak", {"mundlak": True})]
+        if forest:
+            runs += [("causal_forest_dml", {"forest": True}), ("causal_forest_dml_mundlak", {"forest": True, "mundlak": True})]
+        for nm, kw in runs:
+            try:
+                dm[nm] = dml(corn.assign(Dtreat=corn.Draw), D="Dtreat", **kw)
+                for k in ("high_hazard", "low_hazard", "all"):
+                    e = dm[nm][k]
+                    e["pct_per_unit"] = 100 * per * e["cate_per_unit_D"] / e["mean_y"]
+                    e["pct_per_unit_ci95"] = [100 * per * e["ci95"][0] / e["mean_y"], 100 * per * e["ci95"][1] / e["mean_y"]]
+                print(tname, nm, {k: round(dm[nm][k]["pct_per_unit"], 1) for k in ("high_hazard", "low_hazard")},
+                      flush=True)
+            except Exception as e:  # noqa: BLE001
+                dm[nm] = {"error": repr(e)}
+                print(tname, nm, "failed", e, flush=True)
+        out["dml"] = dm
+    # relative effects
     rel = {}
     for nm, o in specs.items():
         kind = "ppml" if nm.startswith("ppml") else "ols"
-        if "_T_" in nm:
-            continue
-        rel[nm] = rel_effect(o, kind)
-    res["relative_effects_high_hazard_per_0.1_shannon"] = rel
-    # implied reduction for the Bowles contrast if ALL fields moved corn-soy -> 4-crop (delta 0.66) and for the
-    # county p10 -> p90 contrast
-    p10, p50, p90 = res["descriptives"]["D_p10_p50_p90"]
-    pp = specs["ppml_countyFE_stateyearFE"]["effect_high_hazard"]
-    imp = lambda b, dD: 100 * (1 - np.exp(b * dD))  # noqa: E731
-    res["bowles_comparison"] = {
-        "headline_spec": "ppml_countyFE_stateyearFE (proportional effect in high-hazard years)",
-        "implied_loss_reduction_pct_for_delta_0.66": {"est": imp(pp["est"], 0.66),
-                                                      "ci95": sorted([imp(pp["ci95"][0], 0.66),
-                                                                      imp(pp["ci95"][1], 0.66)])},
-        "implied_loss_reduction_pct_county_p10_to_p90": {"delta": p90 - p10, "est": imp(pp["est"], p90 - p10),
-                                                         "ci95": sorted([imp(pp["ci95"][0], p90 - p10),
-                                                                         imp(pp["ci95"][1], p90 - p10)])},
-        "trial_range_pct": BOWLES["range_pct"],
-        "note": "Positive = diversity reduces drought loss cost. Trials measure yield-loss reduction on a field; RMA "
-                "loss cost is indemnity below a guarantee on a county aggregate, so magnitudes are not identical.",
-    }
+        rel[nm] = rel_effect(o, kind, per=per)
+    out["relative_effects_high_hazard"] = rel
     for o in specs.values():
         o.pop("_model", None)
-    res["specs"] = specs
+    out["specs"] = specs
+    # robustness flags used by the verdict
+    h, pp = specs["ols_countyFE_stateyearFE"], specs["ppml_countyFE_stateyearFE"]
+    ld = plac["lead_test_window_t+1_to_t+5"]
+    out["flags"] = {
+        "fe_ols_protective_sig": h["effect_high_hazard"]["ci95"][1] < 0,
+        "fe_ols_harmful_sig": h["effect_high_hazard"]["ci95"][0] > 0,
+        "fe_ppml_protective_sig": pp["effect_high_hazard"]["ci95"][1] < 0,
+        "fe_ppml_harmful_sig": pp["effect_high_hazard"]["ci95"][0] > 0,
+        "pooled_protective_sig": specs["ols_stateyearFE_controls"]["effect_high_hazard"]["ci95"][1] < 0,
+        "low_hazard_placebo_passes": plac["low_hazard_years_D_on_drought_lcr"]["p"] > 0.05,
+        "excess_moisture_placebo_passes": plac["excess_moisture_lcr_interaction_model"]["D_x_H"]["p"] > 0.05,
+        "lead_test_passes": ld["DleadH"]["p"] > 0.05 and ld["Dlead_c"]["p"] > 0.05,
+        "robust_to_irrigation_strength_confounder": (lambda b: b["adjusted_ci95"][1] < 0 or b["adjusted_ci95"][0] > 0)(
+            out["sensitivity"]["fe_spec"]["benchmark_H_x_irrigation_1x"]),
+    }
+    return out
 
-    # ---------------- verdict and app effect
-    head = specs["ols_countyFE_stateyearFE"]
-    hp = specs["ppml_countyFE_stateyearFE"]
-    e_ols = head["effect_high_hazard"]
-    e_pp = hp["effect_high_hazard"]
-    sig_neg = e_pp["ci95"][1] < 0 and e_ols["ci95"][1] < 0
-    sig_pos = e_pp["ci95"][0] > 0 and e_ols["ci95"][0] > 0
-    plac_ok = (abs(plac["low_hazard_years_D_on_drought_lcr"]["est"]) < 1.96 * plac["low_hazard_years_D_on_drought_lcr"]["se"])
-    res["verdict_inputs"] = {"headline_ols_effect_high_hazard": e_ols, "headline_ppml_effect_high_hazard": e_pp,
-                             "significantly_protective": bool(sig_neg), "significantly_harmful": bool(sig_pos),
-                             "low_hazard_placebo_passes": bool(plac_ok)}
-    rr = BOWLES["range_pct"]
-    dlt = BOWLES["delta_shannon_field"]
-    if sig_neg and plac_ok:
-        res["app_effect"] = {
-            "source": "observational", "form": "multiplier = exp(theta * (D - D_now)) on drought loss cost",
-            "theta_per_unit_D": {"est": e_pp["est"], "lo": e_pp["ci95"][0], "hi": e_pp["ci95"][1]},
-            "label": "Observational estimate (county FE + state-year FE PPML, high-hazard years)"}
+
+def main():
+    d0 = load()
+    for t in TREATMENTS.values():  # lead (window t+1..t+5) for every treatment
+        cdl = pd.read_parquet(PROC / "cdl_county_year.parquet")[["fips", "year", t["col"]]]
+        d0 = d0.merge(cdl.assign(year=cdl.year - 5).rename(columns={t["col"]: f"{t['col']}_lead5"}),
+                      on=["fips", "year"], how="left")
+    res = {"question": "Does higher crop-rotation diversity (CDL 5-yr window ending t-1) reduce drought loss cost "
+                       "(RMA drought indemnity / liability) for insured corn in county x year data, 2013-2024?",
+           "hazard": "NASA POWER hazard_z (JJA composite of -SPI, EDD>30C, -root-zone wetness; z vs 1991-2020); "
+                     "high-hazard = hazard_z > 1, low-hazard placebo = hazard_z < 0",
+           "outcome": "corn lcr_drought (drought indemnity / liability), weighted by liability in acre-equivalents; "
+                      "principal crops as secondary",
+           "primary_treatment": PRIMARY, "bowles_2020": BOWLES, "treatments": {}}
+    do_dml = "--no-dml" not in sys.argv
+    for tname in TREATMENTS:
+        res["treatments"][tname] = run_treatment(d0, tname, do_dml=do_dml,
+                                                 forest=(tname in (PRIMARY, "div_shannon_5y")))
+    P = res["treatments"][PRIMARY]
+    # Bowles comparison in primary units: all simple-rotation cropland -> 3+ crops (delta share = 1 - mean share)
+    per = TREATMENTS[PRIMARY]["per"]
+    comp = {}
+    for tname, tr in res["treatments"].items():
+        h = tr["specs"]["ols_countyFE_stateyearFE"]
+        pp = tr["specs"]["ppml_countyFE_stateyearFE"]
+        if tname == "div_shannon_5y":
+            dlt = BOWLES["delta_shannon_field"]
+        elif tname == "share_3plus":
+            dlt = 1.0 - tr["descriptives"]["D_mean"]
+        else:
+            dlt = 1.0  # one more crop class per pixel
+        f_ols = lambda v: -100 * v * dlt / h["mean_y_high_hazard"]  # noqa: E731
+        f_pp = lambda v: 100 * (1 - np.exp(v * dlt))  # noqa: E731
+        comp[tname] = {"contrast": dlt,
+                       "implied_reduction_pct_ols_fe": {"est": f_ols(h["effect_high_hazard"]["est"]),
+                                                        "ci95": sorted(f_ols(x) for x in h["effect_high_hazard"]["ci95"])},
+                       "implied_reduction_pct_ppml_fe": {"est": f_pp(pp["effect_high_hazard"]["est"]),
+                                                         "ci95": sorted(f_pp(x) for x in pp["effect_high_hazard"]["ci95"])}}
+    res["bowles_comparison"] = {"trial_range_pct": BOWLES["range_pct"], "by_treatment": comp,
+                                "contrasts": "share_3plus: all remaining 2-crop cropland moved to 3+ crop rotations; "
+                                             "n_crops_5y: +1 crop class per pixel; div_shannon_5y: +0.66 (corn-soy -> "
+                                             "4-crop window)",
+                                "note": "Positive = diversity reduces drought loss cost. Trials measure field yield-loss "
+                                        "reduction; RMA loss cost is indemnity below a guarantee, aggregated over a "
+                                        "county, so magnitudes are not directly comparable. Extrapolating a county "
+                                        "slope to a 100% switch is far outside the observed within-county range."}
+    fl = P["flags"]
+    robust_protective = (fl["fe_ols_protective_sig"] and fl["fe_ppml_protective_sig"] and fl["low_hazard_placebo_passes"]
+                         and fl["lead_test_passes"] and fl["excess_moisture_placebo_passes"]
+                         and fl["robust_to_irrigation_strength_confounder"])
+    res["robust_protective_effect_found"] = bool(robust_protective)
+    rr, dlt = BOWLES["range_pct"], BOWLES["delta_shannon_field"]
+    if robust_protective:
+        e = P["specs"]["ppml_countyFE_stateyearFE"]["effect_high_hazard"]
+        res["app_effect"] = {"source": "observational", "metric": PRIMARY,
+                             "form": "multiplier m(s) = exp(theta * (s - s_now)) on drought loss cost",
+                             "theta": {"est": e["est"], "lo": e["ci95"][0], "hi": e["ci95"][1]},
+                             "label": "Observational estimate (corn, county FE + state-year FE PPML, high-hazard years)"}
     else:
         res["app_effect"] = {
-            "source": "trial_prior_scenario",
-            "form": "multiplier = max(0.05, 1 - r * (D - D_now) / delta_shannon_field) on drought loss cost, for "
-                    "D >= D_now (and 1 + r*(D_now - D)/delta for D < D_now)",
-            "delta_shannon_field": dlt,
+            "source": "trial_prior_scenario", "metric": PRIMARY,
+            "form": "fields moved from simple to 3+ crop rotations lose r less in drought years: county drought loss "
+                    "multiplier m(s) = (1 - r*s) / (1 - r*s_now), s = share of cropland in 3+ crop rotations",
             "r": {"est": rr[0] / 100, "lo": 0.0, "hi": rr[1] / 100},
-            "label": "Scenario assumption from field trials (Bowles et al. 2020: 14-90% smaller maize drought-year "
-                     "yield losses in diversified rotations); est = trial lower bound, lo = no effect (the "
-                     "observational county estimate is not distinguishable from zero), hi = trial upper bound. "
-                     "Not estimated from the county data."}
+            "label": "Scenario assumption, not an estimate from the county data: field trials (Bowles et al. 2020) "
+                     "found 14-90% smaller maize drought-year yield losses in diversified rotations. est = trial lower "
+                     "bound (14%); lo = no effect (the county data show no robust effect); hi = trial upper bound (90%)."}
     res["verdict"] = verdict_text(res)
     save_json(res, OUT / "diversity_effect.json", 1)
     print(res["verdict"])
 
 
+def _fmt_rel(r):
+    return f"{r['est_pct']:+.1f}% (95% CI {r['ci95_pct'][0]:+.1f} to {r['ci95_pct'][1]:+.1f})"
+
+
+def shannon_clause(res):
+    S = res["treatments"]["div_shannon_5y"]
+    fs = S["flags"]
+    if not (fs["fe_ols_protective_sig"] or fs["pooled_protective_sig"]):
+        return "The Shannon index shows no protective effect either."
+    fails = []
+    if not fs["fe_ppml_protective_sig"]:
+        fails.append("the proportional (PPML) model")
+    if not fs["lead_test_passes"]:
+        fails.append("the lead test")
+    if not fs["excess_moisture_placebo_passes"]:
+        fails.append("the excess-moisture placebo")
+    if not fs["robust_to_irrigation_strength_confounder"]:
+        fails.append("a confounder as strong as irrigation")
+    cr = S["relative_effects_high_hazard"]["ols_countyFE_contemporaneous_window_incl2012"]
+    flip = cr["ci95_pct"][0] > 0
+    txt = "The Shannon index does look protective in the linear FE model, but it does not survive " + (
+        (", ".join(fails[:-1]) + " or " + fails[-1] if len(fails) > 1 else fails[0]) if fails else "(no failures)") + "."
+    if flip:
+        txt += " It also flips to a harmful sign when 2012 is added through the contemporaneous window."
+    return txt
+
+
 def verdict_text(res):
-    s = res["specs"]
-    h = s["ols_countyFE_stateyearFE"]
-    p = s["ppml_countyFE_stateyearFE"]
-    r = res["relative_effects_high_hazard_per_0.1_shannon"]
-    d = res["descriptives"]
-    pl = res["placebos"]
-    b = res["bowles_comparison"]
-    lines = []
-    lines.append(
-        f"Data: {d['n_county_years']} corn county-years ({d['years'][0]}-{d['years'][1]}, {d['n_counties']} counties), "
-        f"{d['high_hazard_county_years']} of them high-hazard (hazard_z > 1). Diversity varies mostly between counties: "
-        f"within-county SD {d['D_sd_within_county']:.3f} vs between-county SD {d['D_sd_between_counties']:.3f} "
-        f"({100 * d['D_within_share_of_variance']:.0f}% of variance is within county).")
-    lines.append(
-        f"Raw: more diverse counties are drier/western (Spearman D vs longitude {d['spearman_county_means']['D_vs_longitude']:+.2f}, "
-        f"vs JJA climatology {d['spearman_county_means']['D_vs_clim_jja_prcp']:+.2f}, vs irrigation "
-        f"{d['spearman_county_means']['D_vs_irrigated_share']:+.2f}) and have higher mean corn drought loss cost "
-        f"(Spearman {d['spearman_county_means']['D_vs_mean_corn_lcr']:+.2f}) - the raw association is confounded by climate.")
-    lines.append(
-        f"Headline (county FE + state-year FE, corn): effect of +0.1 Shannon in high-hazard years = "
-        f"{r['ols_countyFE_stateyearFE']['est_pct']:+.1f}% of mean loss cost (95% CI "
-        f"{r['ols_countyFE_stateyearFE']['ci95_pct'][0]:+.1f} to {r['ols_countyFE_stateyearFE']['ci95_pct'][1]:+.1f}); "
-        f"PPML {r['ppml_countyFE_stateyearFE']['est_pct']:+.1f}% (CI {r['ppml_countyFE_stateyearFE']['ci95_pct'][0]:+.1f} "
-        f"to {r['ppml_countyFE_stateyearFE']['ci95_pct'][1]:+.1f}). Negative = protective.")
-    lines.append(
-        f"Bowles et al. 2020 trials: 14-90% smaller drought-year maize yield losses. Implied by the PPML estimate for "
-        f"the same corn-soy -> 4-crop contrast (+0.66 Shannon): {b['implied_loss_reduction_pct_for_delta_0.66']['est']:.0f}% "
-        f"reduction (CI {b['implied_loss_reduction_pct_for_delta_0.66']['ci95'][0]:.0f} to "
-        f"{b['implied_loss_reduction_pct_for_delta_0.66']['ci95'][1]:.0f}).")
-    lp = pl["low_hazard_years_D_on_drought_lcr"]
-    lines.append(f"Placebo, low-hazard years: D coefficient {lp['est']:+.4f} (CI {lp['ci95'][0]:+.4f} to {lp['ci95'][1]:+.4f}).")
-    vi = res["verdict_inputs"]
-    if vi["significantly_protective"] and vi["low_hazard_placebo_passes"]:
-        lines.append("Verdict: the observational data show a protective diversity effect in drought years that "
-                     "survives county and state-year fixed effects; it is used (with its CI) in the app.")
-    elif vi["significantly_harmful"]:
-        lines.append("Verdict: the observational estimate is WRONG-SIGNED (more diversity, more drought loss) even "
-                     "within counties. We do not believe this is causal (residual confounding by shifts toward "
-                     "drought-prone crops/land and very little within-county variation), but the data do not "
-                     "support a protective effect. The app uses the field-trial range as a labelled scenario.")
+    P = res["treatments"][PRIMARY]
+    S = res["treatments"]["div_shannon_5y"]
+    N = res["treatments"]["n_crops_5y"]
+    d = P["descriptives"]
+    sc = d["spearman_county_means"]
+    L = []
+    L.append(f"Data: {d['n_county_years']} insured-corn county-years ({d['years'][0]}-{d['years'][1]}, "
+             f"{d['n_counties']} counties), {d['high_hazard_county_years']} high-hazard (NASA POWER hazard_z > 1), "
+             f"mostly 2021-2023; 2012 cannot be used with a lagged 5-year CDL window (CDL starts 2008).")
+    L.append(f"Primary treatment share_3plus (share of cropland in 3+ crop rotations, window ending t-1): only "
+             f"{100 * d['D_within_share_of_variance']:.0f}% of its variance is within county (within SD "
+             f"{d['D_sd_within_county']:.3f} vs between {d['D_sd_between_counties']:.3f}). Across counties it tracks "
+             f"crop mix and geography (Spearman with corn share {sc['D_vs_corn_share']:+.2f}, irrigation "
+             f"{sc['D_vs_irrigated_share']:+.2f}, longitude {sc['D_vs_longitude']:+.2f}, mean corn drought loss cost "
+             f"{sc['D_vs_mean_corn_lcr']:+.2f}).")
+    r = P["relative_effects_high_hazard"]
+    L.append(f"Effect on corn drought loss cost in high-hazard years per {P['per_label']}: county FE + state-year FE "
+             f"OLS {_fmt_rel(r['ols_countyFE_stateyearFE'])}; PPML {_fmt_rel(r['ppml_countyFE_stateyearFE'])}; "
+             f"pooled with controls {_fmt_rel(r['ols_stateyearFE_controls'])}. Negative = protective.")
+    rn, rs = N["relative_effects_high_hazard"], S["relative_effects_high_hazard"]
+    L.append(f"Secondary treatments (FE OLS): n_crops_5y per +0.1 crops {_fmt_rel(rn['ols_countyFE_stateyearFE'])}; "
+             f"Shannon per +0.1 {_fmt_rel(rs['ols_countyFE_stateyearFE'])}, but Shannon PPML "
+             f"{_fmt_rel(rs['ppml_countyFE_stateyearFE'])}.")
+    fl, fs = P["flags"], S["flags"]
+    yn = lambda b: "passes" if b else "FAILS"  # noqa: E731
+    L.append(f"Diagnostics (primary): low-hazard placebo {yn(fl['low_hazard_placebo_passes'])}; excess-moisture "
+             f"placebo {yn(fl['excess_moisture_placebo_passes'])}; lead test {yn(fl['lead_test_passes'])}; robust to a "
+             f"confounder as strong as hazard x irrigation: {'yes' if fl['robust_to_irrigation_strength_confounder'] else 'no'} "
+             f"(robustness value {P['sensitivity']['fe_spec']['rv_q1']:.3f}). Shannon: lead test "
+             f"{yn(fs['lead_test_passes'])}, excess-moisture placebo {yn(fs['excess_moisture_placebo_passes'])}, "
+             f"robust to irrigation-strength confounder: {'yes' if fs['robust_to_irrigation_strength_confounder'] else 'no'}.")
+    cr = res["treatments"]["div_shannon_5y"]["relative_effects_high_hazard"]["ols_countyFE_contemporaneous_window_incl2012"]
+    L.append(f"Adding 2012 via the contemporaneous Shannon window (includes the crop planted in year t, before the summer hazard): "
+             f"{_fmt_rel(cr)} per +0.1 Shannon.")
+    if res["robust_protective_effect_found"]:
+        L.append("Verdict: a protective effect of rotation diversity in drought years survives fixed effects, placebos, "
+                 "the lead test and the sensitivity benchmark; the app uses it with its CI.")
     else:
-        lines.append("Verdict: the observational county-level effect is NOT distinguishable from zero once climate, "
-                     "soils and fixed effects are controlled. The data neither confirm nor rule out the trial "
-                     "effect at county scale. The app uses the field-trial range (Bowles et al. 2020) as a labelled "
-                     "scenario assumption, not as an estimate from these data.")
-    return " ".join(lines)
+        harmful = fl["fe_ols_harmful_sig"] or fl["fe_ppml_harmful_sig"]
+        L.append("Verdict: NO robust observational effect. " + (
+            "The primary 'how many crops' measure is wrong-signed (more 3+ crop rotation, more corn drought loss) "
+            "within counties. " if harmful else "The primary 'how many crops' measure is not distinguishable from zero. ")
+            + shannon_clause(res) + " County-year insurance data with little within-county "
+              "change in rotations cannot confirm (or rule out) the field-trial effect. The app therefore shows the "
+              "Bowles et al. (2020) trial range (14-90% smaller drought-year maize yield losses) as a labelled "
+              "scenario assumption, with the low end (no effect) included in its range.")
+    return " ".join(L)
 
 
 if __name__ == "__main__":

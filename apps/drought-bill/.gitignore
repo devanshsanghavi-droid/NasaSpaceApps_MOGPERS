@@ -2,3 +2,9 @@ data/raw/
 __pycache__/
 *.pyc
 data/processed/power_daily_cells.parquet
+model/outputs/sim_state.pkl.gz
+model/outputs/hindcast_boot.npz
+model/outputs/cv_oof/
+model/outputs/panel.parquet
+model/outputs/cv_oof.parquet
+model/outputs/hazard_features.parquet
