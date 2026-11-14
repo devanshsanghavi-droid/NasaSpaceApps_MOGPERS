@@ -1,0 +1,23 @@
+{
+ "main": {
+  "name": "ratio_haz_static_a05_tvp12",
+  "kind": "ratio",
+  "hazard": "full",
+  "static": true,
+  "k": 5.0,
+  "alpha_r": 0.5,
+  "tvp": 1.2
+ },
+ "baseline_mean": {
+  "name": "baseline_mean",
+  "kind": "mean",
+  "k": 5.0
+ },
+ "baseline_hazard_only": {
+  "name": "baseline_hazard_only",
+  "kind": "lgb",
+  "hazard": "full",
+  "n": 400,
+  "leaves": 15
+ }
+}
