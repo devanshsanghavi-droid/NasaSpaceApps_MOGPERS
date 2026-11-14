@@ -1,0 +1,1098 @@
+{
+ "counties": {
+  "20081": {
+   "county_fips": "20081",
+   "county_name": "Haskell",
+   "years": {
+    "2022": {
+     "power_point": [
+      -100.8712,
+      37.5622
+     ],
+     "dry_spell": [
+      "2022-07-07",
+      "2022-07-20"
+     ],
+     "dry_spell_precip_mm": 2.3,
+     "jul_aug_precip_mm": 104.2,
+     "scene_window": [
+      "2022-07-12",
+      "2022-07-23"
+     ],
+     "scenes": [
+      {
+       "id": "HLS.S30.T14SLG.2022200T172911.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-19",
+       "tile": "T14SLG",
+       "cloud_cover": 59.0,
+       "n_clear_points": 163
+      },
+      {
+       "id": "HLS.S30.T14SLG.2022197T171911.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-16",
+       "tile": "T14SLG",
+       "cloud_cover": 46.0,
+       "n_clear_points": 372
+      },
+      {
+       "id": "HLS.S30.T14SLG.2022195T172909.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-14",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 507
+      }
+     ],
+     "wimas": "23454 WIMAS points of diversion; 12435 IRR points reporting water in 2022",
+     "n_dryland_distinct_1km_cells": 21
+    },
+    "2023": {
+     "power_point": [
+      -100.8712,
+      37.5622
+     ],
+     "dry_spell": [
+      "2023-08-14",
+      "2023-08-27"
+     ],
+     "dry_spell_precip_mm": 0.8,
+     "jul_aug_precip_mm": 206.9,
+     "scene_window": [
+      "2023-08-19",
+      "2023-08-30"
+     ],
+     "scenes": [
+      {
+       "id": "HLS.L30.T14SLG.2023236T171925.v2.0",
+       "sensor": "L30",
+       "date": "2023-08-24",
+       "tile": "T14SLG",
+       "cloud_cover": 6.0,
+       "n_clear_points": 514
+      },
+      {
+       "id": "HLS.L30.T14SLG.2023235T172543.v2.0",
+       "sensor": "L30",
+       "date": "2023-08-23",
+       "tile": "T14SLG",
+       "cloud_cover": 54.0,
+       "n_clear_points": 4
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023242T171901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-30",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 409
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023240T172859.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-28",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 525
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023237T171859.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-25",
+       "tile": "T14SLG",
+       "cloud_cover": 1.0,
+       "n_clear_points": 406
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023235T172901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-23",
+       "tile": "T14SLG",
+       "cloud_cover": 15.0,
+       "n_clear_points": 307
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023232T171901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-20",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 409
+      }
+     ],
+     "wimas": "23454 WIMAS points of diversion; 12213 IRR points reporting water in 2023",
+     "n_dryland_distinct_1km_cells": 21
+    }
+   }
+  },
+  "20055": {
+   "county_fips": "20055",
+   "county_name": "Finney",
+   "years": {
+    "2022": {
+     "power_point": [
+      -100.7373,
+      38.0442
+     ],
+     "dry_spell": [
+      "2022-07-07",
+      "2022-07-20"
+     ],
+     "dry_spell_precip_mm": 2.7,
+     "jul_aug_precip_mm": 118.5,
+     "scene_window": [
+      "2022-07-12",
+      "2022-07-23"
+     ],
+     "scenes": [
+      {
+       "id": "HLS.L30.T14SLH.2022201T171903.v2.0",
+       "sensor": "L30",
+       "date": "2022-07-20",
+       "tile": "T14SLH",
+       "cloud_cover": 27.0,
+       "n_clear_points": 300
+      },
+      {
+       "id": "HLS.L30.T14SLH.2022200T172536.v2.0",
+       "sensor": "L30",
+       "date": "2022-07-19",
+       "tile": "T14SLH",
+       "cloud_cover": 58.0,
+       "n_clear_points": 73
+      },
+      {
+       "id": "HLS.L30.T14SLH.2022193T171923.v2.0",
+       "sensor": "L30",
+       "date": "2022-07-12",
+       "tile": "T14SLH",
+       "cloud_cover": 17.0,
+       "n_clear_points": 283
+      },
+      {
+       "id": "HLS.S30.T14SLG.2022200T172911.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-19",
+       "tile": "T14SLG",
+       "cloud_cover": 59.0,
+       "n_clear_points": 42
+      },
+      {
+       "id": "HLS.S30.T14SLH.2022200T172911.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-19",
+       "tile": "T14SLH",
+       "cloud_cover": 43.0,
+       "n_clear_points": 165
+      },
+      {
+       "id": "HLS.S30.T14SLG.2022197T171911.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-16",
+       "tile": "T14SLG",
+       "cloud_cover": 46.0,
+       "n_clear_points": 100
+      },
+      {
+       "id": "HLS.S30.T14SLH.2022197T171911.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-16",
+       "tile": "T14SLH",
+       "cloud_cover": 59.0,
+       "n_clear_points": 65
+      },
+      {
+       "id": "HLS.S30.T14SLG.2022195T172909.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-14",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 158
+      },
+      {
+       "id": "HLS.S30.T14SLH.2022195T172909.v2.0",
+       "sensor": "S30",
+       "date": "2022-07-14",
+       "tile": "T14SLH",
+       "cloud_cover": 16.0,
+       "n_clear_points": 337
+      }
+     ],
+     "wimas": "23454 WIMAS points of diversion; 12435 IRR points reporting water in 2022",
+     "n_dryland_distinct_1km_cells": 141
+    },
+    "2023": {
+     "power_point": [
+      -100.7373,
+      38.0442
+     ],
+     "dry_spell": [
+      "2023-08-14",
+      "2023-08-27"
+     ],
+     "dry_spell_precip_mm": 1.5,
+     "jul_aug_precip_mm": 186.1,
+     "scene_window": [
+      "2023-08-19",
+      "2023-08-30"
+     ],
+     "scenes": [
+      {
+       "id": "HLS.L30.T14SLG.2023236T171925.v2.0",
+       "sensor": "L30",
+       "date": "2023-08-24",
+       "tile": "T14SLG",
+       "cloud_cover": 6.0,
+       "n_clear_points": 179
+      },
+      {
+       "id": "HLS.L30.T14SLH.2023236T171901.v2.0",
+       "sensor": "L30",
+       "date": "2023-08-24",
+       "tile": "T14SLH",
+       "cloud_cover": 0.0,
+       "n_clear_points": 376
+      },
+      {
+       "id": "HLS.L30.T14SLG.2023235T172543.v2.0",
+       "sensor": "L30",
+       "date": "2023-08-23",
+       "tile": "T14SLG",
+       "cloud_cover": 54.0,
+       "n_clear_points": 65
+      },
+      {
+       "id": "HLS.L30.T14SLH.2023235T172519.v2.0",
+       "sensor": "L30",
+       "date": "2023-08-23",
+       "tile": "T14SLH",
+       "cloud_cover": 7.0,
+       "n_clear_points": 228
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023242T171901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-30",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 121
+      },
+      {
+       "id": "HLS.S30.T14SLH.2023242T171901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-30",
+       "tile": "T14SLH",
+       "cloud_cover": 0.0,
+       "n_clear_points": 182
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023240T172859.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-28",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 183
+      },
+      {
+       "id": "HLS.S30.T14SLH.2023240T172859.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-28",
+       "tile": "T14SLH",
+       "cloud_cover": 9.0,
+       "n_clear_points": 375
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023237T171859.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-25",
+       "tile": "T14SLG",
+       "cloud_cover": 1.0,
+       "n_clear_points": 107
+      },
+      {
+       "id": "HLS.S30.T14SLH.2023237T171859.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-25",
+       "tile": "T14SLH",
+       "cloud_cover": 0.0,
+       "n_clear_points": 167
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023235T172901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-23",
+       "tile": "T14SLG",
+       "cloud_cover": 15.0,
+       "n_clear_points": 177
+      },
+      {
+       "id": "HLS.S30.T14SLH.2023235T172901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-23",
+       "tile": "T14SLH",
+       "cloud_cover": 2.0,
+       "n_clear_points": 375
+      },
+      {
+       "id": "HLS.S30.T14SLG.2023232T171901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-20",
+       "tile": "T14SLG",
+       "cloud_cover": 0.0,
+       "n_clear_points": 121
+      },
+      {
+       "id": "HLS.S30.T14SLH.2023232T171901.v2.0",
+       "sensor": "S30",
+       "date": "2023-08-20",
+       "tile": "T14SLH",
+       "cloud_cover": 0.0,
+       "n_clear_points": 182
+      }
+     ],
+     "wimas": "23454 WIMAS points of diversion; 12213 IRR points reporting water in 2023",
+     "n_dryland_distinct_1km_cells": 137
+    }
+   }
+  }
+ },
+ "method": "HLS (Harmonized Landsat Sentinel-2 v2.0) irrigation detection for focus counties (Haskell 20081 + Finney 20055)\nin mid-summer dry spells.\n\nSteps (all real downloads, cached under data/raw/hls/ and data/raw/power_land/):\n 1. NASA POWER daily precipitation (PRECTOTCORR, mm/day) at the county centroid, Jun-Sep of each year\n    (https://power.larc.nasa.gov/api/temporal/daily/point). The dry spell = the 14-day window inside Jul 1 - Aug 31 with the\n    least rain (ties -> later window); scenes are taken from window start + 5 d to window end + 3 d so the crop has been\n    without rain for a while.\n 2. HLS v2 scenes (Planetary Computer `hls2-l30` + `hls2-s30`, eo:cloud_cover < 60) over the county inside those dates.\n    Bands red/NIR (L30 B04/B05, S30 B04/B8A), scale 1e-4, fill -9999; Fmask clear = bits 1-4 (cloud, adjacent cloud,\n    shadow, snow/ice) all 0 and Fmask != 255. Windowed reads at native 30 m resolution over the county only.\n 3. Sample points: 30 m CDL pixels of corn / soybeans / sorghum (CDL of the same year) whose 3x3 neighbourhood is the\n    same class (field interiors), inside the county. Labels from WIMAS (data/processed/wimas_use.parquet):\n    irrigated = an IRR point of diversion that reported water (af_reported > 0) that year lies within 800 m;\n    dryland = no WIMAS point of diversion of any use/year within 1600 m; 800-1600 m = ambiguous (no label).\n    Because wells are dense (most cropland is within 800 m of a well), sampling is STRATIFIED: per crop and year up to\n    75 irrigated-labelled + 75 dryland-labelled pixels, plus 50 unstratified 'random' pixels (not used for accuracy).\n 4. NDVI per point = maximum over clear HLS observations in the dry-spell scene set (max-composite limits residual cloud);\n    n_obs = number of clear observations.\n 5. Threshold irrigated := NDVI > t, with t chosen on a random half of the stratified labelled points (max balanced accuracy) and\n    evaluated on the other half (accuracy, Cohen's kappa, precision, recall). Done pooled over years and per year.\n\nOutput: data/processed/hls_irrigation.parquet (sample_id, year, ...), data/processed/hls_irrigation_metrics.json\nUsage : python3 pipeline/nasa_hls_irrigation.py [fips[,fips...]] [years...]   (default 20081,20055 2022 2023)\n",
+ "prediction_threshold_ndvi_pooled": 0.62,
+ "metrics": {
+  "pooled": {
+   "threshold_ndvi": 0.62,
+   "train_balanced_acc": 0.782,
+   "n_train": 741,
+   "n_test": 742,
+   "n_test_irrigated": 441,
+   "test_accuracy": 0.763,
+   "test_balanced_accuracy": 0.757,
+   "test_kappa": 0.511,
+   "test_precision_irrigated": 0.809,
+   "test_recall_irrigated": 0.787,
+   "ndvi_median_irrigated": 0.834,
+   "ndvi_median_dryland": 0.456
+  },
+  "corn_only": {
+   "threshold_ndvi": 0.65,
+   "train_balanced_acc": 0.923,
+   "n_train": 298,
+   "n_test": 299,
+   "n_test_irrigated": 151,
+   "test_accuracy": 0.916,
+   "test_balanced_accuracy": 0.917,
+   "test_kappa": 0.833,
+   "test_precision_irrigated": 0.985,
+   "test_recall_irrigated": 0.848,
+   "ndvi_median_irrigated": 0.846,
+   "ndvi_median_dryland": 0.383
+  },
+  "2022": {
+   "threshold_ndvi": 0.61,
+   "train_balanced_acc": 0.822,
+   "n_train": 366,
+   "n_test": 367,
+   "n_test_irrigated": 206,
+   "test_accuracy": 0.787,
+   "test_balanced_accuracy": 0.807,
+   "test_kappa": 0.587,
+   "test_precision_irrigated": 0.964,
+   "test_recall_irrigated": 0.646,
+   "ndvi_median_irrigated": 0.765,
+   "ndvi_median_dryland": 0.358
+  },
+  "2022_corn": {
+   "threshold_ndvi": 0.56,
+   "train_balanced_acc": 0.951,
+   "n_train": 148,
+   "n_test": 149,
+   "n_test_irrigated": 69,
+   "test_accuracy": 0.913,
+   "test_balanced_accuracy": 0.912,
+   "test_kappa": 0.824,
+   "test_precision_irrigated": 0.912,
+   "test_recall_irrigated": 0.899,
+   "ndvi_median_irrigated": 0.863,
+   "ndvi_median_dryland": 0.336
+  },
+  "2023": {
+   "threshold_ndvi": 0.81,
+   "train_balanced_acc": 0.788,
+   "n_train": 375,
+   "n_test": 375,
+   "n_test_irrigated": 232,
+   "test_accuracy": 0.776,
+   "test_balanced_accuracy": 0.795,
+   "test_kappa": 0.554,
+   "test_precision_irrigated": 0.902,
+   "test_recall_irrigated": 0.716,
+   "ndvi_median_irrigated": 0.856,
+   "ndvi_median_dryland": 0.593
+  },
+  "2023_corn": {
+   "threshold_ndvi": 0.6,
+   "train_balanced_acc": 0.912,
+   "n_train": 150,
+   "n_test": 150,
+   "n_test_irrigated": 78,
+   "test_accuracy": 0.92,
+   "test_balanced_accuracy": 0.921,
+   "test_kappa": 0.84,
+   "test_precision_irrigated": 0.946,
+   "test_recall_irrigated": 0.897,
+   "ndvi_median_irrigated": 0.839,
+   "ndvi_median_dryland": 0.453
+  },
+  "20081": {
+   "threshold_ndvi": 0.79,
+   "train_balanced_acc": 0.82,
+   "n_train": 366,
+   "n_test": 367,
+   "n_test_irrigated": 217,
+   "test_accuracy": 0.733,
+   "test_balanced_accuracy": 0.754,
+   "test_kappa": 0.479,
+   "test_precision_irrigated": 0.874,
+   "test_recall_irrigated": 0.641,
+   "ndvi_median_irrigated": 0.849,
+   "ndvi_median_dryland": 0.522
+  },
+  "20081_2022": {
+   "threshold_ndvi": 0.66,
+   "train_balanced_acc": 0.786,
+   "n_train": 179,
+   "n_test": 179,
+   "n_test_irrigated": 113,
+   "test_accuracy": 0.788,
+   "test_balanced_accuracy": 0.832,
+   "test_kappa": 0.593,
+   "test_precision_irrigated": 1.0,
+   "test_recall_irrigated": 0.664,
+   "ndvi_median_irrigated": 0.801,
+   "ndvi_median_dryland": 0.435
+  },
+  "20081_2023": {
+   "threshold_ndvi": 0.84,
+   "train_balanced_acc": 0.819,
+   "n_train": 187,
+   "n_test": 188,
+   "n_test_irrigated": 113,
+   "test_accuracy": 0.75,
+   "test_balanced_accuracy": 0.776,
+   "test_kappa": 0.515,
+   "test_precision_irrigated": 0.912,
+   "test_recall_irrigated": 0.646,
+   "ndvi_median_irrigated": 0.865,
+   "ndvi_median_dryland": 0.578
+  },
+  "20055": {
+   "threshold_ndvi": 0.56,
+   "train_balanced_acc": 0.797,
+   "n_train": 375,
+   "n_test": 375,
+   "n_test_irrigated": 224,
+   "test_accuracy": 0.757,
+   "test_balanced_accuracy": 0.746,
+   "test_kappa": 0.494,
+   "test_precision_irrigated": 0.793,
+   "test_recall_irrigated": 0.804,
+   "ndvi_median_irrigated": 0.81,
+   "ndvi_median_dryland": 0.377
+  },
+  "20055_2022": {
+   "threshold_ndvi": 0.51,
+   "train_balanced_acc": 0.879,
+   "n_train": 187,
+   "n_test": 188,
+   "n_test_irrigated": 106,
+   "test_accuracy": 0.798,
+   "test_balanced_accuracy": 0.818,
+   "test_kappa": 0.607,
+   "test_precision_irrigated": 0.972,
+   "test_recall_irrigated": 0.66,
+   "ndvi_median_irrigated": 0.754,
+   "ndvi_median_dryland": 0.295
+  },
+  "20055_2023": {
+   "threshold_ndvi": 0.8,
+   "train_balanced_acc": 0.77,
+   "n_train": 187,
+   "n_test": 188,
+   "n_test_irrigated": 119,
+   "test_accuracy": 0.745,
+   "test_balanced_accuracy": 0.747,
+   "test_kappa": 0.473,
+   "test_precision_irrigated": 0.838,
+   "test_recall_irrigated": 0.739,
+   "ndvi_median_irrigated": 0.847,
+   "ndvi_median_dryland": 0.599
+  }
+ },
+ "random_sample_pred_irrigated_share": [
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "corn",
+   "irrigated_pred": 0.62
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "sorghum",
+   "irrigated_pred": 0.02
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "soybeans",
+   "irrigated_pred": 0.94
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "corn",
+   "irrigated_pred": 0.8
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "sorghum",
+   "irrigated_pred": 0.86
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "soybeans",
+   "irrigated_pred": 0.96
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "corn",
+   "irrigated_pred": 0.84
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "sorghum",
+   "irrigated_pred": 0.102
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "soybeans",
+   "irrigated_pred": 0.88
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "corn",
+   "irrigated_pred": 0.96
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "sorghum",
+   "irrigated_pred": 0.98
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "soybeans",
+   "irrigated_pred": 1.0
+  }
+ ],
+ "labels": [
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "corn",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "corn",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "corn",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 36,
+   "n_dry": 5
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "sorghum",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "sorghum",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "sorghum",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 7,
+   "n_dry": 27
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "soybeans",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "soybeans",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 44,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "corn",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "corn",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "corn",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 34,
+   "n_dry": 3
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "sorghum",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "sorghum",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "sorghum",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 9,
+   "n_dry": 27
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "soybeans",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "soybeans",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 50,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "corn",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "corn",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "corn",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 42,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "sorghum",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "sorghum",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "sorghum",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 26,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "soybeans",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "soybeans",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 46,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "corn",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "corn",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "corn",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 46,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "sorghum",
+   "stratum": "dryland",
+   "n": 75,
+   "n_irr": 0,
+   "n_dry": 75
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "sorghum",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "sorghum",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 29,
+   "n_dry": 1
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "soybeans",
+   "stratum": "irrigated",
+   "n": 75,
+   "n_irr": 75,
+   "n_dry": 0
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "soybeans",
+   "stratum": "random",
+   "n": 50,
+   "n_irr": 48,
+   "n_dry": 0
+  }
+ ],
+ "ndvi_by_crop_label": [
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "corn",
+   "lab": "False",
+   "count": 75.0,
+   "25%": 0.223,
+   "50%": 0.263,
+   "75%": 0.308
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "corn",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.721,
+   "50%": 0.824,
+   "75%": 0.868
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "sorghum",
+   "lab": "False",
+   "count": 75.0,
+   "25%": 0.241,
+   "50%": 0.323,
+   "75%": 0.426
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "sorghum",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.337,
+   "50%": 0.435,
+   "75%": 0.57
+  },
+  {
+   "county_fips": "20055",
+   "year": 2022,
+   "crop": "soybeans",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.74,
+   "50%": 0.785,
+   "75%": 0.84
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "corn",
+   "lab": "False",
+   "count": 75.0,
+   "25%": 0.328,
+   "50%": 0.396,
+   "75%": 0.524
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "corn",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.714,
+   "50%": 0.826,
+   "75%": 0.856
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "sorghum",
+   "lab": "False",
+   "count": 75.0,
+   "25%": 0.719,
+   "50%": 0.78,
+   "75%": 0.813
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "sorghum",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.739,
+   "50%": 0.814,
+   "75%": 0.847
+  },
+  {
+   "county_fips": "20055",
+   "year": 2023,
+   "crop": "soybeans",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.883,
+   "50%": 0.903,
+   "75%": 0.915
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "corn",
+   "lab": "False",
+   "count": 72.0,
+   "25%": 0.341,
+   "50%": 0.374,
+   "75%": 0.426
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "corn",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.85,
+   "50%": 0.887,
+   "75%": 0.905
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "sorghum",
+   "lab": "False",
+   "count": 61.0,
+   "25%": 0.483,
+   "50%": 0.554,
+   "75%": 0.573
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "sorghum",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.343,
+   "50%": 0.41,
+   "75%": 0.481
+  },
+  {
+   "county_fips": "20081",
+   "year": 2022,
+   "crop": "soybeans",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.741,
+   "50%": 0.833,
+   "75%": 0.863
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "corn",
+   "lab": "False",
+   "count": 75.0,
+   "25%": 0.432,
+   "50%": 0.491,
+   "75%": 0.529
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "corn",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.796,
+   "50%": 0.845,
+   "75%": 0.862
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "sorghum",
+   "lab": "False",
+   "count": 75.0,
+   "25%": 0.737,
+   "50%": 0.779,
+   "75%": 0.834
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "sorghum",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.801,
+   "50%": 0.842,
+   "75%": 0.869
+  },
+  {
+   "county_fips": "20081",
+   "year": 2023,
+   "crop": "soybeans",
+   "lab": "True",
+   "count": 75.0,
+   "25%": 0.908,
+   "50%": 0.913,
+   "75%": 0.918
+  }
+ ]
+}
