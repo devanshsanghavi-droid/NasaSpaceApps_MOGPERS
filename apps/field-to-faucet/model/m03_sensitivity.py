@@ -82,9 +82,16 @@ def summarize(vals):
     return dict(p50=float(np.median(v)), lo=float(np.quantile(v, 0.05)), hi=float(np.quantile(v, 0.95)), n=int(len(v)))
 
 
+VERSION = "v2" if "--v2" in sys.argv else "v1"
+
+
+def mono(fs):
+    return F.monotone_vector_v2(fs) if VERSION == "v2" else mono(fs)
+
+
 def main():
-    feats = pd.read_parquet(F.OUT / "features.parquet")
-    M = river.load_models()
+    feats = river.load_features(VERSION)
+    M = river.load_models(model_version=VERSION)
     res = dict(
         generated_at=pd.Timestamp.now(tz="UTC").isoformat(),
         perturbation=dict(variable="daily causal MODIS bare share of persistent row-crop land (living = 1 - bare)",
@@ -106,13 +113,16 @@ def main():
         if site not in M:
             continue
         g = g.sort_values("date").reset_index(drop=True)
-        g = g[g.date >= "2015-10-01"].reset_index(drop=True)
+        g = g[g.date >= ("2015-10-01" if VERSION == "v1" else "2009-01-01")].reset_index(drop=True)
         cfg = M[site]["cfg"]
         hp = cfg["hp"]
         fl = cfg["features"]
         print(f"=== {site} ===")
         base = river.predict(g, site, M)
-        base_res = river.predict_reservoir(g, site, M).values
+        M1 = M if VERSION == "v1" else river.load_models(model_version="v1")
+        g_res = g[g.date >= "2015-10-01"]
+        base_res = np.full(len(g), np.nan)
+        base_res[g_res.index] = river.predict_reservoir(g_res, site, M1).values
         out = dict(gbm={}, gbm_p10={}, gbm_p90={}, reservoir={}, diagnostics={})
         pert = {f: river.perturb_cover(g, f) for f in FRACS}
         for f in FRACS:
@@ -124,7 +134,8 @@ def main():
                 eq = effects(g, base[qn].values, cf[qn].values)
                 out[f"gbm_{qn}"][str(f)] = {k: eq[k] for k in ("pct_change_window", "pct_change_aprjul",
                                                                "pct_change_year")}
-            cr = river.predict_reservoir(pert[f], site, M).values
+            cr = np.full(len(g), np.nan)
+            cr[g_res.index] = river.predict_reservoir(pert[f].loc[g_res.index], site, M1).values
             er = effects(g, base_res, cr)
             er["elasticity_dlnC_dbare"] = elasticity(g, base_res, cr, g.bare.values, pert[f].bare.values)
             out["reservoir"][str(f)] = er
@@ -135,7 +146,7 @@ def main():
         y = g.lno3.values
         yrs = g.year.values
         valid = g.rain_7.notna().values & g.logq.notna().values & np.isfinite(y)
-        tr_years = np.arange(2016, 2023)
+        tr_years = np.arange(2016, 2023) if VERSION == "v1" else np.array(cfg["train_years"])
         rng = np.random.default_rng(42)
         boot = {str(f): dict(win=[], aj=[], yr=[], days=[], d25=[], el=[]) for f in FRACS}
         Xb = g[fl]
@@ -143,7 +154,7 @@ def main():
         for b in range(N_BOOT):
             pick = rng.choice(tr_years, size=len(tr_years), replace=True)
             idx = np.concatenate([np.where(valid & (yrs == yy))[0] for yy in pick])
-            mdl = Q.fit(g.iloc[idx], y[idx], fl, 0.5, F.monotone_vector(fl), hp["num_leaves"],
+            mdl = Q.fit(g.iloc[idx], y[idx], fl, 0.5, mono(fl), hp["num_leaves"],
                         hp["min_child_samples"], hp["n_estimators"], seed=100 + b)
             p0 = np.where(okp, np.exp(mdl.predict(Xb)), np.nan)
             for f in FRACS:
@@ -170,7 +181,7 @@ def main():
         d = g.date
         clim = F.doy_climatology(d, g.bare, years=(2016, 2022))
         cl = clim.reindex(d.dt.dayofyear).values
-        tr = (g.split == "train").values
+        tr = np.isin(g.year.values, tr_years)
         r2 = 1 - np.nanvar(g.bare.values[tr] - cl[tr]) / np.nanvar(g.bare.values[tr])
         win = window(d)
         wy = np.where(d.dt.month >= 10, d.dt.year + 1, d.dt.year)  # Oct-May season labelled by its spring year
@@ -194,7 +205,7 @@ def main():
             errs = []
             for yy in tr_years:
                 trm = valid & tr & (yrs != yy); tem = valid & (yrs == yy)
-                mdl = Q.fit(g[trm], y[trm], fs, 0.5, F.monotone_vector(fs), hp["num_leaves"],
+                mdl = Q.fit(g[trm], y[trm], fs, 0.5, mono(fs), hp["num_leaves"],
                             hp["min_child_samples"], hp["n_estimators"])
                 errs.append(float(np.sqrt(np.mean((mdl.predict(g[tem]) - y[tem]) ** 2))))
             cvr[name] = dict(mean_rmse_log=float(np.mean(errs)), by_year=dict(zip(map(str, tr_years), errs)))
@@ -211,7 +222,18 @@ def main():
               f"out-of-range days {oor}, CV rmse with {cvr['with_bare']['mean_rmse_log']:.3f} "
               f"without {cvr['without_bare']['mean_rmse_log']:.3f}")
         res["sites"][site] = out
-    json.dump(res, open(F.OUT / "sensitivity.json", "w"), indent=1, default=float)
+    path = F.OUT / "sensitivity.json"
+    old = json.load(open(path)) if path.exists() else {}
+    if VERSION == "v1":
+        if "v2" in old:
+            res["v2"] = old["v2"]  # keep the v2 block written by a --v2 run
+        json.dump(res, open(path, "w"), indent=1, default=float)
+    else:
+        res["model_version"] = "v2"
+        res["note"] = ("v2 (legacy-N) GBM; reservoir block repeats the v1 conceptual model for reference. The carryover "
+                       "store does not depend on cover, so cover acts only through the bare-share features.")
+        old["v2"] = res
+        json.dump(old, open(path, "w"), indent=1, default=float)
     print("wrote sensitivity.json")
 
 

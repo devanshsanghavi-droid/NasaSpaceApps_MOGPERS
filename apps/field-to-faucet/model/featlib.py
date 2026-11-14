@@ -120,8 +120,13 @@ def cover_asof(cv: pd.DataFrame, c8: pd.DataFrame, basin: str, idx: pd.DatetimeI
     return bare, age, pd.Series("modis_asof_m01", index=idx, dtype=object)
 
 
-def load_raw(proc: Path = PROC) -> pd.DataFrame:
-    """One continuous daily frame per site with raw daily drivers (no rolling yet)."""
+def load_raw(proc: Path = PROC, history: bool = False) -> pd.DataFrame:
+    """One continuous daily frame per site with raw daily drivers (no rolling yet).
+
+    history=False (v1, default): data/processed only (POWER 2015+, NWIS 2015-10+, MODIS 2015-07+, CDL 2016+).
+    history=True (v2): additionally prepends the model-owned pre-2016 files written by m06_history.py
+    (POWER 2008-2014, NWIS 2011-10..2015-09, MODIS 13Q1 composites 2011-07..2015-06 -> causal as-of with
+    the same fallback rule, CDL 2011-2015 corn share at 240 m minus its 2016-2021 bias vs 30 m)."""
     nw = pd.read_parquet(proc / "nwis_daily.parquet")
     nw["date"] = pd.to_datetime(nw["date"])
     pw = pd.read_parquet(proc / "power_daily_basin.parquet")
@@ -130,6 +135,18 @@ def load_raw(proc: Path = PROC) -> pd.DataFrame:
     cv["date"] = pd.to_datetime(cv["date"])
     c8 = pd.read_parquet(proc / "cover_basin_8day.parquet")
     cdl = pd.read_parquet(proc / "cdl_basin_year.parquet")
+    if history:
+        hp = pd.read_parquet(OUT / "power_daily_basin_2008_2014.parquet")
+        hp["date"] = pd.to_datetime(hp["date"])
+        pw = pd.concat([hp[hp.date < pw.date.min()], pw], ignore_index=True)
+        hn = pd.read_parquet(OUT / "nwis_2012_2015.parquet")
+        hn["date"] = pd.to_datetime(hn["date"])
+        nw = pd.concat([hn[hn.date < nw.date.min()], nw], ignore_index=True)
+        h8 = pd.read_parquet(OUT / "cover_basin_8day_2011_2015.parquet")
+        c8_hist = pd.concat([h8, c8.assign(composite_start=pd.to_datetime(c8.composite_start))], ignore_index=True)
+        hc = pd.read_parquet(OUT / "cdl_basin_year_2011_2015.parquet")
+        hc = hc.assign(corn=hc.corn - hc.corn_bias_vs_30m_2016_2021)
+        cdl = pd.concat([hc[hc.year < cdl.year.min()][["basin", "year", "corn"]], cdl], ignore_index=True)
 
     frames = []
     for site, basin in SITES.items():
@@ -155,6 +172,13 @@ def load_raw(proc: Path = PROC) -> pd.DataFrame:
 
         # ---- cover (MODIS), CAUSAL. See cover_asof() for the rules.
         asof, age, src = cover_asof(cv, c8, basin, idx)
+        if history:  # days before the processed as-of series: same rule from the historical composites
+            ha, hg, _ = cover_asof(cv.drop(columns=[c for c in cv.columns if c.endswith("_asof")]), c8_hist,
+                                   basin, idx)
+            first = asof.first_valid_index()
+            pre = (idx < first) & ha.notna().values
+            asof[pre], age[pre] = ha[pre], hg[pre]
+            src[pre] = "asof_modis_hist"
         df["bare_asof_raw"] = asof
         df["cover_age_days"] = age
         good = asof.notna() & (age <= FRESH_AGE)
@@ -286,3 +310,64 @@ def gbm_features(use_longmem: bool, use_cdl: bool) -> list[str]:
 def monotone_vector(feats: list[str]) -> list[int]:
     pos = set(BARE_FEATS + BAREWET_FEATS + WET_FEATS)
     return [1 if f in pos else 0 for f in feats]
+
+
+# ---- v2 (legacy-N) carryover features ------------------------------------------------------------
+CARRY_K = [50, 150, 400, 1000]   # mm of effective drainage per e-fold of the store (grid; LOYO CV picks)
+CARRY_P = 2.0                    # drainage D = P * GWETROOT**2 (rain on wet soil drains; dry soil holds it)
+
+
+def carryover_features(g: pd.DataFrame, ks=CARRY_K, p=CARRY_P) -> pd.DataFrame:
+    """Slow soil/groundwater N-carryover store (Option A), causal, per site (continuous daily frame):
+        S_t = S_{t-1} * exp(-D_t / k) + I_t,   flush F_t = S_{t-1} * (1 - exp(-D_t / k))
+        D_t = P_t * GWETROOT_t**p (mm),  I_t = corn share * spring pulse (Apr 10 - May 31, 1 unit / yr)
+    Drought years drain little, so the store (unleached N) builds up and is flushed when it gets wet again.
+    Spin-up: S_0 = steady state for the first 3 years' mean drainage. Columns per k: ncarry_k<k>,
+    nflush30_k<k>, nflush90_k<k>. Plus prior_gs_rain = Apr-Sep rain of the most recent completed season."""
+    g = g.copy()
+    d = pd.to_datetime(g["date"])
+    doy = d.dt.dayofyear.values
+    pulse = ((doy >= 100) & (doy <= 151)).astype(float) / 52.0
+    inp = g["corn_y"].values * pulse
+    P = g["P"].fillna(0).values
+    gw = g["gwr"].ffill().fillna(0.5).values
+    D = P * gw ** p
+    n3 = min(len(D), 3 * 365)
+    for k in ks:
+        dec = np.exp(-D / k)
+        ann_d = D[:n3].mean() * 365
+        S = inp[:n3].mean() * 365 / max(1 - np.exp(-ann_d / k), 1e-6) * 0.5  # mid-year steady state
+        Sv, Fv = np.empty(len(D)), np.empty(len(D))
+        for i in range(len(D)):
+            f = S * (1 - dec[i])
+            S = S * dec[i] + inp[i]
+            Sv[i], Fv[i] = S, f
+        g[f"ncarry_k{k}"] = Sv
+        fl = pd.Series(Fv)
+        g[f"nflush30_k{k}"] = fl.rolling(30, min_periods=24).sum().values
+        g[f"nflush90_k{k}"] = fl.rolling(90, min_periods=72).sum().values
+        bad = ~g["power_ok"].astype(bool).values
+        g.loc[bad, [f"ncarry_k{k}", f"nflush30_k{k}", f"nflush90_k{k}"]] = np.nan
+    gs = pd.Series(np.where((d.dt.month >= 4) & (d.dt.month <= 9), g["P"], 0.0)).groupby(d.dt.year.values).sum()
+    season = np.where(d.dt.month >= 10, d.dt.year, d.dt.year - 1)
+    g["prior_gs_rain"] = pd.Series(season).map(gs).values
+    first_full = d.dt.year.min() + (0 if d.iloc[0].month <= 4 else 1)
+    g.loc[season < first_full, "prior_gs_rain"] = np.nan
+    return g
+
+
+def carry_feats(k: int, use_prior_gs: bool) -> list[str]:
+    return [f"ncarry_k{k}", f"nflush30_k{k}", f"nflush90_k{k}"] + (["prior_gs_rain"] if use_prior_gs else [])
+
+
+def monotone_vector_v2(feats: list[str]) -> list[int]:
+    pos = set(BARE_FEATS + BAREWET_FEATS + WET_FEATS)
+    out = []
+    for f in feats:
+        if f in pos or f.startswith("ncarry_") or f.startswith("nflush"):
+            out.append(1)
+        elif f == "prior_gs_rain":
+            out.append(-1)  # a wetter previous growing season leaves less unleached N
+        else:
+            out.append(0)
+    return out

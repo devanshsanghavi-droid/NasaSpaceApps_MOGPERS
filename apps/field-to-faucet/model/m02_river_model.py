@@ -329,7 +329,7 @@ def main():
     if mpath.exists():
         try:
             old = json.load(open(mpath))
-            for k in ("outlook",):
+            for k in ("outlook", "v2", "display_model"):
                 if k in old:
                     metrics[k] = old[k]
         except Exception:
