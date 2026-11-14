@@ -169,6 +169,7 @@ def es_kpa(t):
 def add_daily(d, elev):
     """d: one cell's daily frame. VPD per FAO-56: es = mean(es(Tmax), es(Tmin)); ea from QV2M and pressure from
     elevation (FAO-56 eq. 7). Fallback to RH2M-based ea where QV2M is missing."""
+    d[PARAMS] = d[PARAMS].astype("float64")
     tmn, tmx = d.T2M_MIN.to_numpy(float), d.T2M_MAX.to_numpy(float)
     d["edd30"] = sine_dd_above(tmn, tmx, 30.0)
     d["gdd10_30"] = sine_dd_above(tmn, tmx, 10.0) - d["edd30"]
@@ -197,6 +198,7 @@ def cell_year(d):
         "prcp_jul_mm": agg(m == 7, "PRECTOTCORR", "sum", 31),
         "prcp_aug_mm": agg(m == 8, "PRECTOTCORR", "sum", 31),
         "prcp_mjjas_mm": agg(mjjas, "PRECTOTCORR", "sum", 153),
+        "prcp_mj_mm": agg(m.between(5, 6), "PRECTOTCORR", "sum", 61),
         "edd30_jja": agg(jja, "edd30", "sum", 92),
         "gdd10_30_mjjas": agg(mjjas, "gdd10_30", "sum", 153),
         "tmax_jja_c": agg(jja, "T2M_MAX", "mean", 92),
@@ -247,6 +249,8 @@ def standardise(cy):
         pj = g.prcp_jja_mm.to_numpy(float)
         g["prcp_jja_anom_pct"] = 100.0 * (pj / np.nanmean(pj[inb]) - 1.0)
         g["spi_jja"] = spi_gamma(pj, pj[inb])
+        pm = g.prcp_mj_mm.to_numpy(float)
+        g["prcp_mj_anom_pct"] = 100.0 * (pm / np.nanmean(pm[inb]) - 1.0)
         gw = g.gwetroot_jja.to_numpy(float)
         g["gwetroot_jja_pct"] = emp_pct(gw, gw[inb])
         ed = g.edd30_jja.to_numpy(float)
@@ -313,6 +317,7 @@ def main():
     hz["is_partial_year"] = (hz.year == last_day.year) & (last_day < pd.Timestamp(f"{last_day.year}-12-31"))
     cols = ["fips", "year", "state_abbr", "name", "power_cell_id", "power_cell_lon", "power_cell_lat",
             "prcp_jja_mm", "prcp_jul_mm", "prcp_aug_mm", "prcp_mjjas_mm", "prcp_jja_anom_pct", "spi_jja",
+            "prcp_mj_mm", "prcp_mj_anom_pct",
             "edd30_jja", "gdd10_30_mjjas", "tmax_jja_c", "vpd_jja_kpa", "gwetroot_jja", "gwetroot_jul_aug",
             "gwetroot_jja_pct", "gwettop_jja", "z_neg_spi_jja", "z_edd30_jja", "z_neg_gwetroot_jja",
             "hazard_n_components", "hazard_z", "n_days", "is_partial_year"]

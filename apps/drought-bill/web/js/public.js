@@ -85,19 +85,19 @@ export function initPublic(D, state, onSelect) {
     const tax = state.taxpayer;
     const big = tax ? T.taxpayer : T.expected;
     const pctTax = isNum(T.taxpayer.est) && isNum(T.expected.est) && T.expected.est > 0 ? T.taxpayer.est / T.expected.est : null;
-    document.getElementById('hero').innerHTML = `
+    document.getElementById('hero').innerHTML = `<div class="hero-main">
       <p class="eyebrow">The drought bill · ${esc(T.name || '7 Corn Belt and Plains states')} · crop insurance</p>
-      <h1 class="hero-h">${tax ? 'Taxpayers pay' : 'Drought costs'} <span class="red money">${usdBig(big.est)}</span> ${tax ? 'of the drought bill' : ''} every year${tax ? '.' : ' in insured crop losses.'}</h1>
+      <h1 class="hero-h">${tax ? 'Taxpayers pay' : 'Drought costs'} <span class="red money">${usdBig(big.est)}</span>${tax ? ' of the drought bill' : ''} every year${tax ? '.' : ' in insured crop losses.'}</h1>
       <p class="hero-range">Expected yearly crop-insurance payouts for drought${tax ? ' funded by premium subsidies' : ''}${rangeTxt(big, usdBig) ? `, likely range <b>${rangeTxt(big, usdBig)}</b>` : ''}${dollarYear ? ` (${esc(dollarYear)} dollars)` : ''}.</p>
       <p class="hero-sub">${sav && isNum(sav.est) && sav.est > 0
         ? `<b>Diverse rotations cut it.</b> If every county's rotation diversity rose to the region's top 10%, a 2022-style drought bill would shrink by <span class="green">${usdBig(sav.est)}</span>${isNum(sav.share) ? ` (${pct(sav.share)})` : ''}${isNum(sav.lo) ? `, range ${usdBig(sav.lo)}–${usdBig(sav.hi)}` : ''}.`
         : '<b>Diverse rotations cut it.</b> Move the slider on any county to see by how much.'}</p>
+      <p class="nasa-line"><span class="nasa-badge">NASA</span> Built on ${nasa.length ? nasa.map(esc).join(' · ') : 'NASA Earth observations'}.</p></div>
       <div class="tiles">
         <div class="tile"><div class="tile-k">2022 actual drought bill</div><div class="tile-v red">${usdBig(T.a2022.est)}</div><div class="tile-s">insured drought losses, all payers</div></div>
         <div class="tile"><div class="tile-k">Paid by taxpayers</div><div class="tile-v red">${usdBig(T.taxpayer.est)}</div><div class="tile-s">${isNum(pctTax) ? `${pct(pctTax)} of the expected bill, via premium subsidies` : 'via premium subsidies'}</div></div>
         <div class="tile"><div class="tile-k">By 2045 (NASA climate projections)</div><div class="tile-v">${isNum(T.ch245.est) ? `${T.ch245.est > 0 ? '+' : ''}${T.ch245.est.toFixed(0)}%` : NA}</div><div class="tile-s">moderate emissions${rangeTxt(T.ch245, (x) => `${x.toFixed(0)}%`) ? `, range ${rangeTxt(T.ch245, (x) => `${x.toFixed(0)}%`)}` : ''}${isNum(T.ch585.est) ? `; high: ${T.ch585.est > 0 ? '+' : ''}${T.ch585.est.toFixed(0)}%` : ''}</div></div>
-      </div>
-      <p class="nasa-line"><span class="nasa-badge">NASA</span> Built on ${nasa.length ? nasa.map(esc).join(' · ') : 'NASA Earth observations'}.</p>`;
+      </div>`;
   }
 
   // ----- map -----
@@ -170,7 +170,7 @@ export function initPublic(D, state, onSelect) {
       <p class="eyebrow">${esc(STATE_NAMES[c.state] || c.state || '')}</p>
       <h3>${esc(countyLabel(c, state.fips))}</h3>
       <div class="card-big"><span class="red money">${usd(v.est)}</span><span class="unit">per insured acre / yr</span></div>
-      <p class="card-range">${rangeTxt(v) ? `Range ${rangeTxt(v)}. ` : ''}${esc(LAYERS[state.layer].long)}${state.taxpayer ? ', taxpayer-funded share' : ''}.
+      <p class="card-range">${rangeTxt(v) ? `Range ${rangeTxt(v)} · ` : ''}${esc(LAYERS[state.layer].long.replace(/^./, (ch) => ch.toUpperCase()))}${state.taxpayer ? ', taxpayer-funded share' : ''}.
         ${isNum(v.est) && isNum(A) ? `About <b class="red">${usdBig(v.est * A)}</b> across ${Math.round(A).toLocaleString('en-US')} insured acres.` : ''}</p>
       <table class="kv">
         ${row('Expected bill / yr', exp)}

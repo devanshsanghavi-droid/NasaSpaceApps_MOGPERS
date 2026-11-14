@@ -83,6 +83,9 @@ export function initFarmer(D, state, onSelect) {
       .on('pointerleave', hideTip)
       .on('click', (ev, f) => { hideTip(); pickField(f.properties); });
     fieldsMap = { dots };
+    document.getElementById('field-note').textContent = F.mock
+      ? 'Synthetic mock dots (MOCK DATA). Tap a dot to load its crop history.'
+      : `${F.fields.length} field samples from the USDA Cropland Data Layer, 2008–2024. Tap a dot to load its crop history.`;
     document.getElementById('field-legend').innerHTML = Object.entries(ROT_COL).map(([k, c]) => `<span class="lg-item"><i style="background:${c}"></i>${esc(k)}</span>`).join('');
     if (!state.field) pickField(F.fields.find((f) => f.rotation_class === 'corn-soy') || F.fields[0]);
   }
@@ -95,7 +98,7 @@ export function initFarmer(D, state, onSelect) {
     const years = F.years || [];
     const seq = String(f.seq || '');
     document.getElementById('field-strip').innerHTML = `
-      <p class="fig-cap"><b>Field ${esc(f.id)}</b>: ${esc(f.rotation_class || NA)}${isNum(f.ncrop5) ? ` · ${f.ncrop5} crops in 2020–24` : ''}${isNum(f.div5) ? ` · diversity ${f.div5.toFixed(2)}` : ''} <span class="muted">(Cropland Data Layer)</span></p>
+      <p class="strip-cap"><b>Field ${esc(f.id)}</b>: ${esc(f.rotation_class || NA)}${isNum(f.ncrop5) ? ` · ${f.ncrop5} crops in 2020–24` : ''}${isNum(f.div5) ? ` · diversity ${f.div5.toFixed(2)}` : ''} <span class="muted">(Cropland Data Layer)</span></p>
       <div class="strip" role="list">${[...seq].map((ch, i) => { const c = CROP[ch] || CROP.X; return `<div class="strip-cell" role="listitem" style="background:${c[1]};color:${c[2]}" title="${years[i] ?? ''}: ${esc(c[0])}"><b>${esc(ch)}</b><span>${String(years[i] ?? '').slice(2)}</span></div>`; }).join('')}</div>
       <p class="strip-key">${Object.entries(CROP).filter(([k]) => seq.includes(k)).map(([k, c]) => `<span><b>${k}</b> ${esc(c[0])}</span>`).join('')}</p>`;
     const fips = String(F.county?.fips || '19149');

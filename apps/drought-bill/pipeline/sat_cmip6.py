@@ -190,7 +190,11 @@ def year_indices(model, scen, year):
         idx[f"tmin_{nm}_c"] = tn[s].mean(0)
     if got["hurs"] is not None:
         rh = np.clip(got["hurs"][0], 0, 100)
-        vpd = (esat_kpa(tx) + esat_kpa(tn)) / 2.0 * (1 - rh / 100.0)
+        # same form as the hazard module's RH fallback: es = mean(es(Tmax), es(Tmin)); ea = es(Tmean) * RH
+        # (NEX-GDDP `tas` is itself the mean of downscaled tasmax and tasmin)
+        es = (esat_kpa(tx) + esat_kpa(tn)) / 2.0
+        ea = esat_kpa((tx + tn) / 2.0) * rh / 100.0
+        vpd = np.clip(es - ea, 0, None)
         idx["vpd_jja_kpa"] = vpd.mean(0)
         idx["hurs_jja_pct"] = rh.mean(0)
     return idx, (lat, lon)

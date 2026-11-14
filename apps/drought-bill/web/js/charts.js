@@ -31,8 +31,8 @@ export function pairedBars(host, rows, { fmt, height = 240, ariaLabel = '' } = {
     const y = d3.scaleLinear().domain([0, max * 1.08]).nice().range([ih, 0]);
     g.append('g').attr('class', 'grid').selectAll('line').data(y.ticks(4)).join('line')
       .attr('x1', 0).attr('x2', iw).attr('y1', y).attr('y2', y).attr('stroke', C.grid);
-    g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(4).tickFormat(fmt).tickSize(0)).call((a) => a.select('.domain').remove());
-    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`).call(d3.axisBottom(x).tickSize(0)).call((a) => a.select('.domain').attr('stroke', C.axis));
+    g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(4).tickFormat(fmt).tickSize(0).tickPadding(8)).call((a) => a.select('.domain').remove());
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`).call(d3.axisBottom(x).tickSize(0).tickPadding(6)).call((a) => a.select('.domain').attr('stroke', C.axis));
     const grp = g.selectAll('.cat').data(rows).join('g').attr('transform', (r) => `translate(${x(r.label)},0)`);
     const bar = (key, color) => grp.filter((r) => isNum(r[key])).append('rect')
       .attr('x', xi(key)).attr('width', xi.bandwidth()).attr('y', (r) => y(r[key])).attr('height', (r) => ih - y(r[key]))
@@ -59,8 +59,8 @@ export function scatter(host, pts, { fmt, height = 260, xLabel = 'Predicted', yL
     const x = d3.scaleLinear().domain([0, max]).nice().range([0, iw]);
     const y = d3.scaleLinear().domain(x.domain()).range([ih, 0]);
     g.append('g').selectAll('line').data(y.ticks(4)).join('line').attr('x1', 0).attr('x2', iw).attr('y1', y).attr('y2', y).attr('stroke', C.grid);
-    g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(4).tickFormat(fmt).tickSize(0)).call((a) => a.select('.domain').remove());
-    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`).call(d3.axisBottom(x).ticks(4).tickFormat(fmt).tickSize(0)).call((a) => a.select('.domain').attr('stroke', C.axis));
+    g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(4).tickFormat(fmt).tickSize(0).tickPadding(8)).call((a) => a.select('.domain').remove());
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`).call(d3.axisBottom(x).ticks(4).tickFormat(fmt).tickSize(0).tickPadding(6)).call((a) => a.select('.domain').attr('stroke', C.axis));
     g.append('line').attr('x1', 0).attr('y1', ih).attr('x2', iw).attr('y2', 0).attr('stroke', C.axis).attr('stroke-dasharray', '4 3');
     g.append('text').attr('x', iw - 4).attr('y', 12).attr('text-anchor', 'end').attr('class', 'chart-note').text('perfect prediction');
     g.append('text').attr('x', iw / 2).attr('y', ih + 30).attr('text-anchor', 'middle').attr('class', 'chart-label').text(xLabel);
@@ -84,8 +84,8 @@ export function diversityChart(host, s, { now, sel, p90, fmt }) {
     const x = d3.scaleLinear().domain(d3.extent(pts, (p) => p.d)).range([0, iw]);
     const y = d3.scaleLinear().domain([0, d3.max(pts, (p) => (isNum(p.hi) ? p.hi : p.b)) * 1.05]).nice().range([ih, 0]);
     g.append('g').selectAll('line').data(y.ticks(3)).join('line').attr('x1', 0).attr('x2', iw).attr('y1', y).attr('y2', y).attr('stroke', C.grid);
-    g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(3).tickFormat(fmt).tickSize(0)).call((a) => a.select('.domain').remove());
-    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5).tickSize(0)).call((a) => a.select('.domain').attr('stroke', C.axis));
+    g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(3).tickFormat(fmt).tickSize(0).tickPadding(8)).call((a) => a.select('.domain').remove());
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5).tickSize(0).tickPadding(6)).call((a) => a.select('.domain').attr('stroke', C.axis));
     g.append('text').attr('x', iw).attr('y', ih + 28).attr('text-anchor', 'end').attr('class', 'chart-label').text('rotation diversity (Shannon index) →');
     const band = pts.filter((p) => isNum(p.lo) && isNum(p.hi));
     if (band.length > 1) g.append('path').attr('d', d3.area().x((p) => x(p.d)).y0((p) => y(p.lo)).y1((p) => y(p.hi))(band)).attr('fill', 'rgba(193,18,31,.13)');

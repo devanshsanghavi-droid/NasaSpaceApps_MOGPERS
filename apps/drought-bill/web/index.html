@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drought Bill</title>
+  <meta name="description" content="What drought costs farmers and taxpayers in the Corn Belt and Plains, county by county, and how much more diverse crop rotations cut it. Built on NASA data.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23c1121f'/%3E%3Ctext x='8' y='12.5' font-size='12' font-family='Arial' font-weight='700' text-anchor='middle' fill='white'%3E$%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="#public" class="wordmark"><span class="wm-mark">$</span>DROUGHT BILL</a>
+    <nav class="tabs" aria-label="Views">
+      <a class="tab" href="#public" data-view="public">Public</a>
+      <a class="tab" href="#farmer" data-view="farmer">Farmer</a>
+      <a class="tab" href="#about" data-view="about">Method</a>
+    </nav>
+  </header>
+
+  <div class="mock-banner" id="mock-banner" role="alert" hidden>
+    <strong>MOCK DATA</strong> <span id="mock-files">Synthetic placeholder numbers. Not results.</span>
+  </div>
+
+  <main>
+    <!-- PUBLIC -->
+    <div id="view-public" class="view">
+      <section class="hero container" id="hero" aria-live="polite"><p class="loading">Loading the drought bill…</p></section>
+
+      <section class="container block" aria-labelledby="map-h">
+        <div class="block-head">
+          <div>
+            <p class="eyebrow">County map</p>
+            <h2 id="map-h">Where the bill lands</h2>
+          </div>
+          <div class="controls">
+            <div class="seg" id="layer-seg" role="group" aria-label="Map layer"></div>
+            <label class="switch"><input type="checkbox" id="tax-toggle"><span class="switch-ui" aria-hidden="true"></span> Taxpayer share</label>
+          </div>
+        </div>
+        <div class="map-grid">
+          <div class="map-col">
+            <div id="pub-map" class="map-host"></div>
+            <div id="pub-legend" class="legend"></div>
+          </div>
+          <aside class="side" aria-live="polite">
+            <label class="search"><span class="sr-only">Search a county</span>
+              <input class="county-search" type="search" list="county-list" placeholder="Search a county, e.g. Plymouth" autocomplete="off"></label>
+            <div id="pub-card" class="county-card"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="container block" id="hindcast" aria-labelledby="hc-h">
+        <div class="block-head">
+          <div>
+            <p class="eyebrow">Out-of-time test</p>
+            <h2 id="hc-h">Could we have seen 2022 coming?</h2>
+          </div>
+        </div>
+        <p class="lede" id="hindcast-lede">The model is frozen with data through 2020, then asked to predict the 2022 and 2023 drought bills.</p>
+        <div id="hindcast-body"></div>
+      </section>
+    </div>
+
+    <!-- FARMER -->
+    <div id="view-farmer" class="view" hidden>
+      <section class="container block">
+        <div class="block-head">
+          <div>
+            <p class="eyebrow">Farmer view</p>
+            <h2>What does drought cost your acres?</h2>
+          </div>
+        </div>
+        <div class="farm-grid">
+          <div class="farm-left">
+            <div class="seg" role="group" aria-label="How to pick your farm">
+              <button type="button" class="seg-btn" data-fmode="county" aria-pressed="true">My county</button>
+              <button type="button" class="seg-btn" data-fmode="field" aria-pressed="false">Sample field, Plymouth Co. IA</button>
+            </div>
+            <div id="fm-county">
+              <label class="search"><span class="lbl">1. Your county</span>
+                <input class="county-search" type="search" list="county-list" placeholder="Search, or tap the map" autocomplete="off"></label>
+              <div id="farm-map" class="map-host small-map"></div>
+            </div>
+            <div id="fm-field" hidden>
+              <p class="small muted" id="field-note">Tap a dot to load its crop history.</p>
+              <div id="field-map" class="map-host field-map"></div>
+              <div id="field-legend" class="field-legend"></div>
+              <div id="field-strip"></div>
+            </div>
+            <p class="lbl">2. Your current rotation</p>
+            <div id="rot-chips" class="chips" role="group" aria-label="Current rotation"></div>
+          </div>
+          <div class="farm-right" aria-live="polite">
+            <p class="farm-where" id="farm-where"></p>
+            <div id="farm-results"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ABOUT -->
+    <div id="view-about" class="view" hidden>
+      <section class="container block">
+        <div class="block-head"><div><p class="eyebrow">Method and data</p><h2>What this is built on</h2></div></div>
+        <div id="about-body"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer container">
+    <span>Drought Bill · NASA Space Apps 2026 · Field Shift: Adapting Farms with NASA Data</span>
+    <span>Decision support, not a replacement for your agronomist or crop-insurance agent.</span>
+  </footer>
+
+  <datalist id="county-list"></datalist>
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

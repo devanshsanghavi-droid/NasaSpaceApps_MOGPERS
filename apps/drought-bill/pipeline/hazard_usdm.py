@@ -10,6 +10,7 @@ a Tuesday); rows outside the requested year are dropped (GetDSCI returns the wee
 
 Re-run: /home/user/venv-db/bin/python pipeline/hazard_usdm.py
 """
+import gzip
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -31,9 +32,10 @@ EP = {"area": "GetDroughtSeverityStatisticsByAreaPercent", "dsci": "GetDSCI"}
 
 
 def fetch(kind, st, yr):
-    f = RAW / f"{kind}_{st}_{yr}.json"
+    f = RAW / f"{kind}_{st}_{yr}.json.gz"
     if f.exists() and f.stat().st_size > 100:
-        return kind, st, yr, json.loads(f.read_text())
+        with gzip.open(f, "rt") as fh:
+            return kind, st, yr, json.load(fh)
     url = f"{BASE}{EP[kind]}?aoi={st}&startdate=1/1/{yr}&enddate=12/31/{yr}&statisticsType=1"
     last = None
     for attempt in range(6):
@@ -42,7 +44,8 @@ def fetch(kind, st, yr):
             if r.status_code == 200:
                 d = r.json()
                 if isinstance(d, list) and d:
-                    f.write_text(json.dumps(d))
+                    with gzip.open(f, "wt") as fh:
+                        json.dump(d, fh)
                     return kind, st, yr, d
                 last = f"empty/unexpected payload: {str(d)[:200]}"
             else:

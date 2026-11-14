@@ -159,7 +159,7 @@ def main():
             rec["nccpi_rated_frac"] = g.acres_nccpi.sum() / g.mu_acres.sum()
         recs.append(rec)
     soil = pd.DataFrame(recs)
-    # survey-area size vs county total area (land + water) as a sanity check
+    # survey-area size vs county land+water area as a sanity check (Great Lakes water is outside survey areas)
     tot_ac = (cty.set_index("fips").land_km2 + cty.set_index("fips").water_km2) * ACRES_PER_KM2
     soil["sda_area_to_county_ratio"] = soil.sda_area_ac / soil.fips.map(tot_ac)
 
@@ -171,10 +171,26 @@ def main():
         out[f"corn_irrigated_share_{yr}"] = out[f"corn_grain_harv_irr_ac_{yr}"] / out[f"corn_grain_harv_ac_{yr}"]
         out[f"soy_irrigated_share_{yr}"] = out[f"soy_harv_irr_ac_{yr}"] / out[f"soy_harv_ac_{yr}"]
         out[f"cropland_share_{yr}"] = out[f"cropland_ac_{yr}"] / (out.land_km2 * ACRES_PER_KM2)
-    # headline irrigated_share: Census 2022, fall back to 2017 where 2022 is withheld
-    out["irrigated_share"] = out.irrigated_share_2022.fillna(out.irrigated_share_2017)
-    out["irrigated_share_year"] = np.where(out.irrigated_share_2022.notna(), "2022",
-                                           np.where(out.irrigated_share_2017.notna(), "2017", None))
+    # headline irrigated_share, tiered (first available wins):
+    #  1 Census 2022 irrigated harvested cropland / harvested cropland
+    #  2 Census 2017 same ratio (2022 withheld "(D)")
+    #  3 Census 2022 all irrigated land in farms / harvested cropland, capped at 1 (proxy: also counts irrigated
+    #    pasture; used only where the harvested-cropland irrigated item is withheld in both censuses)
+    #  4 Census 2017 same proxy
+    for yr in ("2022", "2017"):
+        out[f"irrigated_share_proxy_{yr}"] = (out[f"ag_land_irr_ac_{yr}"] / out[f"harv_cropland_ac_{yr}"]).clip(upper=1)
+    tiers = [("irrigated_share_2022", "2022", "harvested_cropland_irrigated_2022"),
+             ("irrigated_share_2017", "2017", "harvested_cropland_irrigated_2017"),
+             ("irrigated_share_proxy_2022", "2022", "proxy_ag_land_irrigated_2022"),
+             ("irrigated_share_proxy_2017", "2017", "proxy_ag_land_irrigated_2017")]
+    out["irrigated_share"] = np.nan
+    out["irrigated_share_year"] = None
+    out["irrigated_share_method"] = None
+    for col, yr, meth in tiers:
+        m = out.irrigated_share.isna() & out[col].notna()
+        out.loc[m, "irrigated_share"] = out.loc[m, col]
+        out.loc[m, "irrigated_share_year"] = yr
+        out.loc[m, "irrigated_share_method"] = meth
     out["cropland_share"] = out.cropland_share_2022.fillna(out.cropland_share_2017)
     out["cropland_share_year"] = np.where(out.cropland_share_2022.notna(), "2022",
                                           np.where(out.cropland_share_2017.notna(), "2017", None))
@@ -183,15 +199,14 @@ def main():
         out[f"flag_{col}"] = out.fips.map(flags[col]) if col in flags else None
     out = out.drop(columns=["land_km2"])
     for c in out.columns:
-        if c.endswith("_mm") or c == "nccpi" or "share" in c and not c.endswith("_year") or c.endswith("_frac") \
-                or c.endswith("_ratio"):
+        if pd.api.types.is_float_dtype(out[c]) and not c.endswith("_ac_2022") and not c.endswith("_ac_2017"):
             out[c] = out[c].astype(float).round(4)
     out.to_parquet(PROC / "county_static.parquet", index=False)
 
     print("county_static:", len(out), "rows,", out.shape[1], "cols")
     print(out[["aws0_100_mm", "aws0_150_mm", "nccpi", "irrigated_share", "cropland_share"]].describe().round(3))
     print("null counts:", out[["aws0_100_mm", "nccpi", "irrigated_share", "cropland_share"]].isna().sum().to_dict())
-    print("irrigated_share_year:", out.irrigated_share_year.value_counts(dropna=False).to_dict())
+    print("irrigated_share_method:", out.irrigated_share_method.value_counts(dropna=False).to_dict())
     print(out.groupby("state_abbr")[["aws0_100_mm", "irrigated_share", "nccpi"]].mean().round(3))
     odd = out[(out.sda_area_to_county_ratio < 0.95) | (out.sda_area_to_county_ratio > 1.05)]
     print("survey area / county area outside 0.95-1.05:\n",
