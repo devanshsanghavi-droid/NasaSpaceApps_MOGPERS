@@ -1,0 +1,1562 @@
+{
+ "sources": {
+  "population": "https://www2.census.gov/programs-surveys/popest/datasets/2020-2025/counties/totals/co-est2025-alldata.csv (US Census Bureau, Vintage 2025 county population estimates, July 1 2025)",
+  "main_towns": "https://www2.census.gov/programs-surveys/popest/datasets/2020-2025/cities/totals/sub-est2025_20.csv (Vintage 2025 subcounty estimates; SUMLEV 157 = incorporated place within county; top 3 by 2025 population)",
+  "census_of_ag_2022": "https://www.nass.usda.gov/sites/default/files/datasets/qs.census2022.txt.gz (USDA NASS 2022 Census of Agriculture, county level, DOMAIN=TOTAL)"
+ },
+ "notes": [
+  "share_of_economy_from_irrigated_ag is null: no published county figure was reachable (BEA Regional CAINC5N farm earnings at apps.bea.gov returned proxy CONNECT 403). Use crop_sales_per_resident_usd, irrigated_share_of_harvested_cropland and irrigated_land_acres as exposure indicators instead.",
+  "Values marked (D) by NASS (withheld to avoid disclosing individual operations) are null and listed in census_of_ag_2022_suppressed.",
+  "Dollar values are 2022 nominal USD. Derived ratios are simple quotients of the cited values.",
+  "Population is for the whole county; GMD membership follows CONTRACTS.md (see counties.geojson for the official-polygon check)."
+ ],
+ "counties": [
+  {
+   "fips": "20023",
+   "name": "Cheyenne",
+   "gmd": "GMD4",
+   "population_2025": 2604,
+   "population_2020_base": 2615,
+   "population_change_2020_2025_pct": -0.4,
+   "main_towns": [
+    {
+     "name": "St. Francis",
+     "population_2025": 1265,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Bird City",
+     "population_2025": 439,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 31078.0,
+    "harvested_cropland_irrigated_acres": null,
+    "harvested_cropland_acres": 198984.0,
+    "cropland_acres": 399279.0,
+    "farm_acres_operated": 645026.0,
+    "farm_operations": 401.0,
+    "crop_sales_usd": 79895000.0,
+    "animal_sales_usd": 103241000.0,
+    "ag_sales_total_usd": 183137000.0,
+    "corn_sales_usd": 32542000.0,
+    "wheat_sales_usd": 32115000.0,
+    "sorghum_sales_usd": 7361000.0,
+    "corn_grain_irrigated_acres": 17700.0,
+    "corn_grain_acres": 48372.0,
+    "wheat_irrigated_acres": 8791.0,
+    "wheat_acres": 106039.0,
+    "sorghum_grain_irrigated_acres": 1452.0,
+    "sorghum_grain_acres": 33089.0,
+    "soybeans_irrigated_acres": 2942.0,
+    "soybeans_acres": 5932.0,
+    "alfalfa_irrigated_acres": 2276.0,
+    "corn_silage_irrigated_acres": 1018.0,
+    "net_cash_farm_income_usd": 40771000.0,
+    "operating_expense_usd": 168141000.0,
+    "federal_program_receipts_usd": 9189000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "harvested_cropland_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": null,
+    "irrigated_share_of_corn_grain_acres": 0.366,
+    "corn_share_of_irrigated_harvested_cropland": null,
+    "crop_sales_per_resident_usd": 30682,
+    "ag_sales_per_resident_usd": 70329
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20039",
+   "name": "Decatur",
+   "gmd": "GMD4",
+   "population_2025": 2716,
+   "population_2020_base": 2767,
+   "population_change_2020_2025_pct": -1.8,
+   "main_towns": [
+    {
+     "name": "Oberlin",
+     "population_2025": 1606,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Norcatur",
+     "population_2025": 159,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Jennings",
+     "population_2025": 79,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 9527.0,
+    "harvested_cropland_irrigated_acres": null,
+    "harvested_cropland_acres": 168547.0,
+    "cropland_acres": 324903.0,
+    "farm_acres_operated": 514685.0,
+    "farm_operations": 336.0,
+    "crop_sales_usd": 47411000.0,
+    "animal_sales_usd": 214427000.0,
+    "ag_sales_total_usd": 261838000.0,
+    "corn_sales_usd": 20207000.0,
+    "wheat_sales_usd": 20856000.0,
+    "sorghum_sales_usd": 3388000.0,
+    "corn_grain_irrigated_acres": 5197.0,
+    "corn_grain_acres": 63342.0,
+    "wheat_irrigated_acres": 272.0,
+    "wheat_acres": 76865.0,
+    "sorghum_grain_irrigated_acres": 479.0,
+    "sorghum_grain_acres": 20457.0,
+    "soybeans_irrigated_acres": 204.0,
+    "soybeans_acres": 1323.0,
+    "alfalfa_irrigated_acres": 1680.0,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 28252000.0,
+    "operating_expense_usd": 266906000.0,
+    "federal_program_receipts_usd": 8721000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "harvested_cropland_irrigated_acres": "(D)",
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": null,
+    "irrigated_share_of_corn_grain_acres": 0.082,
+    "corn_share_of_irrigated_harvested_cropland": null,
+    "crop_sales_per_resident_usd": 17456,
+    "ag_sales_per_resident_usd": 96406
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20055",
+   "name": "Finney",
+   "gmd": "GMD3",
+   "population_2025": 37505,
+   "population_2020_base": 38472,
+   "population_change_2020_2025_pct": -2.5,
+   "main_towns": [
+    {
+     "name": "Garden City",
+     "population_2025": 27402,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Holcomb",
+     "population_2025": 2190,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 150804.0,
+    "harvested_cropland_irrigated_acres": 149355.0,
+    "harvested_cropland_acres": 405619.0,
+    "cropland_acres": 695042.0,
+    "farm_acres_operated": 821433.0,
+    "farm_operations": 563.0,
+    "crop_sales_usd": 209091000.0,
+    "animal_sales_usd": 913223000.0,
+    "ag_sales_total_usd": 1122314000.0,
+    "corn_sales_usd": 81168000.0,
+    "wheat_sales_usd": 43606000.0,
+    "sorghum_sales_usd": 20447000.0,
+    "corn_grain_irrigated_acres": 53674.0,
+    "corn_grain_acres": 94545.0,
+    "wheat_irrigated_acres": 24860.0,
+    "wheat_acres": 156178.0,
+    "sorghum_grain_irrigated_acres": 8450.0,
+    "sorghum_grain_acres": 101419.0,
+    "soybeans_irrigated_acres": 3794.0,
+    "soybeans_acres": 5048.0,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": 3104.0,
+    "net_cash_farm_income_usd": 141925000.0,
+    "operating_expense_usd": 1024300000.0,
+    "federal_program_receipts_usd": 11797000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "alfalfa_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.368,
+    "irrigated_share_of_corn_grain_acres": 0.568,
+    "corn_share_of_irrigated_harvested_cropland": 0.359,
+    "crop_sales_per_resident_usd": 5575,
+    "ag_sales_per_resident_usd": 29924
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20057",
+   "name": "Ford",
+   "gmd": "GMD3",
+   "population_2025": 33993,
+   "population_2020_base": 34287,
+   "population_change_2020_2025_pct": -0.9,
+   "main_towns": [
+    {
+     "name": "Dodge City",
+     "population_2025": 27653,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Spearville",
+     "population_2025": 774,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Bucklin",
+     "population_2025": 687,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 51752.0,
+    "harvested_cropland_irrigated_acres": 50467.0,
+    "harvested_cropland_acres": 302452.0,
+    "cropland_acres": 537636.0,
+    "farm_acres_operated": 698533.0,
+    "farm_operations": 536.0,
+    "crop_sales_usd": 132898000.0,
+    "animal_sales_usd": 534883000.0,
+    "ag_sales_total_usd": 667781000.0,
+    "corn_sales_usd": 46333000.0,
+    "wheat_sales_usd": 40366000.0,
+    "sorghum_sales_usd": 33391000.0,
+    "corn_grain_irrigated_acres": 26307.0,
+    "corn_grain_acres": 42195.0,
+    "wheat_irrigated_acres": 10811.0,
+    "wheat_acres": 141680.0,
+    "sorghum_grain_irrigated_acres": 3404.0,
+    "sorghum_grain_acres": 95897.0,
+    "soybeans_irrigated_acres": 7571.0,
+    "soybeans_acres": 10842.0,
+    "alfalfa_irrigated_acres": 3005.0,
+    "corn_silage_irrigated_acres": 3011.0,
+    "net_cash_farm_income_usd": 78512000.0,
+    "operating_expense_usd": 611350000.0,
+    "federal_program_receipts_usd": 3884000.0
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.167,
+    "irrigated_share_of_corn_grain_acres": 0.623,
+    "corn_share_of_irrigated_harvested_cropland": 0.521,
+    "crop_sales_per_resident_usd": 3910,
+    "ag_sales_per_resident_usd": 19645
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20063",
+   "name": "Gove",
+   "gmd": "GMD4",
+   "population_2025": 2631,
+   "population_2020_base": 2721,
+   "population_change_2020_2025_pct": -3.3,
+   "main_towns": [
+    {
+     "name": "Quinter",
+     "population_2025": 912,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Grainfield",
+     "population_2025": 307,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Grinnell",
+     "population_2025": 253,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 16420.0,
+    "harvested_cropland_irrigated_acres": 16391.0,
+    "harvested_cropland_acres": 232672.0,
+    "cropland_acres": 394218.0,
+    "farm_acres_operated": 658365.0,
+    "farm_operations": 383.0,
+    "crop_sales_usd": 79265000.0,
+    "animal_sales_usd": 254695000.0,
+    "ag_sales_total_usd": 333960000.0,
+    "corn_sales_usd": 33061000.0,
+    "wheat_sales_usd": 33112000.0,
+    "sorghum_sales_usd": 8997000.0,
+    "corn_grain_irrigated_acres": 10447.0,
+    "corn_grain_acres": 77109.0,
+    "wheat_irrigated_acres": 4736.0,
+    "wheat_acres": 106834.0,
+    "sorghum_grain_irrigated_acres": 552.0,
+    "sorghum_grain_acres": 40187.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": 1216.0,
+    "alfalfa_irrigated_acres": 292.0,
+    "corn_silage_irrigated_acres": 176.0,
+    "net_cash_farm_income_usd": 55057000.0,
+    "operating_expense_usd": 313856000.0,
+    "federal_program_receipts_usd": 9151000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "soybeans_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.07,
+    "irrigated_share_of_corn_grain_acres": 0.135,
+    "corn_share_of_irrigated_harvested_cropland": 0.637,
+    "crop_sales_per_resident_usd": 30127,
+    "ag_sales_per_resident_usd": 126933
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20065",
+   "name": "Graham",
+   "gmd": "GMD4",
+   "population_2025": 2371,
+   "population_2020_base": 2415,
+   "population_change_2020_2025_pct": -1.8,
+   "main_towns": [
+    {
+     "name": "Hill City",
+     "population_2025": 1376,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Bogue",
+     "population_2025": 146,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Morland",
+     "population_2025": 115,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 7499.0,
+    "harvested_cropland_irrigated_acres": 7499.0,
+    "harvested_cropland_acres": 132161.0,
+    "cropland_acres": 231654.0,
+    "farm_acres_operated": 400161.0,
+    "farm_operations": 347.0,
+    "crop_sales_usd": 42230000.0,
+    "animal_sales_usd": 12989000.0,
+    "ag_sales_total_usd": 55219000.0,
+    "corn_sales_usd": 15262000.0,
+    "wheat_sales_usd": 16025000.0,
+    "sorghum_sales_usd": 7994000.0,
+    "corn_grain_irrigated_acres": 4058.0,
+    "corn_grain_acres": 39892.0,
+    "wheat_irrigated_acres": 1576.0,
+    "wheat_acres": 47478.0,
+    "sorghum_grain_irrigated_acres": 649.0,
+    "sorghum_grain_acres": 28783.0,
+    "soybeans_irrigated_acres": 649.0,
+    "soybeans_acres": 4230.0,
+    "alfalfa_irrigated_acres": 533.0,
+    "corn_silage_irrigated_acres": 61.0,
+    "net_cash_farm_income_usd": 10721000.0,
+    "operating_expense_usd": 57224000.0,
+    "federal_program_receipts_usd": 3485000.0
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.057,
+    "irrigated_share_of_corn_grain_acres": 0.102,
+    "corn_share_of_irrigated_harvested_cropland": 0.541,
+    "crop_sales_per_resident_usd": 17811,
+    "ag_sales_per_resident_usd": 23289
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20067",
+   "name": "Grant",
+   "gmd": "GMD3",
+   "population_2025": 7028,
+   "population_2020_base": 7352,
+   "population_change_2020_2025_pct": -4.4,
+   "main_towns": [
+    {
+     "name": "Ulysses",
+     "population_2025": 5524,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 73670.0,
+    "harvested_cropland_irrigated_acres": 71412.0,
+    "harvested_cropland_acres": 154748.0,
+    "cropland_acres": 291934.0,
+    "farm_acres_operated": 363590.0,
+    "farm_operations": 297.0,
+    "crop_sales_usd": 95730000.0,
+    "animal_sales_usd": 956791000.0,
+    "ag_sales_total_usd": 1052521000.0,
+    "corn_sales_usd": 52149000.0,
+    "wheat_sales_usd": 16438000.0,
+    "sorghum_sales_usd": 10492000.0,
+    "corn_grain_irrigated_acres": 32070.0,
+    "corn_grain_acres": 37201.0,
+    "wheat_irrigated_acres": 16982.0,
+    "wheat_acres": 59699.0,
+    "sorghum_grain_irrigated_acres": 8577.0,
+    "sorghum_grain_acres": 36626.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": null,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 153945000.0,
+    "operating_expense_usd": 910839000.0,
+    "federal_program_receipts_usd": 5485000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "soybeans_irrigated_acres": "(D)",
+    "soybeans_acres": "(D)",
+    "alfalfa_irrigated_acres": "(D)",
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.461,
+    "irrigated_share_of_corn_grain_acres": 0.862,
+    "corn_share_of_irrigated_harvested_cropland": 0.449,
+    "crop_sales_per_resident_usd": 13621,
+    "ag_sales_per_resident_usd": 149761
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20069",
+   "name": "Gray",
+   "gmd": "GMD3",
+   "population_2025": 5652,
+   "population_2020_base": 5652,
+   "population_change_2020_2025_pct": 0.0,
+   "main_towns": [
+    {
+     "name": "Cimarron",
+     "population_2025": 1935,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Montezuma",
+     "population_2025": 978,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Copeland",
+     "population_2025": 248,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 105100.0,
+    "harvested_cropland_irrigated_acres": 103009.0,
+    "harvested_cropland_acres": 277886.0,
+    "cropland_acres": 437987.0,
+    "farm_acres_operated": 553976.0,
+    "farm_operations": 464.0,
+    "crop_sales_usd": 145636000.0,
+    "animal_sales_usd": 1125896000.0,
+    "ag_sales_total_usd": 1271532000.0,
+    "corn_sales_usd": 74359000.0,
+    "wheat_sales_usd": 32502000.0,
+    "sorghum_sales_usd": 21403000.0,
+    "corn_grain_irrigated_acres": 51475.0,
+    "corn_grain_acres": 68791.0,
+    "wheat_irrigated_acres": 20313.0,
+    "wheat_acres": 97367.0,
+    "sorghum_grain_irrigated_acres": 7707.0,
+    "sorghum_grain_acres": 80738.0,
+    "soybeans_irrigated_acres": 7526.0,
+    "soybeans_acres": 9558.0,
+    "alfalfa_irrigated_acres": 13368.0,
+    "corn_silage_irrigated_acres": 2325.0,
+    "net_cash_farm_income_usd": 159994000.0,
+    "operating_expense_usd": 1136756000.0,
+    "federal_program_receipts_usd": 5637000.0
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.371,
+    "irrigated_share_of_corn_grain_acres": 0.748,
+    "corn_share_of_irrigated_harvested_cropland": 0.5,
+    "crop_sales_per_resident_usd": 25767,
+    "ag_sales_per_resident_usd": 224970
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20071",
+   "name": "Greeley",
+   "gmd": "GMD1",
+   "population_2025": 1182,
+   "population_2020_base": 1284,
+   "population_change_2020_2025_pct": -7.9,
+   "main_towns": [
+    {
+     "name": "Tribune",
+     "population_2025": 709,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Horace",
+     "population_2025": 93,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 16911.0,
+    "harvested_cropland_irrigated_acres": null,
+    "harvested_cropland_acres": 255005.0,
+    "cropland_acres": 448464.0,
+    "farm_acres_operated": 495657.0,
+    "farm_operations": 285.0,
+    "crop_sales_usd": 77200000.0,
+    "animal_sales_usd": 189088000.0,
+    "ag_sales_total_usd": 266287000.0,
+    "corn_sales_usd": 21903000.0,
+    "wheat_sales_usd": 35959000.0,
+    "sorghum_sales_usd": null,
+    "corn_grain_irrigated_acres": 11735.0,
+    "corn_grain_acres": 52040.0,
+    "wheat_irrigated_acres": 3748.0,
+    "wheat_acres": 135282.0,
+    "sorghum_grain_irrigated_acres": 396.0,
+    "sorghum_grain_acres": 69489.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": null,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 62720000.0,
+    "operating_expense_usd": 228629000.0,
+    "federal_program_receipts_usd": 9107000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "harvested_cropland_irrigated_acres": "(D)",
+    "sorghum_sales_usd": "(D)",
+    "alfalfa_irrigated_acres": "(D)",
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": null,
+    "irrigated_share_of_corn_grain_acres": 0.225,
+    "corn_share_of_irrigated_harvested_cropland": null,
+    "crop_sales_per_resident_usd": 65313,
+    "ag_sales_per_resident_usd": 225285
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20075",
+   "name": "Hamilton",
+   "gmd": "GMD3",
+   "population_2025": 2500,
+   "population_2020_base": 2519,
+   "population_change_2020_2025_pct": -0.8,
+   "main_towns": [
+    {
+     "name": "Syracuse",
+     "population_2025": 1810,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Coolidge",
+     "population_2025": 78,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 22593.0,
+    "harvested_cropland_irrigated_acres": null,
+    "harvested_cropland_acres": 223147.0,
+    "cropland_acres": 489566.0,
+    "farm_acres_operated": 637056.0,
+    "farm_operations": 358.0,
+    "crop_sales_usd": 57717000.0,
+    "animal_sales_usd": 458772000.0,
+    "ag_sales_total_usd": 516489000.0,
+    "corn_sales_usd": null,
+    "wheat_sales_usd": 22072000.0,
+    "sorghum_sales_usd": 15550000.0,
+    "corn_grain_irrigated_acres": 2201.0,
+    "corn_grain_acres": 20349.0,
+    "wheat_irrigated_acres": 1946.0,
+    "wheat_acres": 113545.0,
+    "sorghum_grain_irrigated_acres": 565.0,
+    "sorghum_grain_acres": 70532.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": null,
+    "alfalfa_irrigated_acres": 5180.0,
+    "corn_silage_irrigated_acres": 6153.0,
+    "net_cash_farm_income_usd": 76884000.0,
+    "operating_expense_usd": 470211000.0,
+    "federal_program_receipts_usd": 13616000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "harvested_cropland_irrigated_acres": "(D)",
+    "corn_sales_usd": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": null,
+    "irrigated_share_of_corn_grain_acres": 0.108,
+    "corn_share_of_irrigated_harvested_cropland": null,
+    "crop_sales_per_resident_usd": 23087,
+    "ag_sales_per_resident_usd": 206596
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20081",
+   "name": "Haskell",
+   "gmd": "GMD3",
+   "population_2025": 3599,
+   "population_2020_base": 3779,
+   "population_change_2020_2025_pct": -4.8,
+   "main_towns": [
+    {
+     "name": "Sublette",
+     "population_2025": 1343,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Satanta",
+     "population_2025": 1046,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 124329.0,
+    "harvested_cropland_irrigated_acres": 123345.0,
+    "harvested_cropland_acres": 194232.0,
+    "cropland_acres": 289791.0,
+    "farm_acres_operated": 334602.0,
+    "farm_operations": 199.0,
+    "crop_sales_usd": 140366000.0,
+    "animal_sales_usd": 1495983000.0,
+    "ag_sales_total_usd": 1636349000.0,
+    "corn_sales_usd": 96115000.0,
+    "wheat_sales_usd": 13979000.0,
+    "sorghum_sales_usd": 18849000.0,
+    "corn_grain_irrigated_acres": 74972.0,
+    "corn_grain_acres": 84993.0,
+    "wheat_irrigated_acres": 13424.0,
+    "wheat_acres": 43326.0,
+    "sorghum_grain_irrigated_acres": 15402.0,
+    "sorghum_grain_acres": 44635.0,
+    "soybeans_irrigated_acres": 5572.0,
+    "soybeans_acres": 5634.0,
+    "alfalfa_irrigated_acres": 2057.0,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 146841000.0,
+    "operating_expense_usd": 1502077000.0,
+    "federal_program_receipts_usd": 2242000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.635,
+    "irrigated_share_of_corn_grain_acres": 0.882,
+    "corn_share_of_irrigated_harvested_cropland": 0.608,
+    "crop_sales_per_resident_usd": 39001,
+    "ag_sales_per_resident_usd": 454668
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20093",
+   "name": "Kearny",
+   "gmd": "GMD3",
+   "population_2025": 3888,
+   "population_2020_base": 3988,
+   "population_change_2020_2025_pct": -2.5,
+   "main_towns": [
+    {
+     "name": "Lakin",
+     "population_2025": 2154,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Deerfield",
+     "population_2025": 697,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 59534.0,
+    "harvested_cropland_irrigated_acres": 58032.0,
+    "harvested_cropland_acres": 260552.0,
+    "cropland_acres": 461332.0,
+    "farm_acres_operated": 553074.0,
+    "farm_operations": 385.0,
+    "crop_sales_usd": 107943000.0,
+    "animal_sales_usd": 261762000.0,
+    "ag_sales_total_usd": 369705000.0,
+    "corn_sales_usd": 38348000.0,
+    "wheat_sales_usd": 22258000.0,
+    "sorghum_sales_usd": 18928000.0,
+    "corn_grain_irrigated_acres": 18973.0,
+    "corn_grain_acres": 47131.0,
+    "wheat_irrigated_acres": 4018.0,
+    "wheat_acres": 98170.0,
+    "sorghum_grain_irrigated_acres": 3123.0,
+    "sorghum_grain_acres": 74632.0,
+    "soybeans_irrigated_acres": 1846.0,
+    "soybeans_acres": 2643.0,
+    "alfalfa_irrigated_acres": 21169.0,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 55687000.0,
+    "operating_expense_usd": 336919000.0,
+    "federal_program_receipts_usd": 9705000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.223,
+    "irrigated_share_of_corn_grain_acres": 0.403,
+    "corn_share_of_irrigated_harvested_cropland": 0.327,
+    "crop_sales_per_resident_usd": 27763,
+    "ag_sales_per_resident_usd": 95089
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20101",
+   "name": "Lane",
+   "gmd": "GMD1",
+   "population_2025": 1508,
+   "population_2020_base": 1573,
+   "population_change_2020_2025_pct": -4.1,
+   "main_towns": [
+    {
+     "name": "Dighton",
+     "population_2025": 922,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 10347.0,
+    "harvested_cropland_irrigated_acres": null,
+    "harvested_cropland_acres": 161509.0,
+    "cropland_acres": 348571.0,
+    "farm_acres_operated": 458845.0,
+    "farm_operations": 287.0,
+    "crop_sales_usd": null,
+    "animal_sales_usd": null,
+    "ag_sales_total_usd": 332189000.0,
+    "corn_sales_usd": null,
+    "wheat_sales_usd": 24661000.0,
+    "sorghum_sales_usd": 7635000.0,
+    "corn_grain_irrigated_acres": 3036.0,
+    "corn_grain_acres": 11997.0,
+    "wheat_irrigated_acres": 2650.0,
+    "wheat_acres": 90763.0,
+    "sorghum_grain_irrigated_acres": 1226.0,
+    "sorghum_grain_acres": 37503.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": 572.0,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": 2618.0,
+    "net_cash_farm_income_usd": 37002000.0,
+    "operating_expense_usd": 315022000.0,
+    "federal_program_receipts_usd": 5397000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "harvested_cropland_irrigated_acres": "(D)",
+    "crop_sales_usd": "(D)",
+    "animal_sales_usd": "(D)",
+    "corn_sales_usd": "(D)",
+    "soybeans_irrigated_acres": "(D)",
+    "alfalfa_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": null,
+    "irrigated_share_of_corn_grain_acres": 0.253,
+    "corn_share_of_irrigated_harvested_cropland": null,
+    "crop_sales_per_resident_usd": null,
+    "ag_sales_per_resident_usd": 220284
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20109",
+   "name": "Logan",
+   "gmd": "GMD4",
+   "population_2025": 2661,
+   "population_2020_base": 2761,
+   "population_change_2020_2025_pct": -3.6,
+   "main_towns": [
+    {
+     "name": "Oakley",
+     "population_2025": 1924,
+     "part_in_county_only": true
+    },
+    {
+     "name": "Winona",
+     "population_2025": 183,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Russell Springs",
+     "population_2025": 26,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 8100.0,
+    "harvested_cropland_irrigated_acres": null,
+    "harvested_cropland_acres": 171520.0,
+    "cropland_acres": 270638.0,
+    "farm_acres_operated": 551683.0,
+    "farm_operations": 263.0,
+    "crop_sales_usd": 55289000.0,
+    "animal_sales_usd": 27117000.0,
+    "ag_sales_total_usd": 82406000.0,
+    "corn_sales_usd": 18279000.0,
+    "wheat_sales_usd": 29502000.0,
+    "sorghum_sales_usd": 6388000.0,
+    "corn_grain_irrigated_acres": 5013.0,
+    "corn_grain_acres": 63269.0,
+    "wheat_irrigated_acres": 800.0,
+    "wheat_acres": 77675.0,
+    "sorghum_grain_irrigated_acres": null,
+    "sorghum_grain_acres": 22811.0,
+    "soybeans_irrigated_acres": 1021.0,
+    "soybeans_acres": 1021.0,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 15221000.0,
+    "operating_expense_usd": 83740000.0,
+    "federal_program_receipts_usd": 5759000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "harvested_cropland_irrigated_acres": "(D)",
+    "sorghum_grain_irrigated_acres": "(D)",
+    "alfalfa_irrigated_acres": "(D)",
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": null,
+    "irrigated_share_of_corn_grain_acres": 0.079,
+    "corn_share_of_irrigated_harvested_cropland": null,
+    "crop_sales_per_resident_usd": 20778,
+    "ag_sales_per_resident_usd": 30968
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20119",
+   "name": "Meade",
+   "gmd": "GMD3",
+   "population_2025": 3852,
+   "population_2020_base": 4060,
+   "population_change_2020_2025_pct": -5.1,
+   "main_towns": [
+    {
+     "name": "Meade",
+     "population_2025": 1422,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Plains",
+     "population_2025": 991,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Fowler",
+     "population_2025": 507,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 111316.0,
+    "harvested_cropland_irrigated_acres": 110671.0,
+    "harvested_cropland_acres": 225802.0,
+    "cropland_acres": 387565.0,
+    "farm_acres_operated": 624369.0,
+    "farm_operations": 397.0,
+    "crop_sales_usd": 160516000.0,
+    "animal_sales_usd": 230234000.0,
+    "ag_sales_total_usd": 390750000.0,
+    "corn_sales_usd": 97897000.0,
+    "wheat_sales_usd": 25296000.0,
+    "sorghum_sales_usd": null,
+    "corn_grain_irrigated_acres": 63907.0,
+    "corn_grain_acres": 81745.0,
+    "wheat_irrigated_acres": 22725.0,
+    "wheat_acres": 80042.0,
+    "sorghum_grain_irrigated_acres": 7958.0,
+    "sorghum_grain_acres": 39312.0,
+    "soybeans_irrigated_acres": 18679.0,
+    "soybeans_acres": 24501.0,
+    "alfalfa_irrigated_acres": 2890.0,
+    "corn_silage_irrigated_acres": 1180.0,
+    "net_cash_farm_income_usd": 82339000.0,
+    "operating_expense_usd": 332164000.0,
+    "federal_program_receipts_usd": 5825000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "sorghum_sales_usd": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.49,
+    "irrigated_share_of_corn_grain_acres": 0.782,
+    "corn_share_of_irrigated_harvested_cropland": 0.577,
+    "crop_sales_per_resident_usd": 41671,
+    "ag_sales_per_resident_usd": 101441
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20129",
+   "name": "Morton",
+   "gmd": "GMD3",
+   "population_2025": 2470,
+   "population_2020_base": 2697,
+   "population_change_2020_2025_pct": -8.4,
+   "main_towns": [
+    {
+     "name": "Elkhart",
+     "population_2025": 1722,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Rolla",
+     "population_2025": 353,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Richfield",
+     "population_2025": 27,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 42936.0,
+    "harvested_cropland_irrigated_acres": 41778.0,
+    "harvested_cropland_acres": 153474.0,
+    "cropland_acres": 383167.0,
+    "farm_acres_operated": 449871.0,
+    "farm_operations": 376.0,
+    "crop_sales_usd": 53289000.0,
+    "animal_sales_usd": 113320000.0,
+    "ag_sales_total_usd": 166609000.0,
+    "corn_sales_usd": 24946000.0,
+    "wheat_sales_usd": 9460000.0,
+    "sorghum_sales_usd": null,
+    "corn_grain_irrigated_acres": 20460.0,
+    "corn_grain_acres": 29379.0,
+    "wheat_irrigated_acres": 11561.0,
+    "wheat_acres": 44180.0,
+    "sorghum_grain_irrigated_acres": 4853.0,
+    "sorghum_grain_acres": 73407.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": null,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 41601000.0,
+    "operating_expense_usd": 151230000.0,
+    "federal_program_receipts_usd": 10780000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "sorghum_sales_usd": "(D)",
+    "soybeans_irrigated_acres": "(D)",
+    "soybeans_acres": "(D)",
+    "alfalfa_irrigated_acres": "(D)",
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.272,
+    "irrigated_share_of_corn_grain_acres": 0.696,
+    "corn_share_of_irrigated_harvested_cropland": 0.49,
+    "crop_sales_per_resident_usd": 21574,
+    "ag_sales_per_resident_usd": 67453
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20153",
+   "name": "Rawlins",
+   "gmd": "GMD4",
+   "population_2025": 2431,
+   "population_2020_base": 2562,
+   "population_change_2020_2025_pct": -5.1,
+   "main_towns": [
+    {
+     "name": "Atwood",
+     "population_2025": 1229,
+     "part_in_county_only": false
+    },
+    {
+     "name": "McDonald",
+     "population_2025": 115,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Herndon",
+     "population_2025": 114,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 12050.0,
+    "harvested_cropland_irrigated_acres": 11550.0,
+    "harvested_cropland_acres": 183744.0,
+    "cropland_acres": 363951.0,
+    "farm_acres_operated": 631243.0,
+    "farm_operations": 312.0,
+    "crop_sales_usd": 51552000.0,
+    "animal_sales_usd": 24193000.0,
+    "ag_sales_total_usd": 75745000.0,
+    "corn_sales_usd": 18252000.0,
+    "wheat_sales_usd": 25410000.0,
+    "sorghum_sales_usd": 3948000.0,
+    "corn_grain_irrigated_acres": 6279.0,
+    "corn_grain_acres": 54337.0,
+    "wheat_irrigated_acres": 1509.0,
+    "wheat_acres": 90396.0,
+    "sorghum_grain_irrigated_acres": 596.0,
+    "sorghum_grain_acres": 28144.0,
+    "soybeans_irrigated_acres": 785.0,
+    "soybeans_acres": 3493.0,
+    "alfalfa_irrigated_acres": 1133.0,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 15679000.0,
+    "operating_expense_usd": 96200000.0,
+    "federal_program_receipts_usd": 13132000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.063,
+    "irrigated_share_of_corn_grain_acres": 0.116,
+    "corn_share_of_irrigated_harvested_cropland": 0.544,
+    "crop_sales_per_resident_usd": 21206,
+    "ag_sales_per_resident_usd": 31158
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20171",
+   "name": "Scott",
+   "gmd": "GMD1",
+   "population_2025": 4815,
+   "population_2020_base": 5154,
+   "population_change_2020_2025_pct": -6.6,
+   "main_towns": [
+    {
+     "name": "Scott City",
+     "population_2025": 3855,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 27197.0,
+    "harvested_cropland_irrigated_acres": 27197.0,
+    "harvested_cropland_acres": 238351.0,
+    "cropland_acres": 398799.0,
+    "farm_acres_operated": 458248.0,
+    "farm_operations": 263.0,
+    "crop_sales_usd": 84476000.0,
+    "animal_sales_usd": 1320960000.0,
+    "ag_sales_total_usd": 1405436000.0,
+    "corn_sales_usd": 29419000.0,
+    "wheat_sales_usd": 28728000.0,
+    "sorghum_sales_usd": 16712000.0,
+    "corn_grain_irrigated_acres": 8728.0,
+    "corn_grain_acres": 54527.0,
+    "wheat_irrigated_acres": 4280.0,
+    "wheat_acres": 85613.0,
+    "sorghum_grain_irrigated_acres": 1188.0,
+    "sorghum_grain_acres": 85950.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": 879.0,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": 5494.0,
+    "net_cash_farm_income_usd": 121991000.0,
+    "operating_expense_usd": 1310841000.0,
+    "federal_program_receipts_usd": 8931000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "soybeans_irrigated_acres": "(D)",
+    "alfalfa_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.114,
+    "irrigated_share_of_corn_grain_acres": 0.16,
+    "corn_share_of_irrigated_harvested_cropland": 0.321,
+    "crop_sales_per_resident_usd": 17544,
+    "ag_sales_per_resident_usd": 291887
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20175",
+   "name": "Seward",
+   "gmd": "GMD3",
+   "population_2025": 21073,
+   "population_2020_base": 21964,
+   "population_change_2020_2025_pct": -4.1,
+   "main_towns": [
+    {
+     "name": "Liberal",
+     "population_2025": 19010,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Kismet",
+     "population_2025": 332,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 92531.0,
+    "harvested_cropland_irrigated_acres": 90310.0,
+    "harvested_cropland_acres": 167459.0,
+    "cropland_acres": 280184.0,
+    "farm_acres_operated": 392849.0,
+    "farm_operations": 292.0,
+    "crop_sales_usd": 121032000.0,
+    "animal_sales_usd": 276989000.0,
+    "ag_sales_total_usd": 398022000.0,
+    "corn_sales_usd": 75374000.0,
+    "wheat_sales_usd": 7569000.0,
+    "sorghum_sales_usd": 8467000.0,
+    "corn_grain_irrigated_acres": 50708.0,
+    "corn_grain_acres": 65289.0,
+    "wheat_irrigated_acres": 9888.0,
+    "wheat_acres": 35361.0,
+    "sorghum_grain_irrigated_acres": 9312.0,
+    "sorghum_grain_acres": 27250.0,
+    "soybeans_irrigated_acres": 6055.0,
+    "soybeans_acres": 11096.0,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": 1123.0,
+    "net_cash_farm_income_usd": 55881000.0,
+    "operating_expense_usd": 365651000.0,
+    "federal_program_receipts_usd": 6585000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "alfalfa_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.539,
+    "irrigated_share_of_corn_grain_acres": 0.777,
+    "corn_share_of_irrigated_harvested_cropland": 0.561,
+    "crop_sales_per_resident_usd": 5743,
+    "ag_sales_per_resident_usd": 18888
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20179",
+   "name": "Sheridan",
+   "gmd": "GMD4",
+   "population_2025": 2427,
+   "population_2020_base": 2443,
+   "population_change_2020_2025_pct": -0.7,
+   "main_towns": [
+    {
+     "name": "Hoxie",
+     "population_2025": 1188,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Selden",
+     "population_2025": 185,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 46899.0,
+    "harvested_cropland_irrigated_acres": 46569.0,
+    "harvested_cropland_acres": 197470.0,
+    "cropland_acres": 320248.0,
+    "farm_acres_operated": 469691.0,
+    "farm_operations": 317.0,
+    "crop_sales_usd": 90709000.0,
+    "animal_sales_usd": 306595000.0,
+    "ag_sales_total_usd": 397304000.0,
+    "corn_sales_usd": 53613000.0,
+    "wheat_sales_usd": 19575000.0,
+    "sorghum_sales_usd": 5570000.0,
+    "corn_grain_irrigated_acres": 29336.0,
+    "corn_grain_acres": 102064.0,
+    "wheat_irrigated_acres": 4487.0,
+    "wheat_acres": 54662.0,
+    "sorghum_grain_irrigated_acres": 481.0,
+    "sorghum_grain_acres": 5779.0,
+    "soybeans_irrigated_acres": 8720.0,
+    "soybeans_acres": 15473.0,
+    "alfalfa_irrigated_acres": 1119.0,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 69346000.0,
+    "operating_expense_usd": 350424000.0,
+    "federal_program_receipts_usd": 5286000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.236,
+    "irrigated_share_of_corn_grain_acres": 0.287,
+    "corn_share_of_irrigated_harvested_cropland": 0.63,
+    "crop_sales_per_resident_usd": 37375,
+    "ag_sales_per_resident_usd": 163702
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20181",
+   "name": "Sherman",
+   "gmd": "GMD4",
+   "population_2025": 5763,
+   "population_2020_base": 5936,
+   "population_change_2020_2025_pct": -2.9,
+   "main_towns": [
+    {
+     "name": "Goodland",
+     "population_2025": 4366,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Kanorado",
+     "population_2025": 148,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 83591.0,
+    "harvested_cropland_irrigated_acres": 82764.0,
+    "harvested_cropland_acres": 297618.0,
+    "cropland_acres": 558204.0,
+    "farm_acres_operated": 674867.0,
+    "farm_operations": 373.0,
+    "crop_sales_usd": 140337000.0,
+    "animal_sales_usd": 40231000.0,
+    "ag_sales_total_usd": 180568000.0,
+    "corn_sales_usd": 94216000.0,
+    "wheat_sales_usd": 29870000.0,
+    "sorghum_sales_usd": 6229000.0,
+    "corn_grain_irrigated_acres": 56202.0,
+    "corn_grain_acres": 128566.0,
+    "wheat_irrigated_acres": 12266.0,
+    "wheat_acres": 105764.0,
+    "sorghum_grain_irrigated_acres": 2652.0,
+    "sorghum_grain_acres": 32130.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": 8103.0,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": 1851.0,
+    "net_cash_farm_income_usd": 48883000.0,
+    "operating_expense_usd": 170355000.0,
+    "federal_program_receipts_usd": 12266000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "soybeans_irrigated_acres": "(D)",
+    "alfalfa_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.278,
+    "irrigated_share_of_corn_grain_acres": 0.437,
+    "corn_share_of_irrigated_harvested_cropland": 0.679,
+    "crop_sales_per_resident_usd": 24351,
+    "ag_sales_per_resident_usd": 31332
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20187",
+   "name": "Stanton",
+   "gmd": "GMD3",
+   "population_2025": 1986,
+   "population_2020_base": 2081,
+   "population_change_2020_2025_pct": -4.6,
+   "main_towns": [
+    {
+     "name": "Johnson City",
+     "population_2025": 1402,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Manter",
+     "population_2025": 125,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 39599.0,
+    "harvested_cropland_irrigated_acres": 38246.0,
+    "harvested_cropland_acres": 196948.0,
+    "cropland_acres": 384749.0,
+    "farm_acres_operated": 432788.0,
+    "farm_operations": 225.0,
+    "crop_sales_usd": 68604000.0,
+    "animal_sales_usd": 74231000.0,
+    "ag_sales_total_usd": 142835000.0,
+    "corn_sales_usd": 36744000.0,
+    "wheat_sales_usd": 16078000.0,
+    "sorghum_sales_usd": null,
+    "corn_grain_irrigated_acres": 16036.0,
+    "corn_grain_acres": 59681.0,
+    "wheat_irrigated_acres": 16574.0,
+    "wheat_acres": 88050.0,
+    "sorghum_grain_irrigated_acres": 4754.0,
+    "sorghum_grain_acres": 50809.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": null,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": null,
+    "net_cash_farm_income_usd": 30844000.0,
+    "operating_expense_usd": 137890000.0,
+    "federal_program_receipts_usd": 13224000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "sorghum_sales_usd": "(D)",
+    "alfalfa_irrigated_acres": "(D)",
+    "corn_silage_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.194,
+    "irrigated_share_of_corn_grain_acres": 0.269,
+    "corn_share_of_irrigated_harvested_cropland": 0.419,
+    "crop_sales_per_resident_usd": 34544,
+    "ag_sales_per_resident_usd": 71921
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20189",
+   "name": "Stevens",
+   "gmd": "GMD3",
+   "population_2025": 4984,
+   "population_2020_base": 5248,
+   "population_change_2020_2025_pct": -5.0,
+   "main_towns": [
+    {
+     "name": "Hugoton",
+     "population_2025": 3545,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Moscow",
+     "population_2025": 259,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 135470.0,
+    "harvested_cropland_irrigated_acres": 134325.0,
+    "harvested_cropland_acres": 233760.0,
+    "cropland_acres": 367091.0,
+    "farm_acres_operated": 460825.0,
+    "farm_operations": 410.0,
+    "crop_sales_usd": 158323000.0,
+    "animal_sales_usd": 242534000.0,
+    "ag_sales_total_usd": 400857000.0,
+    "corn_sales_usd": 111181000.0,
+    "wheat_sales_usd": 15540000.0,
+    "sorghum_sales_usd": 9594000.0,
+    "corn_grain_irrigated_acres": 85769.0,
+    "corn_grain_acres": 106588.0,
+    "wheat_irrigated_acres": 27283.0,
+    "wheat_acres": 65196.0,
+    "sorghum_grain_irrigated_acres": 6496.0,
+    "sorghum_grain_acres": 36672.0,
+    "soybeans_irrigated_acres": 6668.0,
+    "soybeans_acres": 9224.0,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": 4230.0,
+    "net_cash_farm_income_usd": 90689000.0,
+    "operating_expense_usd": 331850000.0,
+    "federal_program_receipts_usd": 6526000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "alfalfa_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.575,
+    "irrigated_share_of_corn_grain_acres": 0.805,
+    "corn_share_of_irrigated_harvested_cropland": 0.639,
+    "crop_sales_per_resident_usd": 31766,
+    "ag_sales_per_resident_usd": 80429
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20193",
+   "name": "Thomas",
+   "gmd": "GMD4",
+   "population_2025": 7725,
+   "population_2020_base": 7924,
+   "population_change_2020_2025_pct": -2.5,
+   "main_towns": [
+    {
+     "name": "Colby",
+     "population_2025": 5489,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Brewster",
+     "population_2025": 278,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Rexford",
+     "population_2025": 192,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 73622.0,
+    "harvested_cropland_irrigated_acres": 69917.0,
+    "harvested_cropland_acres": 326984.0,
+    "cropland_acres": 526711.0,
+    "farm_acres_operated": 615525.0,
+    "farm_operations": 454.0,
+    "crop_sales_usd": 133533000.0,
+    "animal_sales_usd": 155604000.0,
+    "ag_sales_total_usd": 289137000.0,
+    "corn_sales_usd": 76627000.0,
+    "wheat_sales_usd": 38034000.0,
+    "sorghum_sales_usd": 7781000.0,
+    "corn_grain_irrigated_acres": 45821.0,
+    "corn_grain_acres": 155168.0,
+    "wheat_irrigated_acres": 10216.0,
+    "wheat_acres": 118753.0,
+    "sorghum_grain_irrigated_acres": 2322.0,
+    "sorghum_grain_acres": 28923.0,
+    "soybeans_irrigated_acres": 7609.0,
+    "soybeans_acres": 13006.0,
+    "alfalfa_irrigated_acres": 871.0,
+    "corn_silage_irrigated_acres": 2279.0,
+    "net_cash_farm_income_usd": 49217000.0,
+    "operating_expense_usd": 286850000.0,
+    "federal_program_receipts_usd": 13565000.0
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.214,
+    "irrigated_share_of_corn_grain_acres": 0.295,
+    "corn_share_of_irrigated_harvested_cropland": 0.655,
+    "crop_sales_per_resident_usd": 17286,
+    "ag_sales_per_resident_usd": 37429
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20199",
+   "name": "Wallace",
+   "gmd": "GMD4",
+   "population_2025": 1441,
+   "population_2020_base": 1512,
+   "population_change_2020_2025_pct": -4.7,
+   "main_towns": [
+    {
+     "name": "Sharon Springs",
+     "population_2025": 716,
+     "part_in_county_only": false
+    },
+    {
+     "name": "Wallace",
+     "population_2025": 45,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 26270.0,
+    "harvested_cropland_irrigated_acres": 25910.0,
+    "harvested_cropland_acres": 214565.0,
+    "cropland_acres": 377554.0,
+    "farm_acres_operated": 557058.0,
+    "farm_operations": 285.0,
+    "crop_sales_usd": 75833000.0,
+    "animal_sales_usd": 39568000.0,
+    "ag_sales_total_usd": 115401000.0,
+    "corn_sales_usd": 42902000.0,
+    "wheat_sales_usd": 21621000.0,
+    "sorghum_sales_usd": 8146000.0,
+    "corn_grain_irrigated_acres": 15004.0,
+    "corn_grain_acres": 97609.0,
+    "wheat_irrigated_acres": 6189.0,
+    "wheat_acres": 69597.0,
+    "sorghum_grain_irrigated_acres": 1495.0,
+    "sorghum_grain_acres": 37821.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": null,
+    "alfalfa_irrigated_acres": 1030.0,
+    "corn_silage_irrigated_acres": 2579.0,
+    "net_cash_farm_income_usd": 14554000.0,
+    "operating_expense_usd": 123265000.0,
+    "federal_program_receipts_usd": 11145000.0
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.121,
+    "irrigated_share_of_corn_grain_acres": 0.154,
+    "corn_share_of_irrigated_harvested_cropland": 0.579,
+    "crop_sales_per_resident_usd": 52625,
+    "ag_sales_per_resident_usd": 80084
+   },
+   "share_of_economy_from_irrigated_ag": null
+  },
+  {
+   "fips": "20203",
+   "name": "Wichita",
+   "gmd": "GMD1",
+   "population_2025": 2031,
+   "population_2020_base": 2154,
+   "population_change_2020_2025_pct": -5.7,
+   "main_towns": [
+    {
+     "name": "Leoti",
+     "population_2025": 1397,
+     "part_in_county_only": false
+    }
+   ],
+   "census_of_ag_2022": {
+    "irrigated_land_acres": 37007.0,
+    "harvested_cropland_irrigated_acres": 36645.0,
+    "harvested_cropland_acres": 244633.0,
+    "cropland_acres": 392738.0,
+    "farm_acres_operated": 459188.0,
+    "farm_operations": 266.0,
+    "crop_sales_usd": 98907000.0,
+    "animal_sales_usd": 491372000.0,
+    "ag_sales_total_usd": 590279000.0,
+    "corn_sales_usd": 46273000.0,
+    "wheat_sales_usd": 42349000.0,
+    "sorghum_sales_usd": 9881000.0,
+    "corn_grain_irrigated_acres": 24814.0,
+    "corn_grain_acres": 85629.0,
+    "wheat_irrigated_acres": 15225.0,
+    "wheat_acres": 118838.0,
+    "sorghum_grain_irrigated_acres": 510.0,
+    "sorghum_grain_acres": 42212.0,
+    "soybeans_irrigated_acres": null,
+    "soybeans_acres": null,
+    "alfalfa_irrigated_acres": null,
+    "corn_silage_irrigated_acres": 3678.0,
+    "net_cash_farm_income_usd": 46644000.0,
+    "operating_expense_usd": 575713000.0,
+    "federal_program_receipts_usd": 10470000.0
+   },
+   "census_of_ag_2022_suppressed": {
+    "alfalfa_irrigated_acres": "(D)"
+   },
+   "derived": {
+    "irrigated_share_of_harvested_cropland": 0.15,
+    "irrigated_share_of_corn_grain_acres": 0.29,
+    "corn_share_of_irrigated_harvested_cropland": 0.677,
+    "crop_sales_per_resident_usd": 48699,
+    "ag_sales_per_resident_usd": 290635
+   },
+   "share_of_economy_from_irrigated_ag": null
+  }
+ ]
+}
