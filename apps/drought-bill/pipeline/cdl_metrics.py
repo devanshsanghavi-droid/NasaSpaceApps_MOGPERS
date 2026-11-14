@@ -21,7 +21,10 @@ X, C, S, W, O, A, G, P, R, F = range(10)
 CLASS_NAMES = ["X", "C", "S", "W", "O", "A", "G", "P", "R", "F"]
 LETTER = np.array(list("XCSWOAGPXX"))   # contract letters: R (other crop) and F (fallow) are written as X
 CROPLAND = np.array([c in (C, S, W, O, A, G, R, F) for c in range(10)])  # counts toward "cropland pixel"
-DIVERSITY = [C, S, W, O, A, G, P, R]                                        # classes counted in diversity metrics
+# Classes counted in the diversity metrics. Alfalfa/hay (A) and pasture/grass (P) are merged into ONE perennial
+# forage/grass class: CDL relabels much of "other hay" (37) as "grassland/pasture" (176) in 2024 (and 2008-2010 have
+# far more 62/171/176 grass on cropland), so counting A and P separately inflates diversity in windows with those years.
+DIVERSITY = [(C,), (S,), (W,), (O,), (G,), (R,), (A, P)]
 
 GROUPS = {
     C: [1, 12, 13, 241],                                   # corn, sweet corn, pop/orn corn, dbl corn/soy
@@ -57,6 +60,7 @@ def shannon(counts):
     with np.errstate(divide="ignore", invalid="ignore"):
         p = counts / tot
         h = -np.nansum(np.where(p > 0, p * np.log(p), 0.0), axis=0)
+    h = h + 0.0                       # turn -0.0 into 0.0
     h[tot == 0] = np.nan
     return h.astype(np.float32)
 
@@ -64,14 +68,14 @@ def shannon(counts):
 def window_metrics(cls):
     """cls: (T, N) class ids for a window of T years. Returns dict of per-pixel arrays (N,)."""
     T = cls.shape[0]
-    counts = np.stack([(cls == k).sum(0) for k in DIVERSITY]).astype(np.int16)   # (8, N)
+    counts = np.stack([np.isin(cls, ks).sum(0) for ks in DIVERSITY]).astype(np.int16)   # (7, N)
     present = counts > 0
     ncrop = present.sum(0).astype(np.int8)
     isc = cls == C
     cc3 = np.zeros(cls.shape[1], bool)
     for t in range(T - 2):
         cc3 |= isc[t] & isc[t + 1] & isc[t + 2]
-    iC, iS = DIVERSITY.index(C), DIVERSITY.index(S)
+    iC, iS = DIVERSITY.index((C,)), DIVERSITY.index((S,))
     cs_only = present[iC] & present[iS] & (ncrop == 2)
     sg = ((cls == W) | (cls == O)).any(0)
     per = ((cls == A) | (cls == P)).any(0)
@@ -148,7 +152,7 @@ def main():
         m = window_metrics(w)
         cy = cls[i1 - 1]
         shares = dict(corn_share=cy == C, soy_share=cy == S, wheat_share=cy == W, sorghum_share=cy == G,
-                      hay_alfalfa_share=cy == A)
+                      hay_alfalfa_share=cy == A, perennial_share=(cy == A) | (cy == P))
         rc = rotation_class_codes(m)
         for j, col in enumerate(ROT_COLS):
             shares[col] = rc == j
@@ -159,7 +163,7 @@ def main():
         for k in shares:
             df[k] = a[k]
         crop_cols = ["corn_share", "soy_share", "wheat_share", "sorghum_share", "hay_alfalfa_share"]
-        df["other_share"] = 1 - df[crop_cols].sum(1)
+        df["other_share"] = 1 - df[crop_cols].sum(axis=1)
         df = df[[c for c in df.columns if c not in ROT_COLS] + ROT_COLS]
         rows.append(df)
         print(f"  window {ye - 4}-{ye}: {mask.sum():,} cropland px", flush=True)
@@ -169,14 +173,16 @@ def main():
     mask = ncrop_years >= 9                                  # cropland in >= 9 of 17 years
     m = window_metrics(cls)
     shares = dict(corn_share=(cls == C).mean(0), soy_share=(cls == S).mean(0), wheat_share=(cls == W).mean(0),
-                  sorghum_share=(cls == G).mean(0), hay_alfalfa_share=(cls == A).mean(0))
+                  sorghum_share=(cls == G).mean(0), hay_alfalfa_share=(cls == A).mean(0),
+                  perennial_share=((cls == A) | (cls == P)).mean(0))
     a = agg(mask, m, shares)
     st = pd.DataFrame({"fips": g.fips.values, "n_px": a["n_px"]})
     for k, v in names.items():
         st[v] = a[k]   # same column names as cdl_county_year, but computed over the 17-year record
     for k in shares:
         st[k] = a[k]
-    st["other_share"] = 1 - st[list(shares)].sum(1)
+    crop_cols = ["corn_share", "soy_share", "wheat_share", "sorghum_share", "hay_alfalfa_share"]
+    st["other_share"] = 1 - st[crop_cols].sum(axis=1)
     st["n_pts"] = n_pts
     st["cropland_frac"] = st.n_px / st.n_pts
     st["years"] = f"{YEARS[0]}-{YEARS[-1]}"

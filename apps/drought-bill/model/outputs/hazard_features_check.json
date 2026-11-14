@@ -1,0 +1,51 @@
+{
+ "reproduction_max_abs_diff": {
+  "prcp_jja_mm": 0.00011230468749090505,
+  "edd30_jja": 4.9999386241950106e-05,
+  "spi_jja": 5.047808605285198e-05,
+  "gwetroot_jja": 4.7834237243860045e-05,
+  "gwetroot_jja_pct": 3.3333333334439885e-05,
+  "vpd_jja_kpa": 4.999936365601698e-05,
+  "hazard_z": 5.012453332664535e-05,
+  "prcp_mj_anom_pct": 9.071044922137617e-05
+ },
+ "wetness_emulator": {
+  "gwetroot_jja": {
+   "x": [
+    "prcp_mj_frac",
+    "prcp_jja_frac",
+    "tmax_jja_anom"
+   ],
+   "beta": [
+    0.0669243218014354,
+    0.03681049138455913,
+    -0.012352054820104826
+   ],
+   "within_r2": 0.6241905588638161
+  },
+  "gwetroot_jul_aug": {
+   "x": [
+    "prcp_mj_frac",
+    "prcp_jja_frac",
+    "tmax_jja_anom"
+   ],
+   "beta": [
+    0.040190442431003746,
+    0.07749900156998718,
+    -0.010074985324870082
+   ],
+   "within_r2": 0.618575833437125
+  },
+  "gwetroot_mj": {
+   "x": [
+    "prcp_mj_frac",
+    "tmax_mj_anom"
+   ],
+   "beta": [
+    0.06938635101628965,
+    -0.016446469156583876
+   ],
+   "within_r2": 0.4670202481914818
+  }
+ }
+}

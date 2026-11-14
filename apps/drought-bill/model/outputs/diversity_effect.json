@@ -1,0 +1,1228 @@
+{
+ "question": "Does higher rotation diversity (CDL 5-yr Shannon, window ending t-1) reduce drought loss cost (RMA drought indemnity / liability) in county x year data?",
+ "treatment": "div_shannon_5y of the CDL window ending t-1 (mean per-pixel Shannon entropy of crop classes)",
+ "hazard": "NASA POWER hazard_z (JJA composite; z of -SPI, EDD>30C, -root-zone wetness)",
+ "bowles_2020": {
+  "citation": "Bowles TM et al. (2020) Long-term evidence shows that crop-rotation diversification increases agricultural resilience to adverse growing conditions in North America. One Earth 2(3):284-293. doi:10.1016/j.oneear.2020.02.007",
+  "finding": "diversified rotations reduced maize yield losses in drought years by 14-90% across 11 long-term North American trials (relative to simple rotations)",
+  "range_pct": [
+   14.0,
+   90.0
+  ],
+  "delta_shannon_field": 0.66
+ },
+ "descriptives": {
+  "n_county_years": 7463,
+  "n_counties": 631,
+  "years": [
+   2013,
+   2024
+  ],
+  "D_mean": 0.6318079233169556,
+  "D_sd_total": 0.11253463476896286,
+  "D_sd_between_counties": 0.10609609074094956,
+  "D_sd_within_county": 0.04436686482248726,
+  "D_within_share_of_variance": 0.15543366684881402,
+  "D_p10_p50_p90": [
+   0.4977486550807953,
+   0.6385843753814697,
+   0.7633250832557679
+  ],
+  "spearman_county_means": {
+   "D_vs_mean_corn_lcr": 0.05304510350043344,
+   "D_vs_aws": 0.11271368506868197,
+   "D_vs_irrigated_share": -0.12222005964525834,
+   "D_vs_clim_jja_prcp": -0.008595734461575669,
+   "D_vs_clim_edd30": -0.015179168770991252,
+   "D_vs_longitude": 0.012325174407663524,
+   "D_vs_mean_hazard": 0.02278428497019528
+  },
+  "D_by_state": {
+   "IA": [
+    0.5658444245656331,
+    0.628898153702418,
+    0.6635324855645498
+   ],
+   "IL": [
+    0.5855446860194206,
+    0.6508267596364021,
+    0.7423562258481979
+   ],
+   "KS": [
+    0.5310247664650282,
+    0.6541300962368647,
+    0.8115067501862844
+   ],
+   "MN": [
+    0.49732835094134015,
+    0.6531372418006262,
+    0.7618113656838735
+   ],
+   "MO": [
+    0.44663312534491223,
+    0.604729081193606,
+    0.6739861865838369
+   ],
+   "NE": [
+    0.4805390161772569,
+    0.6098242712517579,
+    0.6989606966574987
+   ],
+   "SD": [
+    0.4532120292385419,
+    0.6568720390399297,
+    0.8420421699682873
+   ]
+  },
+  "high_hazard_county_years": 630,
+  "high_hazard_by_year": {
+   "2013": 25,
+   "2016": 1,
+   "2017": 15,
+   "2018": 20,
+   "2020": 43,
+   "2021": 157,
+   "2022": 195,
+   "2023": 158,
+   "2024": 16
+  },
+  "raw_spearman_D_lcr_high_hazard": -0.018632042364627427
+ },
+ "placebos": {
+  "low_hazard_years_D_on_drought_lcr": {
+   "est": -0.000577068743576844,
+   "se": 0.08476860191866026,
+   "ci95": [
+    -0.16672352850415095,
+    0.16556939101699725
+   ],
+   "p": 0.9945683817557409,
+   "n": 3706,
+   "mean_y": 0.002665075542031885
+  },
+  "high_hazard_years_D_on_drought_lcr_(for_contrast)": {
+   "est": 0.0748968281820328,
+   "se": 2.0298709174088536,
+   "ci95": [
+    -3.9036501699393202,
+    4.053443826303385
+   ],
+   "p": 0.9705668642964854,
+   "n": 630,
+   "mean_y": 0.0707890289549019
+  },
+  "excess_moisture_lcr_interaction_model": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.002197375515585912,
+    "se": 0.9406204852859843,
+    "ci95": [
+     -1.845813526676115,
+     1.8414187756449432
+    ],
+    "p": 0.9981360703589575
+   },
+   "D_x_H": {
+    "est": 0.024996249838047022,
+    "se": 0.7138462572807408,
+    "ci95": [
+     -1.374142414432205,
+     1.4241349141082988
+    ],
+    "p": 0.9720667487529737
+   },
+   "effect_high_hazard": {
+    "est": 0.03095105025169431,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": -0.016151459911276957,
+    "se": 1.3392925420043333,
+    "ci95": [
+     -2.64116484223977,
+     2.6088619224172165
+    ],
+    "p": 0.9903779885816983
+   },
+   "H_low_mean": -0.5582471165115098,
+   "mean_y_high_hazard": 0.0011696507516077033,
+   "mean_y_low_hazard": 0.030755409199450592,
+   "df_resid": 6748.0,
+   "t_DH": 0.03501629319072905
+  },
+  "excess_moisture_lcr_D_all_years": {
+   "est": -0.015108587678036717,
+   "se": null,
+   "ci95": [
+    null,
+    null
+   ],
+   "p": null,
+   "n": 7463
+  },
+  "lead_test_window_t+1_to_t+5": {
+   "n": 4333,
+   "n_counties": 626,
+   "years": [
+    2013,
+    2019
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.03365647104822873,
+    "se": 2.2131325008784395,
+    "ci95": [
+     -4.37139617276997,
+     4.304083230673513
+    ],
+    "p": 0.9878665450207206
+   },
+   "D_x_H": {
+    "est": 0.03291766175144882,
+    "se": 1.1969516144436148,
+    "ci95": [
+     -2.313107502558036,
+     2.3789428260609333
+    ],
+    "p": 0.9780599454254569
+   },
+   "effect_high_hazard": {
+    "est": 0.0027010470794493337,
+    "se": 3.5776618404114777,
+    "ci95": [
+     -7.009516160127046,
+     7.014918254285946
+    ],
+    "p": 0.9993976167524782
+   },
+   "H_high_mean": 1.1044988068169161,
+   "effect_low_hazard": {
+    "est": -0.05300487190228035,
+    "se": 1.4553303974561542,
+    "ci95": [
+     -2.9054524509163424,
+     2.799442707111782
+    ],
+    "p": 0.9709465143841057
+   },
+   "H_low_mean": -0.5877817507253544,
+   "mean_y_high_hazard": 0.11171070438096936,
+   "mean_y_low_hazard": 0.002403270285488178,
+   "Dlead_c": {
+    "est": 0.0301595775384125,
+    "se": 1.3381234484760784,
+    "ci95": [
+     -2.592562381474701,
+     2.652881536551526
+    ],
+    "p": 0.9820182330112593
+   },
+   "DleadH": {
+    "est": -0.0837150779451783,
+    "se": 0.7160920139514244,
+    "ci95": [
+     -1.4872554252899701,
+     1.3198252693996135
+    ],
+    "p": 0.9069349584766523
+   },
+   "df_resid": 3656.0,
+   "t_DH": 0.02750124679580311
+  }
+ },
+ "overlap": {
+  "state_p05_p95": {
+   "IA": [
+    0.5280561029911042,
+    0.681556224822998
+   ],
+   "IL": [
+    0.5220552027225495,
+    0.7928151249885559
+   ],
+   "KS": [
+    0.4585474967956543,
+    0.8821154356002806
+   ],
+   "MN": [
+    0.4164711803197861,
+    0.8363167107105255
+   ],
+   "MO": [
+    0.3653816610574722,
+    0.7555713832378388
+   ],
+   "NE": [
+    0.41884031891822815,
+    0.7353418111801148
+   ],
+   "SD": [
+    0.2859788715839386,
+    0.9242305815219879
+   ]
+  },
+  "common_support_interval": [
+   0.5280561029911042,
+   0.681556224822998
+  ],
+  "share_rows_inside_by_state": {
+   "IA": 0.898989898989899,
+   "IL": 0.6908333333333333,
+   "KS": 0.4379503602882306,
+   "MN": 0.5895287958115183,
+   "MO": 0.5150925024342746,
+   "NE": 0.6145930776426567,
+   "SD": 0.4425806451612903
+  },
+  "share_rows_inside_total": 0.6077984724641565,
+  "r2_D_on_controls_stateyearFE": 0.248921881073646,
+  "r2_D_on_controls_countyFE": 0.9103748177930557
+ },
+ "sensitivity": {
+  "coefficient": "D_x_H (county FE + state-year FE, corn)",
+  "partial_r2_treatment_outcome": null,
+  "rv_q1": null,
+  "rv_q1_alpha05": null,
+  "benchmark_H_x_irrigation": {
+   "benchmark": "H_irr",
+   "kd": 1.0,
+   "ky": 1.0,
+   "r2_treat_bench": 0.09681060671970951,
+   "r2_outcome_bench": null,
+   "bias_bound": null,
+   "adjusted_est": null,
+   "adjusted_ci95": [
+    null,
+    null
+   ]
+  },
+  "benchmark_H_x_irrigation_3x": {
+   "benchmark": "H_irr",
+   "kd": 3,
+   "ky": 3,
+   "r2_treat_bench": 0.09681060671970951,
+   "r2_outcome_bench": null,
+   "bias_bound": null,
+   "adjusted_est": null,
+   "adjusted_ci95": [
+    null,
+    null
+   ]
+  },
+  "benchmark_H_x_aws": {
+   "benchmark": "H_aws",
+   "kd": 1.0,
+   "ky": 1.0,
+   "r2_treat_bench": 0.036407658322313984,
+   "r2_outcome_bench": null,
+   "bias_bound": null,
+   "adjusted_est": null,
+   "adjusted_ci95": [
+    null,
+    null
+   ]
+  },
+  "pooled_spec": {
+   "coefficient": "D_x_H (state-year FE + controls, corn)",
+   "partial_r2_treatment_outcome": 0.0025990287344599223,
+   "rv_q1": 0.04976077369524673,
+   "rv_q1_alpha05": 0.02781316002119808,
+   "benchmark_irrigation": {
+    "benchmark": "H_irr",
+    "kd": 1.0,
+    "ky": 1.0,
+    "r2_treat_bench": 0.10706089792577721,
+    "r2_outcome_bench": 0.004010965075826035,
+    "bias_bound": 0.03827745725517709,
+    "adjusted_est": -0.03567564023415551,
+    "adjusted_ci95": [
+     -0.0687557532467431,
+     -0.002595527221567917
+    ]
+   },
+   "benchmark_irrigation_3x": {
+    "benchmark": "H_irr",
+    "kd": 3,
+    "ky": 3,
+    "r2_treat_bench": 0.10706089792577721,
+    "r2_outcome_bench": 0.004010965075826035,
+    "bias_bound": 0.1397823219149648,
+    "adjusted_est": 0.06582922442563222,
+    "adjusted_ci95": [
+     0.032749111413044624,
+     0.09890933743821981
+    ]
+   }
+  }
+ },
+ "dml": {},
+ "relative_effects_high_hazard_per_0.1_shannon": {
+  "ols_stateyearFE_controls": {
+   "per_shannon": 0.1,
+   "est_pct": -18.239988661090347,
+   "ci95_pct": [
+    -26.58199010534399,
+    -9.897987216836713
+   ]
+  },
+  "ols_countyFE_stateyearFE": {
+   "per_shannon": 0.1,
+   "est_pct": -14.521345313050073,
+   "ci95_pct": [
+    -51.05227041999384,
+    22.00957979389369
+   ]
+  },
+  "ppml_countyFE_stateyearFE": {
+   "per_shannon": 0.1,
+   "est_pct": -1.6332072092487548,
+   "ci95_pct": [
+    -99.99530388709827,
+    2060332.9849877423
+   ]
+  },
+  "ppml_stateyearFE_controls": {
+   "per_shannon": 0.1,
+   "est_pct": -10.594838019471297,
+   "ci95_pct": [
+    -18.67923306624587,
+    -1.7067436750061726
+   ]
+  },
+  "ols_countyFE_H_mjja": {
+   "per_shannon": 0.1,
+   "est_pct": -12.005334133822213,
+   "ci95_pct": [
+    null,
+    null
+   ]
+  },
+  "ols_countyFE_contemporaneous_D_incl2012": {
+   "per_shannon": 0.1,
+   "est_pct": 32.18615547225071,
+   "ci95_pct": [
+    21.01820467253406,
+    43.35410627196736
+   ]
+  },
+  "ppml_countyFE_contemporaneous_D_incl2012": {
+   "per_shannon": 0.1,
+   "est_pct": 26.50641796663087,
+   "ci95_pct": [
+    -48.63845160672935,
+    211.5925101051806
+   ]
+  },
+  "ols_countyFE_principal_crops": {
+   "per_shannon": 0.1,
+   "est_pct": -18.384402229875132,
+   "ci95_pct": [
+    null,
+    null
+   ]
+  },
+  "ols_countyFE_unweighted": {
+   "per_shannon": 0.1,
+   "est_pct": -6.846001275088281,
+   "ci95_pct": [
+    -174.66959598635535,
+    160.97759343617878
+   ]
+  },
+  "ols_countyFE_common_support": {
+   "per_shannon": 0.1,
+   "est_pct": -55.96196393705109,
+   "ci95_pct": [
+    null,
+    null
+   ]
+  }
+ },
+ "bowles_comparison": {
+  "headline_spec": "ppml_countyFE_stateyearFE (proportional effect in high-hazard years)",
+  "implied_loss_reduction_pct_for_delta_0.66": {
+   "est": 10.298402656739958,
+   "ci95": [
+    -2.9656920908191034e+30,
+    100.0
+   ]
+  },
+  "implied_loss_reduction_pct_county_p10_to_p90": {
+   "delta": 0.26557642817497257,
+   "est": 4.278976733854478,
+   "ci95": [
+    -28632342519426.023,
+    99.99999999967999
+   ]
+  },
+  "trial_range_pct": [
+   14.0,
+   90.0
+  ],
+  "note": "Positive = diversity reduces drought loss cost. Trials measure yield-loss reduction on a field; RMA loss cost is indemnity below a guarantee on a county aggregate, so magnitudes are not identical."
+ },
+ "specs": {
+  "ols_stateyearFE_controls": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.031047246636669825,
+    "se": 0.009256785119698753,
+    "ci95": [
+     -0.04919054547127938,
+     -0.012903947802060271
+    ],
+    "p": 0.000796526941353326
+   },
+   "D_x_H": {
+    "est": -0.0739530974893326,
+    "se": 0.016877608679891628,
+    "ci95": [
+     -0.10703321050192019,
+     -0.040872984476745006
+    ],
+    "p": 1.1774152047460991e-05
+   },
+   "effect_high_hazard": {
+    "est": -0.1291191085467007,
+    "se": 0.030128682743831844,
+    "ci95": [
+     -0.18817132672461112,
+     -0.07006689036879028
+    ],
+    "p": 1.8225682901698632e-05
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": 0.010236856793844675,
+    "se": 0.0062683544621502715,
+    "ci95": [
+     -0.0020491179519698567,
+     0.022522831539659206
+    ],
+    "p": 0.10244772770154466
+   },
+   "H_low_mean": -0.5582471165115098,
+   "mean_y_high_hazard": 0.0707890289549019,
+   "mean_y_low_hazard": 0.002665075542031885,
+   "df_resid": 7368.0,
+   "t_DH": -4.381728412594494
+  },
+  "ols_countyFE_stateyearFE": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.02151727342906544,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "D_x_H": {
+    "est": -0.061289281359773774,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "effect_high_hazard": {
+    "est": -0.10279519338296306,
+    "se": 0.13193819975228543,
+    "ci95": [
+     -0.3613940648974425,
+     0.1558036781315164
+    ],
+    "p": 0.4359112476793293
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": 0.012697291163090898,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_low_mean": -0.5582471165115098,
+   "mean_y_high_hazard": 0.0707890289549019,
+   "mean_y_low_hazard": 0.002665075542031885,
+   "df_resid": 6748.0,
+   "t_DH": null
+  },
+  "ppml_countyFE_stateyearFE": {
+   "n": 7458,
+   "n_counties": 628,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ppml",
+   "D": {
+    "est": -0.37717093047162903,
+    "se": 89.3541222331404,
+    "ci95": [
+     -175.5112505074268,
+     174.75690864648354
+    ],
+    "p": 0.9966320751519426
+   },
+   "D_x_H": {
+    "est": 0.1602413566056668,
+    "se": 105.17905425479506,
+    "ci95": [
+     -205.99070498279266,
+     206.311187696004
+    ],
+    "p": 0.9987844152442362
+   },
+   "effect_high_hazard": {
+    "est": -0.16466910524958464,
+    "se": 50.76389505154957,
+    "ci95": [
+     -99.66190340628674,
+     99.33256519578757
+    ],
+    "p": 0.9974118080149408
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": -0.4666253065092284,
+    "se": 147.9788099532959,
+    "ci95": [
+     -290.5050928149692,
+     289.57184220195074
+    ],
+    "p": 0.997484014698803
+   },
+   "H_low_mean": -0.5582477453541222,
+   "mean_y_high_hazard": 0.0707890289549019,
+   "mean_y_low_hazard": 0.0026650871364156834
+  },
+  "ppml_stateyearFE_controls": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "sy"
+   ],
+   "kind": "ppml",
+   "D": {
+    "est": -0.20267936016503232,
+    "se": 0.4058434154449889,
+    "ci95": [
+     -0.9981324544372105,
+     0.592773734107146
+    ],
+    "p": 0.6174956086341683
+   },
+   "D_x_H": {
+    "est": -0.6916623330767895,
+    "se": 0.4560812979185051,
+    "ci95": [
+     -1.5855816769970594,
+     0.20225701084348047
+    ],
+    "p": 0.12938463574356074
+   },
+   "effect_high_hazard": {
+    "est": -1.1199176520115803,
+    "se": 0.48355612761129535,
+    "ci95": [
+     -2.0676876621297193,
+     -0.17214764189344145
+    ],
+    "p": 0.020558081202849722
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": 0.1834391428747089,
+    "se": 0.5953401084436912,
+    "ci95": [
+     -0.9834274696749259,
+     1.3503057554243436
+    ],
+    "p": 0.7579872546548589
+   },
+   "H_low_mean": -0.5582471165115098,
+   "mean_y_high_hazard": 0.0707890289549019,
+   "mean_y_low_hazard": 0.002665075542031885
+  },
+  "ols_countyFE_H_mjja": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.009370251326531213,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "D_x_H": {
+    "est": -0.04903494721901837,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "effect_high_hazard": {
+    "est": -0.07247943949331925,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_high_mean": 1.287024698627817,
+   "effect_low_hazard": {
+    "est": 0.018527220530909178,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_low_mean": -0.568930394333539,
+   "mean_y_high_hazard": 0.06037269657420482,
+   "mean_y_low_hazard": 0.004603231224068072,
+   "df_resid": 6748.0,
+   "t_DH": null
+  },
+  "ols_countyFE_T_n_crops_5y_lag": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": 0.004400593447661335,
+    "se": 0.5574592522119272,
+    "ci95": [
+     -1.0882195408877158,
+     1.0970207277830386
+    ],
+    "p": 0.9937015502209672
+   },
+   "D_x_H": {
+    "est": -0.0022066074889489458,
+    "se": 0.013539485019241527,
+    "ci95": [
+     -0.02874399812666234,
+     0.024330783148764447
+    ],
+    "p": 0.8705375418345992
+   },
+   "effect_high_hazard": {
+    "est": 0.0014743319076757164,
+    "se": 0.5736467789024569,
+    "ci95": [
+     -1.1228733547411396,
+     1.125822018556491
+    ],
+    "p": 0.9979493559192669
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": 0.005632425715639787,
+    "se": 0.5506777682118942,
+    "ci95": [
+     -1.073695999979673,
+     1.0849608514109523
+    ],
+    "p": 0.9918392435257057
+   },
+   "H_low_mean": -0.5582471165115098,
+   "mean_y_high_hazard": 0.0707890289549019,
+   "mean_y_low_hazard": 0.002665075542031885,
+   "df_resid": 6748.0,
+   "t_DH": -0.16297573251959316
+  },
+  "ols_countyFE_T_share_3plus_lag": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": 0.030207663722298893,
+    "se": 0.14932086018996962,
+    "ci95": [
+     -0.2624612222500416,
+     0.32287654969463936
+    ],
+    "p": 0.8396819188140193
+   },
+   "D_x_H": {
+    "est": 0.04435809386218341,
+    "se": 0.02133778072261379,
+    "ci95": [
+     0.0025360436458603808,
+     0.08618014407850644
+    ],
+    "p": 0.03763093099835206
+   },
+   "effect_high_hazard": {
+    "est": 0.08903252709562477,
+    "se": 0.1129585155301363,
+    "ci95": [
+     -0.13236616334344237,
+     0.31043121753469194
+    ],
+    "p": 0.4305868473664053
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": 0.005444885729788103,
+    "se": 0.16367769018749226,
+    "ci95": [
+     -0.3153633870376967,
+     0.32625315849727293
+    ],
+    "p": 0.9734625462871811
+   },
+   "H_low_mean": -0.5582471165115098,
+   "mean_y_high_hazard": 0.0707890289549019,
+   "mean_y_low_hazard": 0.002665075542031885,
+   "df_resid": 6748.0,
+   "t_DH": 2.0788522686041424
+  },
+  "ols_countyFE_T_share_cont_corn_lag": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": 0.09794840669103644,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "D_x_H": {
+    "est": 0.11118531184584704,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "effect_high_hazard": {
+    "est": 0.24539524691760714,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_high_mean": 1.326135959676027,
+   "effect_low_hazard": {
+    "est": 0.03587952695465931,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_low_mean": -0.5582471165115098,
+   "mean_y_high_hazard": 0.0707890289549019,
+   "mean_y_low_hazard": 0.002665075542031885,
+   "df_resid": 6748.0,
+   "t_DH": null
+  },
+  "ols_countyFE_contemporaneous_D_incl2012": {
+   "n": 8147,
+   "n_counties": 637,
+   "years": [
+    2012,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": 0.18323160178604314,
+    "se": 0.03629005242812628,
+    "ci95": [
+     0.11210309902691563,
+     0.25436010454517066
+    ],
+    "p": 4.4392847872557363e-07
+   },
+   "D_x_H": {
+    "est": 0.13460742600235145,
+    "se": 0.03128938308537918,
+    "ci95": [
+     0.07328023515500826,
+     0.19593461684969465
+    ],
+    "p": 1.6925110258453038e-05
+   },
+   "effect_high_hazard": {
+    "est": 0.4274819351839185,
+    "se": 0.07567737904593558,
+    "ci95": [
+     0.2791542722538848,
+     0.5758095981139523
+    ],
+    "p": 1.6162688249542488e-08
+   },
+   "H_high_mean": 1.814538325646377,
+   "effect_low_hazard": {
+    "est": 0.10809572089094048,
+    "se": 0.035453931384746167,
+    "ci95": [
+     0.038606015376838,
+     0.17758542640504296
+    ],
+    "p": 0.0022967597265010236
+   },
+   "H_low_mean": -0.5581852586185707,
+   "mean_y_high_hazard": 0.13281546954325502,
+   "mean_y_low_hazard": 0.0026823945071731688,
+   "df_resid": 7419.0,
+   "t_DH": 4.302015978872094
+  },
+  "ppml_countyFE_contemporaneous_D_incl2012": {
+   "n": 8142,
+   "n_counties": 634,
+   "years": [
+    2012,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ppml",
+   "D": {
+    "est": 0.7304581807542416,
+    "se": 22.493187560673547,
+    "ci95": [
+     -43.35618943816591,
+     44.817105799674394
+    ],
+    "p": 0.9740935392732621
+   },
+   "D_x_H": {
+    "est": 0.8932136369918223,
+    "se": 10.521264000455142,
+    "ci95": [
+     -19.728463803900254,
+     21.514891077883902
+    ],
+    "p": 0.9323440409854624
+   },
+   "effect_high_hazard": {
+    "est": 2.351228558065894,
+    "se": 4.598996097057946,
+    "ci95": [
+     -6.66280379216768,
+     11.365260908299469
+    ],
+    "p": 0.6091772592244146
+   },
+   "H_high_mean": 1.814538325646377,
+   "effect_low_hazard": {
+    "est": 0.23188058685955337,
+    "se": 28.31400951898855,
+    "ci95": [
+     -55.263578070358,
+     55.72733924407711
+    ],
+    "p": 0.9934657127255255
+   },
+   "H_low_mean": -0.5581840371065147,
+   "mean_y_high_hazard": 0.13281546954325502,
+   "mean_y_low_hazard": 0.0026824123466269263
+  },
+  "ols_countyFE_principal_crops": {
+   "n": 7560,
+   "n_counties": 636,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.06858833357908763,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "D_x_H": {
+    "est": -0.049959982994369434,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "effect_high_hazard": {
+    "est": -0.1350944251993898,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_high_mean": 1.3311872349475682,
+   "effect_low_hazard": {
+    "est": -0.04059583477348651,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_low_mean": -0.5602984054008968,
+   "mean_y_high_hazard": 0.07348317530817393,
+   "mean_y_low_hazard": 0.005425058170932787,
+   "df_resid": 6840.0,
+   "t_DH": null
+  },
+  "ols_countyFE_unweighted": {
+   "n": 7463,
+   "n_counties": 631,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.0008124632180644707,
+    "se": 0.17455580138586738,
+    "ci95": [
+     -0.34294183393436456,
+     0.34131690749823557
+    ],
+    "p": 0.9962862906179438
+   },
+   "D_x_H": {
+    "est": -0.059133429193959586,
+    "se": 0.6043664843806992,
+    "ci95": [
+     -1.24369173858013,
+     1.1254248801922109
+    ],
+    "p": 0.9220564375194864
+   },
+   "effect_high_hazard": {
+    "est": -0.0793025180142848,
+    "se": 0.9918521737706275,
+    "ci95": [
+     -2.023332778604715,
+     1.864727742576145
+    ],
+    "p": 0.9362738660755764
+   },
+   "H_high_mean": 1.3273381210274542,
+   "effect_low_hazard": {
+    "est": 0.03354611072179777,
+    "se": 0.13482549147029568,
+    "ci95": [
+     -0.23071185255998175,
+     0.2978040740035773
+    ],
+    "p": 0.8035067215979599
+   },
+   "H_low_mean": -0.5810346940503821,
+   "mean_y_high_hazard": 0.11583772019274445,
+   "mean_y_low_hazard": 0.005349511830890117,
+   "df_resid": 6748.0,
+   "t_DH": -0.09784366063011295
+  },
+  "ols_countyFE_common_support": {
+   "n": 4536,
+   "n_counties": 520,
+   "years": [
+    2013,
+    2024
+   ],
+   "fe": [
+    "fips",
+    "sy"
+   ],
+   "kind": "ols",
+   "D": {
+    "est": -0.16517937022957066,
+    "se": 0.028958960271512475,
+    "ci95": [
+     -0.22193893236173512,
+     -0.1084198080974062
+    ],
+    "p": 1.17088323539808e-08
+   },
+   "D_x_H": {
+    "est": -0.1518363013241866,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "effect_high_hazard": {
+    "est": -0.3642936876188341,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_high_mean": 1.311374919256847,
+   "effect_low_hazard": {
+    "est": -0.08252094681026656,
+    "se": null,
+    "ci95": [
+     null,
+     null
+    ],
+    "p": null
+   },
+   "H_low_mean": -0.5443917080331113,
+   "mean_y_high_hazard": 0.06509665887148108,
+   "mean_y_low_hazard": 0.0024006965028421524,
+   "df_resid": 3932.0,
+   "t_DH": null
+  }
+ },
+ "verdict_inputs": {
+  "headline_ols_effect_high_hazard": {
+   "est": -0.10279519338296306,
+   "se": 0.13193819975228543,
+   "ci95": [
+    -0.3613940648974425,
+    0.1558036781315164
+   ],
+   "p": 0.4359112476793293
+  },
+  "headline_ppml_effect_high_hazard": {
+   "est": -0.16466910524958464,
+   "se": 50.76389505154957,
+   "ci95": [
+    -99.66190340628674,
+    99.33256519578757
+   ],
+   "p": 0.9974118080149408
+  },
+  "significantly_protective": false,
+  "significantly_harmful": false,
+  "low_hazard_placebo_passes": true
+ },
+ "app_effect": {
+  "source": "trial_prior_scenario",
+  "form": "multiplier = max(0.05, 1 - r * (D - D_now) / delta_shannon_field) on drought loss cost, for D >= D_now (and 1 + r*(D_now - D)/delta for D < D_now)",
+  "delta_shannon_field": 0.66,
+  "r": {
+   "est": 0.14,
+   "lo": 0.0,
+   "hi": 0.9
+  },
+  "label": "Scenario assumption from field trials (Bowles et al. 2020: 14-90% smaller maize drought-year yield losses in diversified rotations); est = trial lower bound, lo = no effect (the observational county estimate is not distinguishable from zero), hi = trial upper bound. Not estimated from the county data."
+ },
+ "verdict": "Data: 7463 corn county-years (2013-2024, 631 counties), 630 of them high-hazard (hazard_z > 1). Diversity varies mostly between counties: within-county SD 0.044 vs between-county SD 0.106 (16% of variance is within county). Raw: more diverse counties are drier/western (Spearman D vs longitude +0.01, vs JJA climatology -0.01, vs irrigation -0.12) and have higher mean corn drought loss cost (Spearman +0.05) - the raw association is confounded by climate. Headline (county FE + state-year FE, corn): effect of +0.1 Shannon in high-hazard years = -14.5% of mean loss cost (95% CI -51.1 to +22.0); PPML -1.6% (CI -100.0 to +2060333.0). Negative = protective. Bowles et al. 2020 trials: 14-90% smaller drought-year maize yield losses. Implied by the PPML estimate for the same corn-soy -> 4-crop contrast (+0.66 Shannon): 10% reduction (CI -2965692090819103358409366306816 to 100). Placebo, low-hazard years: D coefficient -0.0006 (CI -0.1667 to +0.1656). Verdict: the observational county-level effect is NOT distinguishable from zero once climate, soils and fixed effects are controlled. The data neither confirm nor rule out the trial effect at county scale. The app uses the field-trial range (Bowles et al. 2020) as a labelled scenario assumption, not as an estimate from these data."
+}

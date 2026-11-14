@@ -1,0 +1,6 @@
+baseline_mean                    rmse=30.475 mae=14.310 r2=0.013 sp=0.056 wy_sp=0.250 yrAPE_med=135.0 bias=3.3 corn_rmse=50.956 (0.7s)
+baseline_hazard_only             rmse=21.420 mae=7.579 r2=0.513 sp=0.742 wy_sp=0.581 yrAPE_med=30.2 bias=-13.4 corn_rmse=36.984 (174.5s)
+lgb_haz_static                   rmse=17.855 mae=6.403 r2=0.661 sp=0.775 wy_sp=0.665 yrAPE_med=37.0 bias=-19.3 corn_rmse=30.143 (18.0s)
+lgb_haz_static_enc               rmse=19.728 mae=6.717 r2=0.587 sp=0.782 wy_sp=0.669 yrAPE_med=36.8 bias=-22.5 corn_rmse=33.862 (20.7s)
+lgb_haz_static_enc_k2            rmse=19.502 mae=6.694 r2=0.596 sp=0.782 wy_sp=0.671 yrAPE_med=37.7 bias=-21.6 corn_rmse=33.425 (18.2s)
+lgb_haz_static_enc_k10           rmse=19.527 mae=6.704 r2=0.595 sp=0.780 wy_sp=0.669 yrAPE_med=35.5 bias=-21.9 corn_rmse=33.473 (17.6s)

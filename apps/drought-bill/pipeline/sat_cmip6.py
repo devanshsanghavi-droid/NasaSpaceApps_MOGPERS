@@ -15,6 +15,7 @@ Outputs: data/processed/cmip6_deltas.parquet, data/processed/cmip6_period_means.
 """
 import argparse
 import sys
+import threading
 import time
 import warnings
 import zlib
@@ -44,6 +45,7 @@ STATES = {"19": "IA", "31": "NE", "20": "KS", "29": "MO", "17": "IL", "46": "SD"
 
 _client = None
 _href = {}
+_lock = threading.Lock()
 
 
 def client():
@@ -56,6 +58,11 @@ def client():
 
 
 def href(model, scen, year, var, refresh=False):
+    with _lock:
+        return _href_locked(model, scen, year, var, refresh)
+
+
+def _href_locked(model, scen, year, var, refresh):
     k = (model, scen, year)
     if refresh or k not in _href:
         its = list(client().search(collections=["nasa-nex-gddp-cmip6"], query={
@@ -326,6 +333,7 @@ def main():
     ap.add_argument("--compute", action="store_true", help="compute from cache only")
     ap.add_argument("--threads", type=int, default=6)
     ap.add_argument("--models", nargs="*", default=MODELS)
+    ap.add_argument("--files", type=int, default=2, help="files fetched concurrently (threads are split)")
     ap.add_argument("--no-hurs", action="store_true")
     a = ap.parse_args()
     if not a.compute:
@@ -333,17 +341,22 @@ def main():
         t0 = time.time()
         for vars_ in phases:
             for model in a.models:
-                for scen, yrs in YEARS.items():
-                    for y in yrs:
-                        for v in vars_:
-                            t = time.time()
-                            try:
-                                s = fetch(model, scen, v, y, a.threads)
-                            except Exception as e:  # noqa: BLE001
-                                s = f"FAILED {e}"
-                            if s != "cached":
-                                print(f"{model} {scen} {y} {v}: {s} {time.time() - t:.0f}s "
-                                      f"(total {(time.time() - t0) / 60:.1f} min)", flush=True)
+                tasks = [(scen, y, v) for scen, yrs in YEARS.items() for y in yrs for v in vars_]
+
+                def one(task, model=model):
+                    scen, y, v = task
+                    t = time.time()
+                    try:
+                        s = fetch(model, scen, v, y, max(1, a.threads // a.files))
+                    except Exception as e:  # noqa: BLE001
+                        s = f"FAILED {e}"
+                    if s != "cached":
+                        print(f"{model} {scen} {y} {v}: {s} {time.time() - t:.0f}s "
+                              f"(total {(time.time() - t0) / 60:.1f} min)", flush=True)
+
+                # a.files files in flight at once so one file's HDF5 metadata read overlaps another's chunk reads
+                with ThreadPoolExecutor(a.files) as ex:
+                    list(ex.map(one, tasks))
                 # refresh outputs after each model so partial results are usable
                 try:
                     compute()
