@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import featlib as F  # noqa: E402
 import qgbm as Q  # noqa: E402
 import m02_river_model as M2  # noqa: E402
+import river  # noqa: E402
 
 OUT2 = F.OUT / "v2"
 MODELS2 = F.OUT / "models_v2"
@@ -158,7 +159,44 @@ def main():
         out["v1_p10"] = out.date.map(rd1.p10)
         out["v1_p90"] = out.date.map(rd1.p90)
         out["clim_p50"] = out.date.map(rd1.clim_p50)
+        # ---------------- level-corrected variants (use observed nitrate; absolute levels only)
+        for lab, cols in (("v2", ("p10", "p50", "p90")), ("v1", ("v1_p10", "v1_p50", "v1_p90"))):
+            pr = out[list(cols)].rename(columns=dict(zip(cols, ("p10", "p50", "p90"))))
+            lc = river.level_correct(pr, out.obs, out.date)
+            for c in ("p10", "p50", "p90"):
+                out[f"lc_{lab}_{c}"] = lc[c].values
+            out[f"lc_{lab}_factor"] = lc["level_factor"].values
         rows.append(out)
+
+        # ---------------- PRE-REGISTERED blind check: 2013 (after the 2012 drought), Raccoon only.
+        # Hyperparameters (incl. k) re-selected by LOYO CV with 2013 excluded everywhere; then predict 2013.
+        blind = None
+        if site == "05484500":
+            yb = [yy for yy in train_years if yy != 2013]
+            okb = ok & (yrs != 2013)
+            cvb = cv_v2(g, base_feats, yb, okb)
+            hpb = cvb[0]
+            fb = base_feats + F.carry_feats(hpb["k"], hpb["prior_gs"])
+            mb = fit(g[okb], y[okb], fb, 0.5, hpb)
+            m1b = Q.fit(g[okb], y[okb], base_feats, 0.5, F.monotone_vector(base_feats), hp1["num_leaves"],
+                        hp1["min_child_samples"], hp1["n_estimators"], params=Q.BASE_PARAMS)
+            m13 = okx & (yrs == 2013) & np.isfinite(y)
+            o13 = np.exp(y[m13])
+            blind = dict(pre_registered=("2013 chosen by the verifier BEFORE v2 was fitted, as the analog of 2025 "
+                                         "(record flush after the 2012 drought). v2 hyperparameters and k selected "
+                                         "by LOYO CV without 2013."),
+                         hp=dict((k, hpb[k]) for k in ("num_leaves", "min_child_samples", "n_estimators", "k",
+                                                       "prior_gs")),
+                         obs_days_over10=int((o13 > 10).sum()), n_obs_days=int(m13.sum()),
+                         obs_peak=float(o13.max()))
+            for name, mdl in (("v2", mb), ("v1_features", m1b)):
+                p13 = np.exp(mdl.predict(g[m13]))
+                blind[name] = dict(pred_days_over10=int((p13 > 10).sum()), NSE=M2.nse(o13, p13), KGE=M2.kge(o13, p13),
+                                   bias=float(np.mean(p13 - o13)), pred_peak=float(p13.max()),
+                                   rmse_log=rmse(np.log(p13), y[m13]))
+            print(f"  BLIND 2013: obs days>10 {blind['obs_days_over10']} | v2 {blind['v2']['pred_days_over10']} "
+                  f"(NSE {blind['v2']['NSE']:.2f}) | v1-feats {blind['v1_features']['pred_days_over10']} "
+                  f"(NSE {blind['v1_features']['NSE']:.2f})")
 
         # ---------------- strict check (decided by rule; no 2026)
         strict_tr = ok & (yrs <= STRICT_END)
@@ -200,7 +238,9 @@ def main():
                   features=feats, train_years=[train_years[0], train_years[-1]],
                   cv_top5=[{k: c[k] for k in ["num_leaves", "min_child_samples", "n_estimators", "k", "prior_gs",
                                                "cv_rmse_log", "cv_rmse_log_2016_2022"]} for c in cv[:5]],
-                  cv_best_by_year=hp["by_year"], cqr_qhat_log=qhat, splits={}, strict_check=strict)
+                  cv_best_by_year=hp["by_year"], cqr_qhat_log=qhat, splits={}, strict_check=strict,
+                  blind_2013=blind,
+                  labels=dict(test="post-hoc (v2 designed after seeing the v1 2025 miss)", live="post-hoc"))
         o_all = out.obs.values
         for sp in ["train", "test", "live"]:
             msp = (out.split == sp).values & (out.date.dt.year >= 2016).values  # v1-comparable days
@@ -222,6 +262,20 @@ def main():
         sm["live_2026"] = {"gbm_v2": M2.event_block(o16, "p50", 2026, "p90"),
                            "gbm_v1": M2.event_block(o16, "v1_p50", 2026, "v1_p90")}
         sm["residual_diagnostics"] = M2.residual_diagnostics(out.assign(split=out.split))
+        lcb = {}
+        for lab in ("v2", "v1"):
+            lcb[lab] = {}
+            for sp in ("test", "live"):
+                msp = (out.split == sp).values
+                lcb[lab][sp] = M2.metric_block(o_all[msp], out[f"lc_{lab}_p50"].values[msp],
+                                               out[f"lc_{lab}_p10"].values[msp], out[f"lc_{lab}_p90"].values[msp])
+            lcb[lab]["crisis_2025"] = M2.event_block(o16, f"lc_{lab}_p50", 2025, f"lc_{lab}_p90")
+            lcb[lab]["live_2026"] = M2.event_block(o16, f"lc_{lab}_p50", 2026, f"lc_{lab}_p90")
+        sm["level_corrected"] = dict(
+            method=("p10/p50/p90 x exp(median ln(obs/p50) over the 60 days ending 1 day before t); >= 10 obs "
+                    "needed. Uses measured nitrate (nowcast-style) - for absolute levels only; the driver-only "
+                    "model stays the basis for relative what-ifs. Compare with persistence_7d/14d in v1 metrics."),
+            **lcb)
         v2["sites"][site] = sm
         for sp in ["test", "live"]:
             a, b = sm["splits"][sp]["gbm_v2"], sm["splits"][sp]["gbm_v1"]
@@ -229,7 +283,9 @@ def main():
                   f"v1 NSE {b['NSE']:.2f} KGE {b['KGE']:.2f}")
         c = sm["crisis_2025"]
         print(f"  2025 days>10: obs {c['gbm_v2']['obs_days_over10']} v2 {c['gbm_v2']['pred_days_over10_on_obs_days']} "
-              f"v1 {c['gbm_v1']['pred_days_over10_on_obs_days']}")
+              f"v1 {c['gbm_v1']['pred_days_over10_on_obs_days']} | level-corrected v2 "
+              f"{lcb['v2']['crisis_2025']['pred_days_over10_on_obs_days']} v1 "
+              f"{lcb['v1']['crisis_2025']['pred_days_over10_on_obs_days']}")
 
     river2 = pd.concat(rows, ignore_index=True)
     river2.to_parquet(OUT2 / "river_daily_v2.parquet", compression="zstd", index=False)

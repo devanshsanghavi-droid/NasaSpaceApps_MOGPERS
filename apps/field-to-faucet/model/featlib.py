@@ -35,6 +35,7 @@ FRESH_AGE = 24      # days; an as-of value older than this decays toward climato
 STALE_EFOLD = 30.0  # e-folding (days) of the last anomaly once stale
 
 RAIN_WIN = [1, 3, 7, 14, 30, 60, 90, 180, 365]
+NO3_FLOOR = 0.05  # mg/L
 API_K = {"api_k85": 0.85, "api_k95": 0.95, "api_k98": 0.98}
 
 
@@ -274,7 +275,9 @@ def site_features(g: pd.DataFrame) -> pd.DataFrame:
     g.loc[~g["power_ok"].astype(bool), wcols] = np.nan
     g["year"] = d.dt.year
     g["split"] = split_of(g["date"]).values
-    g["lno3"] = np.log(g["no3"].where(g["no3"] > 0))
+    # 55 approved 0.0 mg/L daily values (2020-2024 drought lows) are floored at 0.05 mg/L (half the smallest
+    # non-zero value) instead of being dropped, so the target does not lose the lowest days
+    g["lno3"] = np.log(g["no3"].clip(lower=NO3_FLOOR))
     return g
 
 

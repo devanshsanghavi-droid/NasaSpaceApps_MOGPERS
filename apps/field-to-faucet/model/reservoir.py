@@ -84,8 +84,8 @@ def fit(g: pd.DataFrame, train_mask: np.ndarray, seeds=4, verbose=True, max_nfev
     dr = _drivers(g)
     qmed = float(np.nanmedian(g.loc[train_mask, "q_cfs"]))
     no3 = g["no3"].values
-    m = train_mask & np.isfinite(no3) & (no3 > 0) & np.isfinite(dr["q"]) & (dr["q"] > 0)
-    y = np.log(no3[m])
+    m = train_mask & np.isfinite(no3) & np.isfinite(dr["q"]) & (dr["q"] > 0)
+    y = np.log(np.clip(no3[m], 0.05, None))  # 0.0 mg/L values floored at 0.05
     lo = np.array([np.log(LO[j]) if k in LOGP else LO[j] for j, k in enumerate(PNAMES)])
     hi = np.array([np.log(HI[j]) if k in LOGP else HI[j] for j, k in enumerate(PNAMES)])
     ia, ic = PNAMES.index("a"), PNAMES.index("c0")

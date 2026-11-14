@@ -52,11 +52,18 @@ def build(g: pd.DataFrame, lag: int) -> pd.DataFrame:
 FEATS = NOW + DRIVERS
 
 
-def fit_models(d: pd.DataFrame, mask: np.ndarray, hs=H):
+def within(d: pd.DataFrame, mask: np.ndarray, h: int, end) -> np.ndarray:
+    """Rows of `mask` whose target day t+h is still inside the period (<= end): no target leaks past a split."""
+    if end is None:
+        return mask
+    return mask & ((d.date + pd.Timedelta(days=h)) <= pd.Timestamp(end)).values
+
+
+def fit_models(d: pd.DataFrame, mask: np.ndarray, hs=H, end=None):
     models = {}
     base = mask & d["lno3"].notna().values & d["rain_7"].notna().values
     for h in hs:
-        m = base & d[f"y{h}"].notna().values
+        m = within(d, base, h, end) & d[f"y{h}"].notna().values
         models[h] = {t: lgb.train(dict(PARAMS, alpha=t), lgb.Dataset(d.loc[m, FEATS], d.loc[m, f"y{h}"]),
                                   num_boost_round=N_TREES) for t in TAUS}
     return models
@@ -122,7 +129,7 @@ def widen(q: np.ndarray, k: float) -> np.ndarray:
 K_GRID = np.round(np.arange(1.0, 5.01, 0.05), 2)
 
 
-def calibrate_k(d, models, mask) -> dict:
+def calibrate_k(d, models, mask, end=None) -> dict:
     """Per lead, smallest spread factor k giving >= 80% coverage of [q10, q90] on the rows in `mask`
     (the 2023-2025 test years for the 2016-2022 models). Applied to later issues only."""
     X = d[FEATS]
@@ -130,7 +137,7 @@ def calibrate_k(d, models, mask) -> dict:
     ks = {}
     for h in H:
         o = d["lno3"].shift(-h).values
-        ok = mask & np.isfinite(l0) & np.isfinite(o) & d["rain_7"].notna().values
+        ok = within(d, mask, h, end) & np.isfinite(l0) & np.isfinite(o) & d["rain_7"].notna().values
         q = predict_q(models[h], X[ok])
         y = o[ok] - l0[ok]
         ks[h] = float(K_GRID[-1])
@@ -142,7 +149,7 @@ def calibrate_k(d, models, mask) -> dict:
     return ks
 
 
-def evaluate(d, models, train_mask, test_mask, label, kcal=None):
+def evaluate(d, models, train_mask, test_mask, label, kcal=None, train_end=None):
     res = {}
     X = d[FEATS]
     l0 = d["lno3"].values
@@ -151,11 +158,14 @@ def evaluate(d, models, train_mask, test_mask, label, kcal=None):
         ok = test_mask & np.isfinite(l0) & np.isfinite(o) & d["rain_7"].notna().values
         qraw = predict_q(models[h], X)
         lq = l0[:, None] + qraw
-        cq = l0[:, None] + clim_change(d, train_mask, h)
-        pers_prob = (np.exp(l0) > MCL).astype(float)
+        trh = within(d, train_mask, h, train_end)
+        cq = l0[:, None] + clim_change(d, trh, h)
+        pers_prob_det = (np.exp(l0) > MCL).astype(float)
+        # probabilistic persistence: last value x train-period distribution of the h-day change (all seasons)
+        yqa = np.nanquantile(d.loc[trh, f"y{h}"], TAUS)
+        pers_prob = prob_over(l0[:, None] + yqa[None, :])
         i10, i50, i90 = TAUS.index(0.1), TAUS.index(0.5), TAUS.index(0.9)
-        # persistence interval: train-period quantiles of the h-day log change (all seasons)
-        yq = np.nanquantile(d.loc[train_mask, f"y{h}"], [0.1, 0.9])
+        yq = yqa[[i10, i90]]
         r = dict(
             gbm=scores(o[ok], np.exp(lq[ok, i50]), np.exp(lq[ok, i10]), np.exp(lq[ok, i90]), prob_over(lq[ok]), o),
             persistence=scores(o[ok], np.exp(l0[ok]), np.exp(l0[ok] + yq[0]), np.exp(l0[ok] + yq[1]),
@@ -167,20 +177,24 @@ def evaluate(d, models, train_mask, test_mask, label, kcal=None):
             r["gbm_calibrated"] = scores(o[ok], np.exp(lw[ok, i50]), np.exp(lw[ok, i10]), np.exp(lw[ok, i90]),
                                          prob_over(lw[ok]), o)
             r["gbm_calibrated"]["spread_factor_k"] = kcal[h]
+        bdet = float(np.mean((pers_prob_det[ok] - (o[ok] > MCL)) ** 2))
+        r["persistence"]["brier_over10_deterministic"] = bdet
         for k in ("gbm", "climatology_of_change", "gbm_calibrated"):
             if k not in r:
                 continue
             r[k]["skill_vs_persistence_mse"] = float(1 - r[k]["RMSE"] ** 2 / r["persistence"]["RMSE"] ** 2)
+            # Brier skill vs PROBABILISTIC persistence (last value +- train-period change spread)
             r[k]["brier_skill_vs_persistence"] = float(1 - r[k]["brier_over10"] / r["persistence"]["brier_over10"]) \
                 if r["persistence"]["brier_over10"] > 0 else None
+            r[k]["brier_skill_vs_deterministic_persistence"] = float(1 - r[k]["brier_over10"] / bdet) if bdet > 0 else None
         res[f"h{h}"] = r
     s7, s14 = res["h7"], res["h14"]
     print(f"  [{label}] h7  RMSE gbm {s7['gbm']['RMSE']:.2f} pers {s7['persistence']['RMSE']:.2f} "
           f"clim {s7['climatology_of_change']['RMSE']:.2f} | cov80 {s7['gbm']['coverage80']:.2f} | "
-          f"Brier gbm {s7['gbm']['brier_over10']:.3f} pers {s7['persistence']['brier_over10']:.3f}")
+          f"BSS vs prob. persistence {s7['gbm']['brier_skill_vs_persistence']:+.2f}")
     print(f"  [{label}] h14 RMSE gbm {s14['gbm']['RMSE']:.2f} pers {s14['persistence']['RMSE']:.2f} "
           f"clim {s14['climatology_of_change']['RMSE']:.2f} | cov80 {s14['gbm']['coverage80']:.2f} | "
-          f"Brier gbm {s14['gbm']['brier_over10']:.3f} pers {s14['persistence']['brier_over10']:.3f}")
+          f"BSS vs prob. persistence {s14['gbm']['brier_skill_vs_persistence']:+.2f}")
     if kcal is not None:
         print(f"  [{label}] calibrated cov80 h7 {s7['gbm_calibrated']['coverage80']:.2f} "
               f"h14 {s14['gbm_calibrated']['coverage80']:.2f}; Brier h7 {s7['gbm_calibrated']['brier_over10']:.3f} "
@@ -227,15 +241,15 @@ def main():
         yr = d.date.dt.year.values
         train = (yr >= 2016) & (yr <= 2022)
         test = (yr >= 2023) & (yr <= 2025)
-        m_val = fit_models(d, train)
-        ev_test = evaluate(d, m_val, train, test, "test 2023-2025")
-        kcal = calibrate_k(d, m_val, test)
+        m_val = fit_models(d, train, end="2022-12-31")
+        ev_test = evaluate(d, m_val, train, test, "test 2023-2025", train_end="2022-12-31")
+        kcal = calibrate_k(d, m_val, test, end="2025-12-31")
         print("  spread factor k by lead (calibrated on 2023-2025):", kcal)
         # live check on 2026 with models trained 2016-2025 (targets must lie before the issue date),
         # intervals widened with the 2023-2025 k: an out-of-sample test of the calibration
         tr2 = (yr >= 2016) & (yr <= 2025)
-        m_25 = fit_models(d, tr2)
-        ev_live = evaluate(d, m_25, tr2, yr == 2026, "live 2026", kcal=kcal)
+        m_25 = fit_models(d, tr2, end="2025-12-31")
+        ev_live = evaluate(d, m_25, tr2, yr == 2026, "live 2026", kcal=kcal, train_end="2025-12-31")
         # operational models: all data with known targets (y_h NaN automatically excluded)
         m_op = fit_models(d, yr >= 2016)
         it = d.index[d.date == last_no3][0]
@@ -259,8 +273,11 @@ def main():
         name = F.SITE_NAMES[site]
         sk7 = ev_test["h7"]["gbm"]["skill_vs_persistence_mse"]
         sk14 = ev_test["h14"]["gbm"]["skill_vs_persistence_mse"]
+        bs14 = ev_test["h14"]["gbm"]["brier_skill_vs_persistence"]
         skill_txt = ("In 2023-2025 tests this outlook beat 'no change' by "
-                     f"{100 * sk7:.0f}% (1 week) and {100 * sk14:.0f}% (2 weeks) in squared error."
+                     f"{100 * sk7:.0f}% (1 week) and {100 * sk14:.0f}% (2 weeks) in squared error"
+                     + ("; its chance-above-10 numbers were no better than a simple persistence spread at 2 weeks."
+                        if bs14 is not None and bs14 <= 0.05 else ".")
                      if sk7 > 0 and sk14 > 0 else
                      "In 2023-2025 tests this outlook was NOT better than simply assuming no change "
                      f"(skill {100 * sk7:+.0f}% at 1 week, {100 * sk14:+.0f}% at 2 weeks), so treat it as a "
@@ -293,7 +310,9 @@ def main():
                                bare_share_age_days=float(gp.loc[last_pow, "cover_age_days"]),
                                snow_depth_cm=round(snod, 1),
                                pctile_reference=f"same calendar window (+-7 days) in 2016-2025, n={nr} days"),
-                  skill=dict(test_2023_2025_h7=ev_test["h7"]["gbm"]["skill_vs_persistence_mse"],
+                  skill=dict(brier_skill_vs_prob_persistence_h7=ev_test["h7"]["gbm"]["brier_skill_vs_persistence"],
+                             brier_skill_vs_prob_persistence_h14=ev_test["h14"]["gbm"]["brier_skill_vs_persistence"],
+                             test_2023_2025_h7=ev_test["h7"]["gbm"]["skill_vs_persistence_mse"],
                              test_2023_2025_h14=ev_test["h14"]["gbm"]["skill_vs_persistence_mse"],
                              coverage80_h7=ev_test["h7"]["gbm"]["coverage80"],
                              coverage80_h14=ev_test["h14"]["gbm"]["coverage80"]),

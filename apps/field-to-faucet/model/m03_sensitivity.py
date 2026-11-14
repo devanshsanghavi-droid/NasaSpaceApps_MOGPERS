@@ -86,7 +86,7 @@ VERSION = "v2" if "--v2" in sys.argv else "v1"
 
 
 def mono(fs):
-    return F.monotone_vector_v2(fs) if VERSION == "v2" else mono(fs)
+    return F.monotone_vector_v2(fs) if VERSION == "v2" else F.monotone_vector(fs)
 
 
 def main():
@@ -100,6 +100,14 @@ def main():
         uncertainty=(f"{N_BOOT} refits of the median GBM on bootstrap-resampled training years (2016-2022, whole "
                      "years drawn with replacement) -> 5-95% range; plus the effect seen by the p10 and p90 quantile "
                      "models; plus the conceptual reservoir model as a structurally different estimate."),
+        flow_conditioning=(
+            "All effects are changes in CONCENTRATION conditional on the observed streamflow: discharge features are "
+            "model inputs and are held fixed in the counterfactual (they carry a large share of the GBM gain; see "
+            "diagnostics.gain_share). Cover crops can also reduce drainage volume, so these are not load changes "
+            "and a load estimate needs a separate flow assumption."),
+        central_value_note=(
+            "'central' = the saved (deployed) models; 'bootstrap' = 30 refits on resampled training years. Both use "
+            "training-period behaviour, so the effect sizes are mostly in-sample, not validated out of sample."),
         identification_caveat=(
             "Historical bare-share variation is overwhelmingly seasonal (bare in winter/spring, green in summer) and "
             "its year-to-year differences are driven by weather (planting/green-up timing, harvest date), not by "
@@ -113,7 +121,8 @@ def main():
         if site not in M:
             continue
         g = g.sort_values("date").reset_index(drop=True)
-        g = g[g.date >= ("2015-10-01" if VERSION == "v1" else "2009-01-01")].reset_index(drop=True)
+        # full series (v1 features start 2015-01-01) so 30/90/180-d cover windows are complete in early 2016
+        g = g[g.date >= ("2015-01-01" if VERSION == "v1" else "2009-01-01")].reset_index(drop=True)
         cfg = M[site]["cfg"]
         hp = cfg["hp"]
         fl = cfg["features"]
@@ -209,7 +218,19 @@ def main():
                             hp["min_child_samples"], hp["n_estimators"])
                 errs.append(float(np.sqrt(np.mean((mdl.predict(g[tem]) - y[tem]) ** 2))))
             cvr[name] = dict(mean_rmse_log=float(np.mean(errs)), by_year=dict(zip(map(str, tr_years), errs)))
+        gains = {}
+        for qq in (50,):
+            b = M[site]["q"][qq].booster
+            gi = pd.Series(b.feature_importance("gain"), index=b.feature_name())
+            gi = gi / gi.sum()
+            grp = lambda c: ("flow" if c.startswith("logq") or c.startswith("dlogq") else  # noqa: E731
+                             "cover" if c.startswith("bare") else
+                             "wetness" if c.startswith("gw") else
+                             "carryover" if c.startswith(("ncarry", "nflush", "prior_gs")) else
+                             "season" if c.startswith("doy") else "weather_other")
+            gains = gi.groupby([grp(c) for c in gi.index]).sum().round(3).to_dict()
         out["diagnostics"] = dict(
+            gain_share=gains,
             bare_variance_explained_by_doy_climatology_train=float(r2),
             octmay_mean_bare_by_season=dict(zip(map(str, seas.index), map(float, seas.values.round(4)))),
             octmay_mean_bare_interannual_sd=float(seas.std()),

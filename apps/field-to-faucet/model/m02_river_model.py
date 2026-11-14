@@ -70,7 +70,7 @@ def metric_block(o, p50, p10=None, p90=None):
                MAE=float(np.mean(np.abs(p_ - o_))), bias=float(np.mean(p_ - o_)),
                pbias_pct=float(100 * (p_.sum() - o_.sum()) / o_.sum()),
                r=float(np.corrcoef(o_, p_)[0, 1]),
-               NSE_log=nse(np.log(o_), np.log(np.clip(p_, 0.05, None))))
+               NSE_log=nse(np.log(np.clip(o_, 0.05, None)), np.log(np.clip(p_, 0.05, None))))
     if p10 is not None:
         mm = m & np.isfinite(p10) & np.isfinite(p90)
         out["coverage80"] = float(np.mean((o[mm] >= p10[mm]) & (o[mm] <= p90[mm])))
@@ -113,7 +113,8 @@ def event_block(df: pd.DataFrame, col: str, year: int, col90: str | None = None)
 
 def residual_diagnostics(out: pd.DataFrame) -> dict:
     """Out-of-sample log residual ln(obs/p50) by year (train years use LOYO predictions) and by flow tercile."""
-    g = out[out.obs.notna() & (out.obs > 0)].copy()
+    g = out[out.obs.notna()].copy()
+    g["obs"] = g.obs.clip(lower=0.05)
     g["pred"] = np.where(g.split == "train", g.gbm_loyo_p50, g.p50)
     g = g[np.isfinite(g.pred) & (g.pred > 0)]
     g["lr"] = np.log(g.obs / g.pred)
@@ -252,7 +253,7 @@ def main():
         params, qmed = RV.fit(g, train)
         res = RV.predict(params, qmed, g)
         lres = np.log(np.clip(res, 1e-3, None))
-        rr = (y - lres)[train & np.isfinite(y) & np.isfinite(lres)]
+        rr = (y - lres)[train & np.isfinite(y) & np.isfinite(lres)]  # y = ln(max(no3, 0.05))
         rq = np.quantile(rr, [0.1, 0.9])
         res10, res90 = res * np.exp(rq[0]), res * np.exp(rq[1])
         print("  reservoir params:", {k: round(v, 4) for k, v in params.items()})

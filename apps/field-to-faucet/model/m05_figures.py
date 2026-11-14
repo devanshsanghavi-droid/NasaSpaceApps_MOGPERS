@@ -151,6 +151,32 @@ def main():
         fig.tight_layout()
         fig.savefig(F.OUT / "fig_sensitivity.png", dpi=DPI)
         plt.close(fig)
+    # 6. v1 vs v2 (legacy-N) vs level-corrected, 2023-2026
+    v2p = F.OUT / "v2" / "river_daily_v2.parquet"
+    if v2p.exists() and "v2" in met:
+        r2 = pd.read_parquet(v2p)
+        fig, axes = plt.subplots(2, 1, figsize=(11, 6.2), sharex=True)
+        for ax, site in zip(axes, ["05484500", "05482000"]):
+            g = r2[(r2.site == site) & (r2.date >= "2023-01-01")]
+            c2 = met["v2"]["sites"][site]["crisis_2025"]
+            lc = met["v2"]["sites"][site]["level_corrected"]["v2"]["crisis_2025"]
+            ax.plot(g.date, g.v1_p50, color=BLUE, lw=1.1, label="v1 p50 (pre-registered)")
+            ax.plot(g.date, g.p50, color=AQUA, lw=1.3, label="v2 legacy-N p50 (post-hoc)")
+            ax.plot(g.date, g.lc_v2_p50, color=ORANGE, lw=1.0, ls="--", label="v2 level-corrected (uses obs)")
+            ax.plot(g.date, g.obs, color=INK, lw=1.0, label="observed (USGS)")
+            ax.axhline(10, color=MCLC, lw=1, ls="--")
+            ax.axvspan(pd.Timestamp(F.LIVE_START), g.date.max(), color="#e8f0fa", zorder=0, lw=0)
+            ax.set_title(f"{F.SITE_NAMES[site]}  -  2025 days > 10: observed {c2['gbm_v2']['obs_days_over10']}, "
+                         f"v1 {c2['gbm_v1']['pred_days_over10_on_obs_days']}, v2 "
+                         f"{c2['gbm_v2']['pred_days_over10_on_obs_days']}, level-corrected "
+                         f"{lc['pred_days_over10_on_obs_days']}", loc="left", fontsize=9.5)
+            ax.set_ylabel("nitrate-N (mg/L)")
+            ax.set_ylim(0, 20)
+        axes[0].legend(loc="upper center", ncol=4, fontsize=8, bbox_to_anchor=(0.5, 1.25))
+        axes[1].xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+        fig.tight_layout()
+        fig.savefig(F.OUT / "fig_v1_v2_2023_2026.png", dpi=DPI)
+        plt.close(fig)
     print("figures:", sorted(p.name for p in F.OUT.glob("fig_*.png")))
 
 

@@ -118,3 +118,18 @@ def predict_reservoir(features_df: pd.DataFrame, site: str, models: dict | None 
     g = features_df.sort_values("date")
     c = RV.predict(cfg["reservoir"], cfg["reservoir_qmed"], g)
     return pd.Series(c, index=g.index).loc[features_df.index]
+
+
+def level_correct(pred: pd.DataFrame, obs: pd.Series, dates: pd.Series, window: int = 60, lag: int = 1,
+                  min_obs: int = 10) -> pd.DataFrame:
+    """'Level-corrected' variant for ABSOLUTE levels: multiply p10/p50/p90 by exp(median ln(obs/p50)) over the
+    `window` days ending `lag` days before t (causal; NWIS daily values arrive ~1 day late). Days with fewer
+    than `min_obs` observations in the window get no correction. This uses measured nitrate, so it is a
+    nowcast-style correction, NOT a driver-only simulation: keep the uncorrected model for relative what-ifs.
+    pred, obs, dates must be aligned on one site's continuous daily index."""
+    r = pd.Series(np.log(np.clip(obs.values, F.NO3_FLOOR, None)) - np.log(pred["p50"].values), index=pred.index)
+    corr = r.shift(lag).rolling(window, min_periods=min_obs).median().fillna(0.0)
+    f = np.exp(corr.values)
+    out = pred[["p10", "p50", "p90"]].mul(f, axis=0)
+    out["level_factor"] = f
+    return out
