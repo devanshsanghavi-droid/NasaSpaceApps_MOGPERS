@@ -1,35 +1,34 @@
 {
   "generated_at": "2026-11-14T00:00:00Z",
   "module": "facts",
-  "method_note": "All facts gathered via web search on 2026-11-14. Direct page fetches were blocked by the session network (iowapublicradio.org, kcci.com, dmww.com refused), so no page was opened in full. Following the repo's evidence_priors convention, any number not read on the opened original is 'secondary'. source_kind says whether the publisher is the primary body (primary_publisher), news, a third party, or our own arithmetic (derived). Quotes are search-extracted; re-check wording before printing on a slide.",
+  "method_note": "First pass (2026-11-14) used web-search snippets only. Verification pass (2026-11-14): pages on ciww.gov, kcci.com, iowapublicradio.org, nutrientstrategy.iastate.edu, ars.usda.gov, iowaagriculture.gov, extension.iastate.edu and waterservices.usgs.gov were fetched and read; 'primary' means the number was read on the fetched page and the quote is copied from it (PDF table rows are flattened text). nrcs.usda.gov and mymarketnews.ams.usda.gov dropped connections, and other hosts were blocked, so those facts stay 'secondary'. extra_quotes holds supporting quotes; inrs_2024_update holds the INRS Science Team's March 2024 revised efficiencies.",
   "verification_levels": {
-    "primary": "read on the original page by us (none in this run)",
-    "secondary": "number from search extraction of the source or from press/extension; original not opened",
+    "primary": "number read by us on the fetched original page on 2026-11-14; quote copied from it",
+    "derived": "our arithmetic from primary-verified inputs (e.g. day counts between verified dates)",
+    "secondary": "number from search extraction, press, or a third party; original not opened",
     "unverified": "not confirmed; do not display as fact"
   },
   "facts": [
     {
       "id": "water_people_served",
-      "claim": "Central Iowa Water Works supplies drinking water to about 600,000 people in central Iowa.",
+      "claim": "Central Iowa Water Works' 12 member utilities serve more than 600,000 people in central Iowa.",
       "value": 600000,
       "unit": "people",
-      "range": {
-        "lo": 500000,
-        "hi": 600000
-      },
+      "range": null,
       "year": 2026,
-      "source_title": "High nitrate levels prompt a lawn watering ban for 600,000 people in central Iowa",
-      "publisher": "Iowa Public Radio",
-      "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
-      "date_published": "2026-06-09",
-      "quote": "High nitrate levels prompt a lawn watering ban for 600,000 people in central Iowa",
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "Headline text. EPA CIWW case study (Oct 2026) also describes CIWW as serving approximately 600,000 people. CIWW was formed as a regional authority in 2024 (28E agreement) and began operating around 1 Jan 2025; it is a cooperative of 12 utilities, not a merger. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "source_title": "Central Iowa Water Works Returns to Everyday Water Stewardship as Nitrate Removal Facility Concludes 193-Days of Operation",
+      "publisher": "Central Iowa Water Works",
+      "url": "https://ciww.gov/central-iowa-water-works-returns-to-everyday-water-stewardship-as-nitrate-removal-facility-concludes-193-days-of-operation/",
+      "date_published": "2026-07-27",
+      "quote": "Together, CIWW members serve more than 600,000 Iowans and distribute nearly 20 billion gallons of water each year.",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "Same 'more than 600,000' wording appears in the 2025 ban release and the 2026 Stage II releases. IPR (2026-06-09) calls it 'one in five Iowans'. Gallons conflict across CIWW releases ('nearly 22 billion' in 2025, 'nearly 20 billion' in 2026), so do not quote gallons. CIWW was chartered in April 2024; it is a regional authority of 12 founding members, not a merger.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_capacity_mgd",
-      "claim": "The Fleur Drive nitrate removal facility can treat up to 10 million gallons a day, using 8 ion-exchange vessels (up to 7 run at once, 1 regenerates).",
+      "claim": "The Fleur Drive nitrate removal facility can treat up to 10 million gallons a day with 8 ion-exchange vessels: at least 3 and up to 7 run at once, with one kept for regeneration.",
       "value": 10,
       "unit": "million gallons/day",
       "range": null,
@@ -38,29 +37,42 @@
       "publisher": "Central Iowa Water Works",
       "url": "https://ciww.gov/what-is-the-nitrate-removal-facility/",
       "date_published": null,
-      "quote": "The facility includes eight treatment vessels and can process up to 10 million gallons of water per day.",
-      "verification": "secondary",
+      "quote": "The facility includes eight treatment vessels and can process up to 10 million gallons of water per day. When operating, at least three vessels run at a time, and up to seven can operate simultaneously",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Official CIWW FAQ page. Older DMWW explainer rates each vessel at 1.4 MGD (8 x 1.4 = 11.2), so 10 MGD is the operational figure. Runs when source-water nitrate threatens the 10 mg/L finished-water limit; it is blended with untreated water. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Treated water is blended with other finished water. Scale: IPR 2025-06-25 quotes a DMWW chemist that 10 MGD is 'a fraction of normal demand, which can be 70-80 million gallons' (see fact nrf_vs_demand). Trigger: CIWW FAQ says the facility is used when source-water nitrate is elevated and lets CIWW meet the standard 'even when nitrate levels in the source water exceed 10 mg/L'. IPR 2026-01-12 says the facility can run as few as two vessels (CIWW FAQ says at least three); minor conflict, not important.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_days_2025",
-      "claim": "In 2025 the nitrate removal facility ran (partly or fully) on 112 days; it was turned off on 8 Aug 2025.",
+      "claim": "In 2025 the nitrate removal facility ran (partly or fully) on 112 days: 10-18 April and 28 April - 8 August 2025.",
       "value": 112,
       "unit": "days",
-      "range": {
-        "lo": 111,
-        "hi": 112
-      },
+      "range": null,
       "year": 2025,
-      "source_title": "Central Iowa Water Works running nitrate removal facility, rare in January (KCCI report reprinted)",
-      "publisher": "KJAN / KCCI",
-      "url": "https://www.kjan.com/?p=555553",
-      "date_published": "2026-01",
-      "quote": "ran in part or fully for 112 days in spring and summer 2025",
-      "verification": "secondary",
+      "source_title": "Iowa water quality: Central Iowa Water Works officials lift irrigation restrictions",
+      "publisher": "KCCI",
+      "url": "https://www.kcci.com/article/central-iowa-water-works-lifts-lawn-watering-restrictions-water-quality-nitrates/65789527",
+      "date_published": "2025-08-15",
+      "quote": "Central Iowa Water Works nitrate removal facility has operated for 112 days so far this year",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "A mid-Aug 2025 CIWW release also said 112 days (an Aug 7 article said 111). IPR 2026-01-12 only says 'over 100 days'. Facility ran 68 days in 2024. Concept doc 'more than 110 days' is correct. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Our check: 10-18 Apr = 9 days, 28 Apr - 8 Aug = 103 days, total 112. CIWW's own 29 Jul 2025 release (102 days through 29 Jul) agrees. KCCI (2026-03-04) repeats 'ran in part or fully for 112 days'. The quote is the in-article summary block (heading run into text). Facility ran 68 days in 2024 (secondary, not rechecked).",
+      "extra_quotes": [
+        {
+          "url": "https://www.kcci.com/article/central-iowa-water-works-lifts-lawn-watering-restrictions-water-quality-nitrates/65789527",
+          "quote": "Central Iowa Water Works says its nitrate removal facility was shut down Friday, Aug. 8, after running at partial or full capacity since April 28 ."
+        },
+        {
+          "url": "https://www.kcci.com/article/central-iowa-water-works-nitrate-removal-facility-turns-off-running-for-112-days-so-far-this-year/65670201",
+          "quote": "The plant was first turned on from April 10 to 18. In 2015, the facility ran for 177 days"
+        },
+        {
+          "url": "https://ciww.gov/ciww-resumes-commercial-irrigation-continuing-the-phased-exit-from-the-stage-iii-watering-ban/",
+          "quote": "The nitrate removal facility at the Fleur Drive plant continues to operate and has been in operation for 102 days through today."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_cost_2025_usd",
@@ -77,9 +89,10 @@
       "url": "https://ciww.gov/what-is-the-nitrate-removal-facility/",
       "date_published": null,
       "quote": "In 2025, the total annual cost was about $2.2 million, including $1.6 million in operations and maintenance and $600,000 in capital costs.",
-      "verification": "secondary",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Axios (2026-04-07) quotes Exec. Dir. Tami Madsen: 'Last year, the cost was $1.6 million' — that is the O&M part only. Say '$2.2M incl. capital' or '$1.6M to operate'; do not mix. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Say '$2.2M including capital' or '$1.6M to operate'; do not mix. Axios (2026-04-07, not opened) quotes Madsen: 'Last year, the cost was $1.6 million' = O&M only.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_om_cost_2025_usd",
@@ -88,18 +101,19 @@
       "unit": "USD",
       "range": null,
       "year": 2025,
-      "source_title": "Des Moines metro taps backup water early amid nitrate concerns",
-      "publisher": "Axios Des Moines",
-      "url": "https://www.axios.com/local/des-moines/2026/04/07/des-moines-water-works-nitrate-spring-summer",
-      "date_published": "2026-04-07",
-      "quote": "Last year, the cost was $1.6 million, per Tami Madsen, executive director of CIWW.",
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "Matches the CIWW FAQ O&M figure. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "source_title": "What is the Nitrate Removal Facility?",
+      "publisher": "Central Iowa Water Works",
+      "url": "https://ciww.gov/what-is-the-nitrate-removal-facility/",
+      "date_published": "2026-06-12",
+      "quote": "In 2025, the total annual cost was about $2.2 million, including $1.6 million in operations and maintenance and $600,000 in capital costs.",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "Now sourced to the CIWW FAQ (read). Axios 2026-04-07 gives the same $1.6M (not opened; Axios host blocked).",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_cost_per_day_usd",
-      "claim": "At full capacity (7 vessels) the facility costs about $16,000 a day to run; partial operation costs less (reported $4,000-$16,000; Axios: about $11,000).",
+      "claim": "At full capacity (7 vessels) the facility costs about $16,000 a day to run; partial operation costs less.",
       "value": 16000,
       "unit": "USD/day",
       "range": {
@@ -111,14 +125,21 @@
       "publisher": "Central Iowa Water Works",
       "url": "https://ciww.gov/what-is-the-nitrate-removal-facility/",
       "date_published": null,
-      "quote": "when operating at full capacity (seven vessels), the Nitrate Removal Facility costs approximately $16,000 per day to run",
-      "verification": "secondary",
+      "quote": "When operating at full capacity (seven vessels), the Nitrate Removal Facility costs approximately $16,000 per day to run.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Upper bound, not average. Derived average 2025 O&M per operating day = $1.6M / 112 d = ~$14,300/day (our arithmetic). Older reports cite $10,000/day; do not use. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Upper bound, not average. Our arithmetic: 2025 O&M $1.6M / 112 operating days = about $14,300 per operating day. Axios 'about $11,000' and older '$10,000/day' figures were not rechecked; do not use.",
+      "extra_quotes": [
+        {
+          "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
+          "quote": "Operating the nitrate removal facility at Fleur Drive can cost $16,000 per day when operating at full capacity."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_om_cost_2026_q1_usd",
-      "claim": "In the first quarter of 2026 the facility's O&M cost was about $660,000; full 2026 costs will be calculated in early 2027.",
+      "claim": "In the first quarter of 2026 the facility's O&M cost was about $660,000; CIWW says 2026 capital costs will be calculated in early 2027.",
       "value": 660000,
       "unit": "USD",
       "range": null,
@@ -127,29 +148,38 @@
       "publisher": "Central Iowa Water Works",
       "url": "https://ciww.gov/what-is-the-nitrate-removal-facility/",
       "date_published": null,
-      "quote": "in the first quarter of 2026, operations and maintenance costs were approximately $660,000",
-      "verification": "secondary",
+      "quote": "In the first quarter of 2026, operations and maintenance costs were approximately $660,000. The 2026 capital costs will be calculated in early 2027.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Axios 2026-04-07 gives the same $660,000 'so far this year'. No full-year 2026 cost published as of 2026-11-14. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "CORRECTED wording: CIWW says the 2026 *capital* costs come in early 2027 (earlier draft said 'full 2026 costs'). No full-year 2026 O&M figure published as of 2026-11-14.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_days_2026",
-      "claim": "In 2026 the nitrate removal facility ran a record 193 days (turned on 6 Jan, taken offline 23 Jul 2026). The previous record was 177 days in 2015.",
+      "claim": "In 2026 the nitrate removal facility ran a record 193 days: 6 Jan - 2 Mar and 9 Mar - 23 Jul 2026. The previous record was 177 days in 2015.",
       "value": 193,
       "unit": "days",
-      "range": {
-        "lo": 192,
-        "hi": 193
-      },
+      "range": null,
       "year": 2026,
       "source_title": "Central Iowa Water Works returns to everyday water stewardship as Nitrate Removal Facility concludes 193 days of operation",
       "publisher": "Central Iowa Water Works",
       "url": "https://ciww.gov/central-iowa-water-works-returns-to-everyday-water-stewardship-as-nitrate-removal-facility-concludes-193-days-of-operation/",
       "date_published": "2026-07-27",
-      "quote": "ran for 193 days during the 2026 season before being taken offline on Thursday, July 23, 2026",
-      "verification": "secondary",
+      "quote": "The decision follows the conclusion of operations at the Nitrate Removal Facility, which ran for 193 days during the 2026 season before being taken offline on Thursday, July 23, 2026.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "One outlet (WeAreIowa/Local 5) said 192 days. Start date 6 Jan 2026 from IPR 2026-01-12 ('first January operation since 2015'). No fall-2026 restart found in search as of 2026-11-14 (one Yahoo headline said CIWW 'may restart'). Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Our check: 6 Jan - 2 Mar = 56 days, 9 Mar - 23 Jul = 137 days, total 193. So it was NOT continuous: KCCI (2026-07-28) says '193 straight days', which conflicts with KCCI's own March reports of a one-week stop. Say '193 days', not '193 straight days'. WeAreIowa's 192 is an outlier. No fall-2026 restart found as of 2026-11-14.",
+      "extra_quotes": [
+        {
+          "url": "https://www.kcci.com/article/kcci-investigates-central-iowa-water-works-nitrate-levels-2026/71182189",
+          "quote": "It ran Jan. 6 through March 2. Operating resumed March 9 and continues through today."
+        },
+        {
+          "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
+          "quote": "As of Monday, Kahler said the Fleur Drive nitrate removal facility had run for 148 days in 2026, representing about 95% of the year so far."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "plant_days_record_prior",
@@ -158,14 +188,21 @@
       "unit": "days",
       "range": null,
       "year": 2015,
-      "source_title": "Central Iowa Water Works turns off nitrate removal plant after 193 days",
-      "publisher": "Des Moines Register via Quad-City Times",
-      "url": "https://qctimes.com/news/state-regional/government-politics/article_2af4accc-87d2-5d05-9b17-e0e1bcce8042.html",
-      "date_published": "2026-07",
-      "quote": null,
-      "verification": "secondary",
+      "source_title": "Central Iowa Water Works nitrate removal facility turns off, running for 112 days so far this year",
+      "publisher": "KCCI",
+      "url": "https://www.kcci.com/article/central-iowa-water-works-nitrate-removal-facility-turns-off-running-for-112-days-so-far-this-year/65670201",
+      "date_published": "2025-08-12",
+      "quote": "In 2015, the facility ran for 177 days",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "Reported consistently across outlets; exact quote not captured."
+      "notes": "Two outlets read directly agree.",
+      "extra_quotes": [
+        {
+          "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
+          "quote": "The record was set in 2015 with 177 days."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_2025_start",
@@ -174,14 +211,29 @@
       "unit": "date",
       "range": null,
       "year": 2025,
-      "source_title": "CIWW Issues Lawn Watering Ban Effective Immediately",
+      "source_title": "CIWW Resumes Commercial Irrigation, Continuing The Phased Exit From The Stage III Watering Ban",
       "publisher": "Central Iowa Water Works",
-      "url": "https://ciww.gov/?p=48",
-      "date_published": "2025-06-12",
-      "quote": "nitrate concentrations in the Raccoon and Des Moines rivers have climbed to near record levels",
-      "verification": "secondary",
+      "url": "https://ciww.gov/ciww-resumes-commercial-irrigation-continuing-the-phased-exit-from-the-stage-iii-watering-ban/",
+      "date_published": "2025-07-29",
+      "quote": "commercial irrigation and lawn watering can resume on Wednesday, July 30, as part of the phased exit from the Stage III lawn watering ban initiated on June 12.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Trigger: CIWW needed to limit river water used in treatment; NRF had run >55 days, all nitrate removal at full capacity; lawn watering ~40% of summer demand (Madsen). One release is dated June 13. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "The ban release itself (ciww.gov/?p=48) shows no date on the page; its WordPress post date (2025-06-06) is a site-migration artifact. Date confirmed by CIWW 29 Jul 2025 release, IPR and KCCI. Run-up: voluntary 25% cut from 30 May 2025, 50% request 11 Jun (KCCI 2025-08-15).",
+      "extra_quotes": [
+        {
+          "url": "https://ciww.gov/ciww-issues-lawn-watering-ban-effective-immediately/",
+          "quote": "Central Iowa Water Works needs to limit the amount of river water that is used in the treatment process because nitrate concentrations in the Raccoon and Des Moines rivers have climbed to near record levels."
+        },
+        {
+          "url": "https://ciww.gov/ciww-issues-lawn-watering-ban-effective-immediately/",
+          "quote": "Central Iowa Water Works has been removing nitrate using the nitrate removal facility for more than 55 days. All nitrate removal processes are operating at full capacity"
+        },
+        {
+          "url": "https://www.iowapublicradio.org/ipr-news/2025-06-25/nitrate-levels-central-iowa-water-des-moines",
+          "quote": "Central Iowa Water Works issued a lawn watering ban June 12"
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_2025_residential_eased",
@@ -190,14 +242,15 @@
       "unit": "date",
       "range": null,
       "year": 2025,
-      "source_title": "Central Iowa lawn watering ban lifted: Lawn watering schedule",
-      "publisher": "WeAreIowa (WOI)",
-      "url": "https://www.weareiowa.com/article/news/local/central-iowa-water-works-des-moines-lawn-watering-schedule-phases-need-to-know-tuesday-nitrate-levels/524-e4a4d954-6361-4cde-b54c-7917b133ede3",
-      "date_published": "2025-07",
-      "quote": null,
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "Phased: residential first, commercial later."
+      "source_title": "Lawn Watering To Resume July 22 Following A Phased Approach!",
+      "publisher": "Central Iowa Water Works",
+      "url": "https://ciww.gov/lawn-watering-to-resume-july-22-following-a-phased-approach/",
+      "date_published": "2025-07-21",
+      "quote": "On July 18, 2025, the Technical Committee voted to lift the ban on residential lawn watering beginning Tuesday, July 22 .",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "Phase 1 residential 22 Jul; phase 2 commercial 30 Jul (CIWW 29 Jul release); phase 3 local governments and schools 7 Aug (KCCI). Trigger used: nitrate in at least one source (the infiltration gallery) at or below 10 mg/L for a sustained period (CIWW 18 Jul 2025 release).",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_2025_end",
@@ -206,18 +259,29 @@
       "unit": "date",
       "range": null,
       "year": 2025,
-      "source_title": "CIWW ends Stage III lawn irrigation ban, implements Stage I voluntary 25 percent reduction in watering",
-      "publisher": "Des Moines Cityview (CIWW release)",
-      "url": "https://www.dmcityview.com/just-released/2025/08/07/ciww-ends-stage-iii-lawn-irrigation-ban-implements-stage-i-voluntary-25-reduction-in-watering/",
+      "source_title": "Central Iowa Water Works ends lawn watering ban, moves to voluntary reduction stage",
+      "publisher": "KCCI",
+      "url": "https://www.kcci.com/article/central-iowa-water-works-lawn-watering-ban-ends-des-moines/65625319",
       "date_published": "2025-08-07",
-      "quote": null,
-      "verification": "secondary",
+      "quote": "Central Iowa Water Works has ended the Stage III lawn watering ban, it announced Thursday.",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "KCCI: technical committee voted 15 Aug 2025 to resume normal irrigation; CIWW 'exits the water shortage program' release 18 Aug 2025. IWLA's 'June 12 to July 31, 49 days' is WRONG; IPR published a correction that the ban ended in August."
+      "notes": "KCCI article datePublished 2025-08-07 (a Thursday). The CIWW site has no 7 Aug 2025 release in its news feed. IWLA's 'June 12 to July 31, 49 days' is WRONG.",
+      "extra_quotes": [
+        {
+          "url": "https://www.kcci.com/article/central-iowa-water-works-lawn-watering-ban-ends-des-moines/65625319",
+          "quote": "Residents under Central Iowa Water Works are now under the Stage I plan, which calls for a voluntary reduction of outside watering by 25%. Local governments and school districts can now resume lawn watering efforts."
+        },
+        {
+          "url": "https://www.kcci.com/article/central-iowa-water-works-lifts-lawn-watering-restrictions-water-quality-nitrates/65789527",
+          "quote": "Officials loosened the restrictions in July and now, effective Friday, Aug. 15, it's been fully lifted."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_2025_days",
-      "claim": "The mandatory 2025 Stage III lawn-watering ban lasted 56 days (12 Jun - 7 Aug 2025); for homes the full ban lasted 40 days (to 22 Jul).",
+      "claim": "The mandatory 2025 Stage III lawn-watering ban lasted 56 days for all customers (12 Jun - 7 Aug 2025); homes were under the full ban for 40 days (to 22 Jul) and businesses for 48 days (to 30 Jul).",
       "value": 56,
       "unit": "days",
       "range": {
@@ -227,12 +291,13 @@
       "year": 2025,
       "source_title": "Derived from CIWW ban start/end releases",
       "publisher": "Field to Faucet (derived)",
-      "url": "https://ciww.gov/?p=48",
+      "url": "https://ciww.gov/ciww-resumes-commercial-irrigation-continuing-the-phased-exit-from-the-stage-iii-watering-ban/",
       "date_published": null,
       "quote": null,
-      "verification": "secondary",
+      "verification": "derived",
       "source_kind": "derived",
-      "notes": "Our arithmetic from ban_2025_start and ban_2025_end. Residential full-ban days = 40. Any water restriction (Stage I-III) 30 May - 15 Aug = 77 days."
+      "notes": "Our arithmetic from primary-verified dates: 12 Jun -> 22 Jul = 40 d (residential), -> 30 Jul = 48 d (commercial), -> 7 Aug = 56 d (governments/schools, end of Stage III). Any restriction (Stage I-III) 30 May - 15 Aug = 77 days.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_2026_start",
@@ -241,18 +306,36 @@
       "unit": "date",
       "range": null,
       "year": 2026,
-      "source_title": "High nitrate levels prompt a lawn watering ban for 600,000 people in central Iowa",
-      "publisher": "Iowa Public Radio",
-      "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
-      "date_published": "2026-06-09",
-      "quote": null,
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "Preceded by a voluntary 50% outdoor-use cut requested late May 2026 (KCRG 2026-05-27). CIWW page: as of 8 Jun 2026 Raccoon >10 mg/L for 136 days, Des Moines River 117 days, infiltration gallery 86 days; NRF running ~95% of the year."
+      "source_title": "Central Iowa Water Works Issues Stage 3 “Water Warning” Lawn Watering Ban Effective Immediately",
+      "publisher": "Central Iowa Water Works",
+      "url": "https://ciww.gov/central-iowa-water-works-issues-stage-3-water-warning/",
+      "date_published": "2026-06-08",
+      "quote": "West Des Moines, Iowa (June 8, 2026) – The Central Iowa Water Works (CIWW) Board of Trustees has initiated Stage 3 of its Water Use Plan,implementing a mandatory lawn watering ban for residential, business, and government customers across the region.",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "Preceded by Stage II voluntary request on 27 May 2026 (CIWW release). IPR 2026-06-09: Stage III considered when demand exceeds 90% of treatment capacity (fact stage3_trigger_demand_pct). Quote copied verbatim incl. the missing space in 'Plan,implementing'.",
+      "checked_at": "2026-11-14"
+    },
+    {
+      "id": "ban_2026_residential_eased",
+      "claim": "Residential customers were moved off the 2026 lawn-watering ban (to Stage II, 50% voluntary cut) on 1 July 2026; the ban stayed for business and government customers until 20 July.",
+      "value": "2026-07-01",
+      "unit": "date",
+      "range": null,
+      "year": 2026,
+      "source_title": "Central Iowa Water Works Eases Restrictions Through Phased Approach to Stage II",
+      "publisher": "Central Iowa Water Works",
+      "url": "https://ciww.gov/central-iowa-water-works-eases-restrictions-through-phased-approach-to-stage-ii/",
+      "date_published": "2026-07-01",
+      "quote": "The change is effective immediately for residential customers. The lawn watering ban will remain in effect for commercial and governmental customers",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "Release dateline: WEST DES MOINES, Iowa (July 1, 2026). CIWW 9 Jul 2026 release confirms the business/government ban continued.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_2026_end",
-      "claim": "All customers moved off the 2026 lawn-watering ban (Stage III to Stage II) on 20 July 2026; all restrictions ended 27 July 2026.",
+      "claim": "Residential customers left the 2026 lawn-watering ban on 1 July 2026; business and government customers on 20 July 2026. All restrictions ended 27 July 2026.",
       "value": "2026-07-20",
       "unit": "date",
       "range": null,
@@ -260,15 +343,26 @@
       "source_title": "Central Iowa Water Works Transitions All Customers to Stage II Water Use Restrictions",
       "publisher": "Central Iowa Water Works",
       "url": "https://ciww.gov/central-iowa-water-works-transitions-all-customers-to-stage-ii-water-use-restrictions/",
-      "date_published": "2026-07",
-      "quote": "Effective July 20, 2026, residential, commercial, and governmental customers may resume outdoor irrigation",
-      "verification": "secondary",
+      "date_published": "2026-07-20",
+      "quote": "Effective July 20, 2026, residential, commercial, and governmental customers may resume outdoor irrigation while reducing lawn watering by approximately 50% and following the regional even/odd lawn watering schedule.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "A 1 Jul 2026 CIWW release began a phased easing (ban kept for commercial/governmental customers), so residential customers likely left the ban on 1 Jul. Technical committee ended all restrictions 27 Jul 2026. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "CONFLICT RESOLVED: CIWW's 1 Jul 2026 release moved residential customers to Stage II that day; 20 Jul moved the remaining (business/government) customers. 27 Jul = all restrictions ended (CIWW 193-day release dated 27 Jul).",
+      "extra_quotes": [
+        {
+          "url": "https://ciww.gov/central-iowa-water-works-eases-restrictions-through-phased-approach-to-stage-ii/",
+          "quote": "The change is effective immediately for residential customers. The lawn watering ban will remain in effect for commercial and governmental customers"
+        },
+        {
+          "url": "https://ciww.gov/central-iowa-water-works-returns-to-everyday-water-stewardship-as-nitrate-removal-facility-concludes-193-days-of-operation/",
+          "quote": "The Central Iowa Water Works (CIWW) Technical Committee met today and voted to return to everyday water stewardship, ending all mandatory and voluntary water use restrictions."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_2026_days",
-      "claim": "The 2026 mandatory lawn-watering ban lasted 42 days for all customers (8 Jun - 20 Jul 2026); about 23 days for homes if they were released 1 Jul.",
+      "claim": "The 2026 mandatory lawn-watering ban lasted 23 days for homes (8 Jun - 1 Jul) and 42 days for business and government customers (8 Jun - 20 Jul 2026).",
       "value": 42,
       "unit": "days",
       "range": {
@@ -278,12 +372,19 @@
       "year": 2026,
       "source_title": "Derived from CIWW 2026 releases",
       "publisher": "Field to Faucet (derived)",
-      "url": "https://ciww.gov/central-iowa-water-works-returns-to-everyday-water-stewardship-as-nitrate-removal-facility-concludes-193-days-of-operation/",
+      "url": "https://ciww.gov/central-iowa-water-works-eases-restrictions-through-phased-approach-to-stage-ii/",
       "date_published": null,
       "quote": null,
-      "verification": "secondary",
+      "verification": "derived",
       "source_kind": "derived",
-      "notes": "Our arithmetic. Any restriction (8 Jun - 27 Jul) = 49 days. Residential release date (1 Jul vs 20 Jul) conflicts between sources."
+      "notes": "Our arithmetic from primary-verified dates; CIWW itself says '23 days' on 1 Jul. Any restriction (Stage II voluntary from 27 May to 27 Jul) = 61 days; Stage III to all-clear (8 Jun - 27 Jul) = 49 days. Compare 2025: 40 days for homes, 56 days to end of Stage III.",
+      "extra_quotes": [
+        {
+          "url": "https://ciww.gov/central-iowa-water-works-eases-restrictions-through-phased-approach-to-stage-ii/",
+          "quote": "Significant conservation efforts of residents and businesses in the region over the past 23 days have reduced water use"
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ban_lift_rule",
@@ -292,14 +393,21 @@
       "unit": "mg/L",
       "range": null,
       "year": 2025,
-      "source_title": "Lawn watering ban remains despite Des Moines, Raccoon rivers recording nitrates under EPA drinking standard",
-      "publisher": "Des Moines Register via Yahoo News",
-      "url": "https://www.yahoo.com/news/lawn-watering-ban-remains-despite-202908954.html",
+      "source_title": "Stage III Daily Updates",
+      "publisher": "Central Iowa Water Works",
+      "url": "https://ciww.gov/stage-iii-daily-updates/",
       "date_published": "2025-07",
-      "quote": "at least one water source must record nitrate concentrations at 10 mg/L or less",
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "2026 lift criterion not found. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "quote": "One of many factors to fully lift the ban requires that at least one water source – either the Raccoon River or Des Moines River – record nitrate concentrations at 10 mg/L or less.",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "In practice the 2025 release was triggered by the infiltration gallery (not a river) staying below 10 mg/L. No explicit 2026 lift criterion published; 2026 releases cite falling demand and improving source-water conditions.",
+      "extra_quotes": [
+        {
+          "url": "https://ciww.gov/ciww-announces-phased-lifting-of-the-lawn-irrigation-ban-starting-with-residential-customers/",
+          "quote": "we needed to see nitrate concentrations in at least one water source decline to 10 mg/l and stay there for a sustained period. This week, that happened in the Infiltration Gallery."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "raccoon_2025_peak_mgL",
@@ -315,10 +423,11 @@
       "publisher": "Iowa Public Radio",
       "url": "https://www.iowapublicradio.org/ipr-news/2025-06-25/nitrate-levels-central-iowa-water-des-moines",
       "date_published": "2025-06-25",
-      "quote": null,
-      "verification": "secondary",
+      "quote": "On June 8, the Raccoon River hit 20.55 mg/L. A Central Iowa Water Works spokesperson said it marked the second time nitrate in the river surpassed 20 mg/L.",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "CONFLICT: IPR 2025-08-06 says '19.39 mg/L in the Raccoon River June 9'. Use our own USGS 05484500 series for exact peaks."
+      "notes": "CIWW lab value as reported by IPR. CONFLICT (not re-opened): IPR 2025-08-06 says 19.39 mg/L on 9 Jun. USGS sensor (05484500, param 99133) daily-mean maximum in 2025 = 18.4 mg/L on 7 Jun (our query of waterservices dv). Sensor daily means sit below lab grab peaks; label which one is shown.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "desmoines_2025_peak_mgL",
@@ -335,9 +444,10 @@
       "url": "https://www.iowapublicradio.org/ipr-news/2025-06-25/nitrate-levels-central-iowa-water-des-moines",
       "date_published": "2025-06-25",
       "quote": "On June 12, nitrate in the Des Moines River reached 17.15 mg/L — below the record 18.62 mg/L in 2013.",
-      "verification": "secondary",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "CONFLICT: IPR 2025-08-06 says 16.66; Iowa Capital Dispatch analysis says 16.6. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "CONFLICT: IPR 2025-08-06 says 16.66; Iowa Capital Dispatch 16.6 (neither re-opened). USGS 05482000 daily-mean maximum 2025 = 17.0 mg/L on 12 Jun (our waterservices query).",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "raccoon_record_mgL",
@@ -351,28 +461,30 @@
       "url": "https://www.iowapublicradio.org/ipr-news/2025-06-25/nitrate-levels-central-iowa-water-des-moines",
       "date_published": "2025-06-25",
       "quote": "The record was set in 2013 with 24.39 mg/L.",
-      "verification": "secondary",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "Des Moines River record 18.62 mg/L (2013), same article. 2025 was 'near record', NOT a record. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Des Moines River record 18.62 mg/L (2013), same article. 2025 was 'near record', NOT a record.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "raccoon_2026_peak_mgL",
-      "claim": "In 2026 the Raccoon River reached 17.45 mg/L on 25 January (highest 2026 value found).",
-      "value": 17.45,
+      "claim": "In 2026 the USGS sensor on the Raccoon River at Van Meter recorded a maximum daily mean of 18.6 mg/L nitrate-N (28 May 2026); higher than the earlier-cited 17.45 mg/L (25 Jan).",
+      "value": 18.6,
       "unit": "mg/L NO3-N",
       "range": {
-        "lo": 17.17,
-        "hi": 17.45
+        "lo": 17.45,
+        "hi": 18.6
       },
       "year": 2026,
-      "source_title": "CIWW Technical Committee minutes 2026-01-14 / later TC report",
-      "publisher": "Central Iowa Water Works",
-      "url": "https://ciww.gov/wp-content/uploads/2026/04/2026-01-14_CIWW_Tech_Committee_Minutes.pdf",
-      "date_published": "2026",
+      "source_title": "USGS NWIS daily values, 05484500, parameter 99133",
+      "publisher": "U.S. Geological Survey",
+      "url": "https://waterservices.usgs.gov/nwis/dv/?format=rdb&sites=05484500,05482000&parameterCd=99133&startDT=2013-01-01&endDT=2026-11-13&statCd=00003",
+      "date_published": null,
       "quote": null,
-      "verification": "secondary",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Search-summary attribution only. Other 2026 readings: 15.72 (March), 17.17 (27 May, Des Moines R. 10.4). 2026 was a record for DURATION, not peak concentration."
+      "notes": "CORRECTED: 17.45 (25 Jan, search-only attribution to CIWW TC minutes) is not the 2026 high; the Jan 14 TC minutes we opened do not contain 17.45. Our USGS query: 2026 daily means include provisional ('P') data and ~67 missing days through 13 Nov. For comparison 2025 max daily mean 18.4 (7 Jun). 2026 was a record for DURATION, not peak concentration.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "raccoon_days_over10_2026_jun8",
@@ -385,26 +497,28 @@
       "publisher": "Central Iowa Water Works",
       "url": "https://ciww.gov/why-is-ciww-implementing-a-lawn-watering-ban/",
       "date_published": "2026-06-08",
-      "quote": null,
-      "verification": "secondary",
+      "quote": "As of June 8, 2026, the Raccoon River has measured nitrate concentrations above 10 mg/L for 136 days, the Des Moines River has registered 117 days over 10mg/L",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Des Moines River = 117 days; infiltration gallery 86 days."
+      "notes": "Same page: NRF operating about 95% of the year; about 50% of Maffitt Reservoir storage already used. Our USGS daily-mean count for the full 2026 to 13 Nov: Raccoon 176 days > 10 mg/L (with data gaps).",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "capital_state_grant_usd",
-      "claim": "Iowa is giving CIWW a one-time $25 million to double its nitrate removal capacity within three years (announced May 2026).",
+      "claim": "Iowa lawmakers appropriated $25 million (2026) to expand CIWW's nitrate removal facility.",
       "value": 25000000,
       "unit": "USD",
       "range": null,
       "year": 2026,
-      "source_title": "Central Iowa Water Works gets $25 million to double nitrate removal operations",
-      "publisher": "KDSM / KCCI",
-      "url": "https://kdsm17.com/news/local/central-iowa-water-works-gets-25-million-to-double-nitrate-removal-operations",
-      "date_published": "2026-05",
-      "quote": null,
-      "verification": "secondary",
+      "source_title": "KCCI Investigates: $1.2 billion in Central Iowa Water Works projects coming",
+      "publisher": "KCCI",
+      "url": "https://www.kcci.com/article/kcci-investigates-12-billion-in-central-iowa-water-works-projects-coming/73659187",
+      "date_published": "2026-09-10",
+      "quote": "For instance, expanding the nitrate removal facility got a $25 million appropriation from state lawmakers.",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "Part of Gov. Reynolds' ~$100M water-treatment package (Inside Climate News 2026-05-01)."
+      "notes": "'Double capacity within three years' comes from a KDSM headline/search snippet only (kdsm17.com blocked); not read. Part of the 2026 'Farm to Faucet' water quality package (IDALS 2026-06-22 page names the package).",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "capital_nrf_expansion_cost_usd",
@@ -419,11 +533,12 @@
       "source_title": "KCCI Investigates: $1.2 billion in Central Iowa Water Works projects coming",
       "publisher": "KCCI",
       "url": "https://www.kcci.com/article/kcci-investigates-12-billion-in-central-iowa-water-works-projects-coming/73659187",
-      "date_published": "2026",
+      "date_published": "2026-09-10",
       "quote": "The estimated cost right now is $40 million. Ratepayers would make up the difference.",
-      "verification": "secondary",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "Earlier KCCI estimate: $23M construction. Broader CIWW capital program ~$1.2B (new West Plant, Saylorville and Grimes expansions) is mostly growth-driven; June 2025 estimate ~$350M. Do not call $1.2B a nitrate cost. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "KCCI 2026-07-28 said 'more than $25 million'; an earlier KCCI estimate was $23M construction (search only). The ~$1.2B CIWW capital program is mostly growth-driven (KCCI: 'as we grow, we need more water'); do not call it a nitrate cost.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "ag_share_river_nitrate_pct",
@@ -442,7 +557,14 @@
       "quote": null,
       "verification": "secondary",
       "source_kind": "news",
-      "notes": "Iowa PBS summary: >70% agricultural; 40% surplus fertilizer, 20% manure, 20% soybean-fixed. Axios 2026-08-18: manure 12-19%, cities 1.5-2%. Quote the report itself before using a single number."
+      "notes": "Report itself not opened. KCCI (read) states 80%; Iowa PBS summary (search) >70%, with 40% surplus fertilizer, 20% manure, 20% soybean-fixed; Axios 2026-08-18: manure 12-19%, cities 1.5-2%. Prefer the INRS statewide nonpoint figure (fact inrs_nonpoint_share_pct, primary) on slides, or say 'roughly 70-80% from agriculture'.",
+      "extra_quotes": [
+        {
+          "url": "https://www.kcci.com/article/central-iowa-water-works-nitrate-removal-facility-turns-off-running-for-112-days-so-far-this-year/65670201",
+          "quote": "A report commissioned by Polk County leaders had 16 scientists conclude that 80% of the nitrate pollution comes from agricultural land."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "isu_lbN_acre_yr",
@@ -461,7 +583,8 @@
       "quote": null,
       "verification": "secondary",
       "source_kind": "primary_publisher",
-      "notes": "Range: ISU Gilmore City drainage site averaged ~36 lb N/ac at 150-160 lb N fertilizer, varying 0.9-94 lb/ac by weather; ~15-20 lb/ac even with no N. ISU Extension: normal 15-25, wet springs 40-50 lb/ac. Corn and soybean losses are similar."
+      "notes": "Range: ISU Gilmore City drainage site averaged ~36 lb N/ac at 150-160 lb N fertilizer, varying 0.9-94 lb/ac by weather; ~15-20 lb/ac even with no N. ISU Extension: normal 15-25, wet springs 40-50 lb/ac. Corn and soybean losses are similar. STILL SECONDARY: stories.cals.iastate.edu and crops.extension.iastate.edu are blocked for this session; not on an allowed host.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "kaspar_rye_pct",
@@ -473,14 +596,15 @@
         "hi": 61
       },
       "year": 2016,
-      "source_title": "USDA ARS publication 333537 (Kaspar et al., broadcast rye/oat cover crops)",
+      "source_title": "Impact of broadcasting a cereal rye or oat cover crop before corn and soybean harvest on nitrate (Kaspar, Jaynes, Parkin, Moorman 2016, ASA-CSSA-SSSA abstract)",
       "publisher": "USDA Agricultural Research Service",
       "url": "https://www.ars.usda.gov/research/publications/publication/?seqNo115=333537",
-      "date_published": null,
+      "date_published": "2016-11",
       "quote": "Over 14 years a cereal rye cover crop reduced nitrate concentrations by 59% and nitrate load by 57%.",
-      "verification": "secondary",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "USDA-ARS (Kaspar), not Iowa State; 14 years, not 15. Kaspar et al. 2007 JEQ (4 yr): 61% load, 59% conc. Kaspar et al. 2012 AWM: rye 48%, oat 26% (concentration). Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "USDA-ARS long-term tile-drainage experiment near Ames (no-till rye). It is a meeting abstract summarising the long-term site. Kaspar et al. 2007 JEQ (4 yr): 61% load; 2012 AWM: rye 48%, oat 26% (concentration) - not re-opened.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "kaspar_other_sites_pct",
@@ -499,23 +623,32 @@
       "quote": null,
       "verification": "secondary",
       "source_kind": "news",
-      "notes": "The concept doc's '22-48%' was NOT found; the source found gives 15-48%. Use 15-48%."
+      "notes": "The concept doc's '22-48%' was NOT found; the source found gives 15-48%. Use 15-48%. sare.org blocked; not rechecked.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_cover_rye_pct",
-      "claim": "Iowa's Nutrient Reduction Strategy science assessment estimates a cereal rye cover crop cuts nitrate-N in drainage by 31% on average.",
+      "claim": "Iowa's Nutrient Reduction Strategy science assessment estimates a cereal rye cover crop cuts nitrate-N concentration in drainage by 31% on average (SD 29).",
       "value": 31,
       "unit": "% reduction NO3-N concentration",
       "range": null,
-      "year": 2013,
-      "source_title": "Iowa Nutrient Reduction Strategy: science assessment (Table, nitrogen practices)",
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
       "publisher": "Iowa State Univ./IDALS/Iowa DNR",
-      "url": "https://publications.iowa.gov/23225/1/NRSfull-130529.pdf",
-      "date_published": "2013-05-29",
-      "quote": null,
-      "verification": "secondary",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Rye 31 (29) ‐6 (7)",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Table entry '31 (29)' with corn yield '-6 (7)'. Measures concentration, not N-applied. Iowa Soybean Assn. (2026) cites a 27% INRS cover-crop average; Iowa Farm Bureau cites 28-31%. Not confirmed whether the Feb 2025 INRS update changed the value."
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. Corn yield change -6% (SD 7) in the 2025 table. The Science Team's 2024 literature update (Mar 2024) revises rye to 28 (26) rotational average (corn year 27, soybean year 30) and its corn-yield effect to 0 (10). Show 31% as the official INRS table value, or 28% as the 2024 update - label which.",
+      "inrs_2024_update": {
+        "value": 28,
+        "sd": 26,
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
+        "table": "Table 1, p. 3",
+        "quote": "Rye - Rotational average 28 (26)"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_cover_rye_sd",
@@ -523,152 +656,222 @@
       "value": 29,
       "unit": "percentage points",
       "range": null,
-      "year": 2013,
-      "source_title": "Iowa Nutrient Reduction Strategy: science assessment",
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
       "publisher": "Iowa State Univ./IDALS/Iowa DNR",
-      "url": "https://publications.iowa.gov/23225/1/NRSfull-130529.pdf",
-      "date_published": "2013-05-29",
-      "quote": null,
-      "verification": "secondary",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Rye 31 (29) ‐6 (7) ... * SD = standard deviation.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Inferred: INRS tables report 'mean (SD)'. Minnesota's science assessment describes Iowa's fall-to-spring value as '6 ± 25%', supporting that the parentheses are SDs. A search tool misread '31 (29)' as 31% N / 29% P; ignore that reading."
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. Column header 'Average (SD*)' and footnote '* SD = standard deviation' confirmed on the page. 2024 update SD = 26.",
+      "inrs_2024_update": {
+        "value": 26,
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_cover_oat_pct",
-      "claim": "INRS: oat cover crop cuts nitrate-N about 28% (SD 2).",
+      "claim": "INRS: an oat cover crop cuts nitrate-N concentration about 28% (SD 2), based on a single study.",
       "value": 28,
       "unit": "% reduction",
       "range": null,
-      "year": 2013,
-      "source_title": "Iowa Nutrient Reduction Strategy: science assessment",
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
       "publisher": "Iowa State Univ./IDALS/Iowa DNR",
-      "url": "https://publications.iowa.gov/23225/1/NRSfull-130529.pdf",
-      "date_published": "2013-05-29",
-      "quote": null,
-      "verification": "unverified",
-      "source_kind": "news",
-      "notes": "28% supported only by secondary '28-31%' ranges (Iowa Farm Bureau, 2020 workshop slides); SD 2 from memory of the table, not confirmed."
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Oat 28 (2)** ‐5 (1) ... ** Based on 1 study with 3 years of corn and 2 years of soybean.",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. Was 'unverified'; now read on the page. Thin evidence (1 study). 2024 update: 25 (6).",
+      "inrs_2024_update": {
+        "value": 25,
+        "sd": 6,
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
+        "quote": "Oat 25 (6)"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_ext_rotation_pct",
-      "claim": "INRS: an extended rotation (at least 2 years of alfalfa in a 4-5 yr rotation) cuts nitrate-N by 42% on average (SD 12).",
+      "claim": "INRS: an extended rotation (at least 2 years of alfalfa in a 4-5 year rotation) cuts nitrate-N concentration by 42% on average (SD 12), with a +7% corn yield change.",
       "value": 42,
       "unit": "% reduction NO3-N concentration",
       "range": null,
-      "year": 2013,
-      "source_title": "Iowa Nutrient Reduction Strategy: science assessment",
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
       "publisher": "Iowa State Univ./IDALS/Iowa DNR",
-      "url": "https://publications.iowa.gov/23225/1/NRSfull-130529.pdf",
-      "date_published": "2013-05-29",
-      "quote": null,
-      "verification": "secondary",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "At least 2 years of alfalfa in a 4 or 5 year Extended Rotations 42 (12) 7 (7) rotation",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Table '42 (12)'; corn yield '7 (7)'. Iowa Capital Dispatch (2025-02-07) on the 2025 update: three-year extended rotation reduces nitrate-N in tile drainage by 42% on average."
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. IMPORTANT: the 2024 Science Team update cuts 4+ yr extended rotation to 27 (25) and adds a 3-yr (corn-soy-small grain) rotation at 15 (34). Iowa Capital Dispatch's '3-year extended rotation 42%' wording mixes these up. If the app models a 3-yr rotation, 15% is the closer value.",
+      "inrs_2024_update": {
+        "value": 27,
+        "sd": 25,
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
+        "quote": "Extended rotation ... 4+ yr. 27 (25)",
+        "three_year": {
+          "value": 15,
+          "sd": 34
+        }
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_crp_pct",
-      "claim": "INRS: retiring row-crop land to CRP cuts nitrate-N by 85% (SD 9); perennial energy crops by 72% (SD 23).",
+      "claim": "INRS: retiring row-crop land to CRP cuts nitrate-N concentration by 85% (SD 9); perennial energy crops by 72% (SD 23).",
       "value": 85,
       "unit": "% reduction NO3-N concentration",
       "range": null,
-      "year": 2013,
-      "source_title": "Iowa Nutrient Reduction Strategy: science assessment",
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
       "publisher": "Iowa State Univ./IDALS/Iowa DNR",
-      "url": "https://publications.iowa.gov/23225/1/NRSfull-130529.pdf",
-      "date_published": "2013-05-29",
-      "quote": "85% reduction in nitrate-N concentration with conversion to CRP from row-crop production",
-      "verification": "secondary",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Land Retirement (CRP) ... 85 (9) ‐100 Compared to Spring‐ Applied Fertilizer",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Perennial energy crops '72 (23)'. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. Corn yield -100% (land leaves corn). Energy crops '72 (23)' in 2025 table; 2024 update 87 (21). Grazed pasture assumed 85 (= CRP). Prairie strips are NOT an INRS table practice (see prairie_strips_nitrate). Quote is reassembled from a multi-column PDF layout (same words, line breaks removed).",
+      "inrs_2024_update": {
+        "energy_crop": {
+          "value": 87,
+          "sd": 21
+        },
+        "crp": "no new data (85 (9) kept)",
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_timing_pct",
-      "claim": "INRS: moving N application from fall to spring pre-plant cuts nitrate-N about 6% (SD 25); a nitrification inhibitor with fall anhydrous about 9% (SD 19).",
+      "claim": "INRS: moving N application from fall to spring pre-plant cuts nitrate-N concentration about 6% (SD 25); a nitrification inhibitor (nitrapyrin) with fall N about 9% (SD 19).",
       "value": 6,
       "unit": "% reduction",
-      "range": {
-        "lo": 4,
-        "hi": 9
-      },
-      "year": 2014,
-      "source_title": "Iowa Science Assessment of Nonpoint Source Practices (NRS2)",
-      "publisher": "Iowa State University",
-      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/NRS2-141001.pdf",
-      "date_published": "2014-10-01",
-      "quote": null,
-      "verification": "secondary",
+      "range": null,
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
+      "publisher": "Iowa State Univ./IDALS/Iowa DNR",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Moving from Fall to Spring Pre‐plant Application 6 (25) 4 (16)",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Minnesota science assessment: Iowa 'originally recommended a 6 ± 25%' value and current Iowa value is lower. ISU NRS tracking v4 gives 5% for inhibitors (concentration). Sidedress vs spring pre-plant ~4%."
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. CORRECTED note: sidedress vs pre-plant is 7 (37) in the 2025 table (1 (14) in the 2024 update), not ~4%; 4 (20) is soil-test-based sidedress. Inhibitor 9 (19) -> 5 (20) in 2024 update. Quote is reassembled from a multi-column PDF layout (same words, line breaks removed).",
+      "inrs_2024_update": {
+        "fall_to_spring": {
+          "value": 6,
+          "sd": 16
+        },
+        "inhibitor": {
+          "value": 5,
+          "sd": 20
+        },
+        "sidedress_vs_preplant": {
+          "value": 1,
+          "sd": 14
+        },
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_mrtn_pct",
-      "claim": "INRS: reducing N rate to the MRTN cuts nitrate-N about 10%.",
+      "claim": "INRS: reducing N rate to the MRTN (133 lb N/ac corn after soybean; 190 lb N/ac continuous corn) cuts nitrate-N about 10% statewide, with about -1% corn yield.",
       "value": 10,
-      "unit": "% reduction",
+      "unit": "% reduction NO3-N concentration",
       "range": null,
-      "year": 2013,
-      "source_title": "Iowa Nutrient Reduction Strategy: science assessment",
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
       "publisher": "Iowa State Univ./IDALS/Iowa DNR",
-      "url": "https://publications.iowa.gov/23225/1/NRSfull-130529.pdf",
-      "date_published": "2013-05-29",
-      "quote": null,
-      "verification": "unverified",
-      "source_kind": "news",
-      "notes": "Not confirmed in this session (value depends on starting rate). Science assessment text confirms rate reduction and cover crops have the greatest N-management potential."
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Reduce to Maximum Return to Nitrogen value 149 kg N/ha (133 lb N/ac) for CS and 213 kg 10‡ ‐1‡‡ ... ‡ Reduction calculated based on initial application rate for each Major Land Resource Area (MLRA).",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. Was 'unverified'; now read. No SD: the 10% depends on each MLRA's starting rate, so a field-level model should use a rate-response curve, not a flat 10%. Quote is reassembled from a multi-column PDF layout (same words, line breaks removed).",
+      "inrs_2024_update": {
+        "value": 10,
+        "note": "no new literature; unchanged",
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_bioreactor_pct",
-      "claim": "INRS: woodchip bioreactors remove about 43% of nitrate load from treated drainage.",
+      "claim": "INRS: woodchip bioreactors cut nitrate-N about 43% (SD 21) in the drainage water they treat.",
       "value": 43,
-      "unit": "% reduction NO3-N load",
+      "unit": "% reduction NO3-N (treated drainage only)",
       "range": null,
-      "year": 2017,
-      "source_title": "Accessibility Version: Tracking the Iowa Nutrient Reduction Strategy v2",
-      "publisher": "Iowa State University (INRS tracking)",
-      "url": "https://nrstracking.cals.iastate.edu/accessibility-version-tracking-iowa-nutrient-reduction-strategy-v2",
-      "date_published": null,
-      "quote": null,
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "Only the water routed through the practice."
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
+      "publisher": "Iowa State Univ./IDALS/Iowa DNR",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Bioreactors 43 (21)",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. Applies only to water routed through the practice. 2024 Science Team update: 24 (17), or 5 (4) lb N removed per treated acre; the update recommends lb N per treated acre as the better metric.",
+      "inrs_2024_update": {
+        "value": 24,
+        "sd": 17,
+        "lb_N_per_treated_acre": 5,
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
+        "quote": "Bioreactors 24 (17) 35 43 (21) 14 2"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_sat_buffer_pct",
-      "claim": "INRS: saturated buffers remove about 50% of nitrate load from treated drainage.",
+      "claim": "INRS: saturated buffers cut nitrate-N about 50% (SD 13) in the drainage they treat.",
       "value": 50,
-      "unit": "% reduction NO3-N load",
-      "range": {
-        "lo": 50,
-        "hi": 53
+      "unit": "% reduction NO3-N (treated drainage only)",
+      "range": null,
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
+      "publisher": "Iowa State Univ./IDALS/Iowa DNR",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Additional P removal of about ½ pound of P Saturated Buffer 50 (13) per year",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. 2024 update: 45 (24), 10 (6) lb N per treated acre. Earlier 'tracking v1 53%' not rechecked.",
+      "inrs_2024_update": {
+        "value": 45,
+        "sd": 24,
+        "lb_N_per_treated_acre": 10,
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf"
       },
-      "year": 2017,
-      "source_title": "Accessibility Version: Tracking the Iowa Nutrient Reduction Strategy v2",
-      "publisher": "Iowa State University (INRS tracking)",
-      "url": "https://nrstracking.cals.iastate.edu/accessibility-version-tracking-iowa-nutrient-reduction-strategy-v2",
-      "date_published": null,
-      "quote": null,
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "Tracking v1 said 53%."
+      "checked_at": "2026-11-14"
     },
     {
       "id": "inrs_wetland_pct",
-      "claim": "INRS: nitrate-removal wetlands cut nitrate load about 52%.",
+      "claim": "INRS: nitrate-removal wetlands cut nitrate-N about 52% (one report, no SD) in the water they treat.",
       "value": 52,
-      "unit": "% reduction NO3-N load",
+      "unit": "% reduction NO3-N (treated drainage only)",
       "range": {
         "lo": 30,
         "hi": 52
       },
-      "year": 2013,
-      "source_title": "Accessibility Version: Tracking the Iowa Nutrient Reduction Strategy",
-      "publisher": "Iowa State University (INRS tracking)",
-      "url": "https://nrstracking.cals.iastate.edu/accessibility-version-tracking-iowa-nutrient-reduction-strategy",
-      "date_published": null,
-      "quote": null,
-      "verification": "secondary",
-      "source_kind": "news",
-      "notes": "Tracking v3 listed 30% for nitrate-removal wetlands; values differ by edition."
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Section 2: Iowa Science Assessment of Nonpoint Source Practices, Table 2",
+      "publisher": "Iowa State Univ./IDALS/Iowa DNR",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "date_published": "2025-02",
+      "quote": "Wetlands Targeted Water Quality 52† ... † Based on one report looking at multiple wetlands in Iowa (Helmers et al., 2008a).",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "2025 INRS Section 2 (Feb 2025), Table 2, PDF p. 6. Values are % reduction in nitrate-N concentration, mean (SD), from a literature review; the Feb 2025 edition still prints the original 2013 values. 2024 update: 30 (17), 12 (6) lb N per treated acre. IDALS (2026-06-22) says wetlands reduce nitrate 'by up to 90 percent' - an upper bound; do not use as average.",
+      "inrs_2024_update": {
+        "value": 30,
+        "sd": 17,
+        "lb_N_per_treated_acre": 12,
+        "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf"
+      },
+      "checked_at": "2026-11-14"
     },
     {
       "id": "iowa_cover_acres",
@@ -687,7 +890,14 @@
       "quote": null,
       "verification": "secondary",
       "source_kind": "news",
-      "notes": "2023 ~3.84M (gain of ~32k). INRS dashboard: 3.9M vs 12.5M-acre goal. IDALS 2025 annual report: 'nearly four million acres'. ISU tracker: 3.7M in 2022. No 2025 planted-acre figure found."
+      "notes": "2023 ~3.84M (gain of ~32k). INRS dashboard: 3.9M vs 12.5M-acre goal. IDALS 2025 annual report: 'nearly four million acres'. ISU tracker: 3.7M in 2022. No 2025 planted-acre figure found. IDALS (read) confirms 'nearly 4 million acres' in 2024; the exact 3.87M is Iowa Farm Bureau (not re-opened).",
+      "extra_quotes": [
+        {
+          "url": "https://iowaagriculture.gov/news/greater-dsm-watershed-program",
+          "quote": "In 2024, Iowa farmers planted nearly 4 million acres of cover crops, up from fewer than 400,000 just a decade ago."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "iowa_cover_share_pct",
@@ -703,7 +913,8 @@
       "quote": null,
       "verification": "secondary",
       "source_kind": "news",
-      "notes": ""
+      "notes": "",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "idals_costshare_usd_ac",
@@ -719,10 +930,11 @@
       "publisher": "Iowa Dept. of Agriculture and Land Stewardship",
       "url": "https://iowaagriculture.gov/news/cover-crop-cost-share-program-2026",
       "date_published": "2026-07-07",
-      "quote": null,
-      "verification": "secondary",
+      "quote": "Farmers planting cover crops for the first time are eligible for $30 per acre. Farmers who have previously planted cover crops are eligible for $20 per acre.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Returning users $20/acre. 1 million acres enrolled in 2026 (record, Naig, Sept 2026)."
+      "notes": "Up to 160 acres per participant (same page). Extra for first-time users: $10/ac for no-till/strip-till, $3/ac nitrogen inhibitor with fall fertilizer. '1 million acres enrolled in 2026' not rechecked.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "gdmw_costshare_usd_ac",
@@ -735,10 +947,17 @@
       "publisher": "Iowa Dept. of Agriculture and Land Stewardship",
       "url": "https://iowaagriculture.gov/news/greater-dsm-watershed-program",
       "date_published": "2026-06-22",
-      "quote": null,
-      "verification": "secondary",
+      "quote": "increasing cost-share payments for both new and existing cover crop users to $25 per acre and increasing the maximum eligible acreage to 500 acres per farmer or landowner.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Watershed enrolled >300,000 acres in 2026 vs ~109,000 in 2025 (IDALS). Initial $500k reportedly used up within 10 days (Iowa Farm Bureau)."
+      "notes": "Created by the 2026 'Farm to Faucet' water quality package signed 1 Jun 2026; IDALS adds $2.5M with the goal of doubling cover crop adoption in the watershed. '>300,000 acres enrolled' and '$500k used in 10 days' not rechecked.",
+      "extra_quotes": [
+        {
+          "url": "https://iowaagriculture.gov/news/cover-crop-cost-share-program-2026",
+          "quote": "Together, those programs offer eligible farmers the opportunity to receive state cost-share assistance on up to 660 acres of cover crops"
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "crop_insurance_discount_usd_ac",
@@ -750,11 +969,12 @@
       "source_title": "Secretary Naig Opens Sign-Up Window for Iowa's Crop Insurance Discount Program",
       "publisher": "Iowa Dept. of Agriculture and Land Stewardship",
       "url": "https://iowaagriculture.gov/news/crop-ins-discount-prog-signup-12-25",
-      "date_published": "2025-12",
-      "quote": null,
-      "verification": "secondary",
+      "date_published": "2025-12-01",
+      "quote": "The innovative program offers farmers a $5 per acre premium reduction for fall-planted cover crops.",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "IDALS + USDA-RMA demonstration; last window 1 Dec 2025 - 23 Jan 2026; next window expected Dec 2026. Cannot be stacked on cost-share acres."
+      "notes": "Same page: no acreage cap; acres cannot be enrolled in other IDALS or USDA-NRCS cost-share programs; sign-up 1 Dec 2025 - 23 Jan 2026; 'nearly 2,000 farmers ... more than 1.4 million acres' to date.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "eqip_340_usd_ac",
@@ -773,7 +993,8 @@
       "quote": null,
       "verification": "secondary",
       "source_kind": "third_party",
-      "notes": "Official FY26 Iowa Scenario Booklet (NRCS, 2026-04-28, https://www.nrcs.usda.gov/sites/default/files/2026-04/FY26%20FA%20Program%20Scenario%20Booklet_April%2028%202026.pdf) snippet shows 340 Single Species 89.20 and Multi-Species 93.05 — consistent with 89.20 being the HU rate (=74.34 x 90/75). Multi-species regular $77.54. Regular = 75% of cost. Confirm in the booklet before display."
+      "notes": "STILL SECONDARY: www.nrcs.usda.gov dropped every connection (HTTP/2 INTERNAL_ERROR / empty reply) on 2026-11-14, so the FY26 Iowa booklet could not be opened. Search snippet of the booklet shows 340 Single Species 89.20 and Multi-Species 93.05, consistent with 89.20 being the historically-underserved rate (=74.34 x 90/75). Confirm before display.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "eqip_328_usd_ac",
@@ -792,11 +1013,12 @@
       "quote": null,
       "verification": "unverified",
       "source_kind": "third_party",
-      "notes": "Third-party only; ratio 13.84/11.53 = 1.20 matches the 90%/75% rule, but not seen in the NRCS booklet. Verify."
+      "notes": "Third-party only; NRCS booklet unreachable (connection dropped by server). Ratio 13.84/11.53 = 1.20 matches 90%/75%, but not seen in the NRCS booklet. Keep off slides.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "rye_seeding_cost_usd_ac",
-      "claim": "Custom drilling of cover crop seed in Iowa averaged $19.05/acre in 2026 (aerial seeding $14.70/acre).",
+      "claim": "Custom drilling of cover crop seed in Iowa averaged $19.05/acre in 2026 (range $9-25); aerial seeding $14.70/acre (range $10-18).",
       "value": 19.05,
       "unit": "USD/acre",
       "range": {
@@ -808,29 +1030,31 @@
       "publisher": "Iowa State University Extension",
       "url": "https://www.extension.iastate.edu/agdm/crops/pdf/a3-10.pdf",
       "date_published": "2026",
-      "quote": null,
-      "verification": "secondary",
+      "quote": "Aerial seeding of cover crop / acre 14.70 15.00 10.00 - 18.00 25 Drilling cover crop seed / acre 19.05 19.25 9.00 - 25.00 39",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Drilling range $9-25; 2025 survey $18.30. Seeding service only, excludes seed."
+      "notes": "Table columns: average, median, range, number of responses. Seeding service only, excludes seed. ISU A1-88 (July 2026) cites the same averages.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "rye_seed_cost_usd_ac",
-      "claim": "Cereal rye seed costs roughly $15-30/acre; seed + seeding + termination typically $25-60/acre.",
-      "value": null,
+      "claim": "ISU Extension estimates the added cost of cereal rye seed at about $25 per acre (in an organic no-till budget); seeding adds about $15-19/acre.",
+      "value": 25,
       "unit": "USD/acre",
       "range": {
         "lo": 15,
         "hi": 30
       },
       "year": 2026,
-      "source_title": "Cover crop economics (ISU A1-88, July 2026; secondary summaries)",
-      "publisher": "Iowa State University Extension / various",
-      "url": "https://www.extension.iastate.edu/agdm/crops/pdf/a1-88.pdf",
-      "date_published": "2026-07",
-      "quote": null,
-      "verification": "unverified",
-      "source_kind": "news",
-      "notes": "ISU A1-88 assumes 112 lb/ac (2 bu) seeding rate; seed price ~$0.25/lb (Aug 2026 snapshot, non-ISU) gives ~$28/ac at 112 lb, ~$15 at 60 lb. A1-88 snippet mentions '$41.65 per acre' — ambiguous (possibly total). ISU A1-92 lists rye seed ~$25/ac. Open A1-88 before using one number."
+      "source_title": "Organic No-Till Grain Production with Cover Crops (Ag Decision Maker A1-92)",
+      "publisher": "Iowa State University Extension",
+      "url": "https://www.extension.iastate.edu/agdm/crops/pdf/a1-92.pdf",
+      "date_published": null,
+      "quote": "Added seed costs for the cereal rye are about $25 per acre.",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "CORRECTED: the '$41.65 per acre' in A1-88 is broadcast seeding of PRAIRIE, not rye. A1-88 assumes a 112 lb/ac (2 bu) rye seeding rate but gives no seed price. A1-92 is undated and in an organic context; rye seed price varies with rate (~60-112 lb/ac). The '$25-60 total with termination' range is not sourced; do not show. Quote is reassembled from a multi-column PDF layout (same words, line breaks removed).",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "fert_price_usd_lbN",
@@ -849,7 +1073,14 @@
       "quote": "Anhydrous Ammonia Ask 1,025.00 - 1,150.00 1,095.83",
       "verification": "secondary",
       "source_kind": "primary_publisher",
-      "notes": "Conversion ours: anhydrous is 82% N, 1 ton = 1,640 lb N; $1,095.83/1,640 = $0.668 (range $0.625-0.701). May 2025: $788/ton = $0.480/lb N. Urea May 2026 $870/ton (46% N) = $0.946/lb N. National AMS avg week ending 2 Oct 2026 $945/ton = $0.576/lb N; DTN late Sept $977. No Oct/Nov 2026 Iowa report found. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "STILL SECONDARY: mymarketnews.ams.usda.gov dropped connections (HTTP/2 INTERNAL_ERROR) on 2026-11-14, so the AMS PDF could not be opened. Conversion ours: anhydrous is 82% N, 1 ton = 1,640 lb N; $1,095.83/1,640 = $0.668. Primary cross-check: ISU A1-88 (July 2026, read) prices N at $0.53 per lb (Hart, 2026) in its budget. May 2025 AMS: $788/ton = $0.480/lb N (search). If a primary number is needed for a slide, use '$0.53/lb N (ISU 2026 budget)'.",
+      "extra_quotes": [
+        {
+          "url": "https://www.extension.iastate.edu/agdm/crops/pdf/a1-88.pdf",
+          "quote": "N at $0.53 per lb, P2O5 at $0.72 per lb, and K2O at $0.39 per lb"
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "mcl_mgL",
@@ -858,14 +1089,21 @@
       "unit": "mg/L NO3-N",
       "range": null,
       "year": 1991,
-      "source_title": "What Are U.S. Standards and Regulations for Nitrates and Nitrites Exposure? (CSEM)",
-      "publisher": "CDC / ATSDR",
-      "url": "https://archive.cdc.gov/www_atsdr_cdc_gov/csem/nitrate-nitrite/standards.html",
-      "date_published": null,
-      "quote": null,
-      "verification": "secondary",
-      "source_kind": "primary_publisher",
-      "notes": "Equivalent to ~45 mg/L as nitrate ion. EPA reassessment of nitrate health risks announced 2023; outcome not confirmed. EPA: infants who drink water above the MCL 'could become seriously ill and, if untreated, may die' (wording via UNL G1784)."
+      "source_title": "Central Iowa Water Works shows how its Des Moines plant tests and treats drinking water with nitrates",
+      "publisher": "Iowa Public Radio",
+      "url": "https://www.iowapublicradio.org/ipr-news/2025-06-25/nitrate-levels-central-iowa-water-des-moines",
+      "date_published": "2025-06-25",
+      "quote": "The U.S. Environmental Protection Agency (EPA) set the legal limit of nitrate in public drinking water at 10 mg/L to protect against “blue baby syndrome,” a potentially fatal condition for infants.",
+      "verification": "primary",
+      "source_kind": "news",
+      "notes": "'As nitrogen' is the convention (USGS 99133 units 'milligrams per liter as nitrogen'); ~45 mg/L as nitrate ion. CDC/ATSDR page not opened (host blocked).",
+      "extra_quotes": [
+        {
+          "url": "https://www.kcci.com/article/kcci-investigates-central-iowa-water-works-nitrate-levels-2026/71182189",
+          "quote": "The EPA set the standard in 1991. It has not set a timeline for revisiting the topic."
+        }
+      ],
+      "checked_at": "2026-11-14"
     },
     {
       "id": "health_cancer_iwhs",
@@ -881,7 +1119,8 @@
       "quote": "women with higher average nitrate levels in public water supplies had increased risks of thyroid, ovarian, bladder, and kidney cancers",
       "verification": "secondary",
       "source_kind": "primary_publisher",
-      "notes": "Associations, not proof of cause. Other studies (cited by Iowa Environmental Council 2024/2025, advocacy) link colorectal cancer to levels below 10 mg/L. Wording: 'studies have found associations'. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Associations, not proof of cause. Other studies (cited by Iowa Environmental Council 2024/2025, advocacy) link colorectal cancer to levels below 10 mg/L. Wording: 'studies have found associations'. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch). dceg.cancer.gov blocked; not rechecked.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "usgs_vanmeter_da_sqmi",
@@ -890,33 +1129,32 @@
       "unit": "sq mi",
       "range": null,
       "year": null,
-      "source_title": "05484500 stats (StreamStats gage page)",
+      "source_title": "USGS NWIS site service (expanded), 05484500",
       "publisher": "U.S. Geological Survey",
-      "url": "https://streamstats.usgs.gov/gagePages/IA/05484500_stats.pdf",
+      "url": "https://waterservices.usgs.gov/nwis/site/?format=rdb&sites=05484500,05482000&siteOutput=expanded&siteStatus=all",
       "date_published": null,
-      "quote": null,
-      "verification": "secondary",
+      "quote": "05484500 Raccoon River at Van Meter, IA ... drain_area_va 3441 ... huc_cd 07100006",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Agrees with USGS 2004 water-data report and HCDN (3,441 mi2). HUC 07100006."
+      "notes": "Read from waterservices.usgs.gov RDB (field drain_area_va, sq mi). 99133 instantaneous series available 2012-03-02 to present. Quote is a field summary of the tab-separated RDB record, not prose.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "usgs_2ndave_da_sqmi",
-      "claim": "The Des Moines River at 2nd Ave gauge (USGS 05482000) drains about 6,245 square miles.",
+      "claim": "The Des Moines River at 2nd Ave gauge (USGS 05482000) drains 6,245 square miles.",
       "value": 6245,
       "unit": "sq mi",
-      "range": {
-        "lo": 6245,
-        "hi": 6262
-      },
+      "range": null,
       "year": null,
-      "source_title": "USGS NWIS site USGS-05482000 (geoconnex reference record)",
-      "publisher": "Internet of Water / geoconnex (USGS-derived)",
-      "url": "https://reference.geoconnex.us/collections/gages/items/1066254?f=html",
+      "source_title": "USGS NWIS site service (expanded), 05482000",
+      "publisher": "U.S. Geological Survey",
+      "url": "https://waterservices.usgs.gov/nwis/site/?format=rdb&sites=05484500,05482000&siteOutput=expanded&siteStatus=all",
       "date_published": null,
-      "quote": null,
-      "verification": "unverified",
-      "source_kind": "third_party",
-      "notes": "Record lists gage_totdasqkm 16174.5 = 6,245 mi2 (our conversion); NHDPlus total 16,217 km2 = 6,262 mi2. Official USGS site page not reached. Downstream of Saylorville Reservoir, so its response is damped."
+      "quote": "05482000 Des Moines River at 2nd Avenue at Des Moines, IA ... drain_area_va 6245 ... huc_cd 07100004",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "notes": "Was 'unverified'; now read on the USGS site service. Below Saylorville Reservoir, so its response is damped. 99133 instantaneous series available 2016-04-01 to present. Quote is a field summary of the tab-separated RDB record, not prose.",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "usgs_pcode_99133",
@@ -927,16 +1165,17 @@
       "year": null,
       "source_title": "Nationwide Real-Time Water Quality: constituent 99133",
       "publisher": "U.S. Geological Survey",
-      "url": "https://nrtwq.usgs.gov/ks/constituents/view/99133",
+      "url": "https://waterservices.usgs.gov/nwis/iv/?format=rdb&sites=05484500&parameterCd=99133&period=P1D",
       "date_published": null,
-      "quote": "Nitrate plus nitrite, water, in situ, milligrams per liter as nitrogen",
-      "verification": "secondary",
+      "quote": "99133 Nitrate plus nitrite, water, in situ, milligrams per liter as nitrogen",
+      "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Lab codes differ (00631 filtered, 00630 unfiltered). Sensor presence at both sites: DMWW publishes real-time readings from devices on both rivers; confirm 15-min 99133 series via NWIS in the pipeline. Quote via web-search extraction of this page; page itself not opened (session network blocks direct fetch)."
+      "notes": "Confirmed both sites carry 99133 IV series (Van Meter from 2012-03-02, 2nd Ave from 2016-04-01) via the site service seriesCatalog. Lab codes differ (00631 filtered, 00630 unfiltered).",
+      "checked_at": "2026-11-14"
     },
     {
       "id": "nasa_nfews_prior_art",
-      "claim": "A NASA-funded University of Iowa (IIHR) project, with Des Moines Water Works, is building a Nitrate Forecasting and Early Warning System from NASA Earth observations plus IWQIS sensors (3-year funding, announced July 2026).",
+      "claim": "NASA is funding a 3-year University of Iowa project, with Des Moines Water Works, Cedar Rapids and Iowa City, to forecast nitrate days ahead from NASA satellite data plus Iowa water-quality sensors (announced July 2026).",
       "value": null,
       "unit": "qualitative",
       "range": null,
@@ -945,10 +1184,226 @@
       "publisher": "Iowa Public Radio",
       "url": "https://www.iowapublicradio.org/environment/2026-07-28/nasa-nitrate-water-quality-university-of-iowa",
       "date_published": "2026-07-28",
-      "quote": null,
-      "verification": "secondary",
+      "quote": "NASA is funding the project for three years.",
+      "verification": "primary",
       "source_kind": "news",
-      "notes": "Prior art judges may know: position Field to Faucet as field-level attribution and farmer strategy, complementary to NFEWS river forecasting. Lead expects 2+ years before the tool is trustworthy."
+      "notes": "The name 'Nitrate Forecasting and Early Warning System (NFEWS)' is not on the IPR page (search-only). Position Field to Faucet as field-level attribution and farmer strategy, complementary to river forecasting.",
+      "extra_quotes": [
+        {
+          "url": "https://www.iowapublicradio.org/environment/2026-07-28/nasa-nitrate-water-quality-university-of-iowa",
+          "quote": "NASA and the university are partnering with Cedar Rapids and Iowa City, as well as Des Moines Water Works ."
+        },
+        {
+          "url": "https://www.iowapublicradio.org/environment/2026-07-28/nasa-nitrate-water-quality-university-of-iowa",
+          "quote": "Gomez-Velez expects it will take at least two years for the tool to become trustworthy."
+        }
+      ],
+      "checked_at": "2026-11-14"
+    },
+    {
+      "range": {
+        "lo": 92,
+        "hi": 93
+      },
+      "date_published": "2025-02-04",
+      "quote": "Nonpoint sources account for 92% of the TN and 80% of the TP entering Iowa streams annually.",
+      "notes": "Section 1 PDF p. 13 says 92%; Section 2 Table 1 (PDF p. 1) gives 93% nonpoint / 7% point for nitrogen. 'Nonpoint' is not identical to 'agriculture' (includes some urban runoff), so say 'nonpoint (mostly agricultural)'. Same page: only about 5% of N inputs in watersheds reach streams.",
+      "checked_at": "2026-11-14",
+      "id": "inrs_nonpoint_share_pct",
+      "claim": "Iowa's Nutrient Reduction Strategy says nonpoint sources (mostly farmland) account for 92% of the nitrogen entering Iowa streams each year; point sources (cities, industry) about 7-8%.",
+      "value": 92,
+      "unit": "% of total N load",
+      "year": 2025,
+      "source_title": "Iowa Nutrient Reduction Strategy (Feb 2025), Executive Summary and Section 1: Policy",
+      "publisher": "IDALS/Iowa DNR/Iowa State Univ.",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/1%202025%20INRS%20Executive%20Summary%20and%20Section%201_Policy%20-%20FINAL%20February%204%202025.pdf",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "extra_quotes": [
+        {
+          "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+          "quote": "% of Total Load from Point Sources 7 21 % of Total Load from Non‐point Sources 93 79"
+        }
+      ]
+    },
+    {
+      "range": {
+        "lo": -6,
+        "hi": 0
+      },
+      "date_published": "2025-02",
+      "quote": "Rye 31 (29) ‐6 (7)",
+      "notes": "Use 0% (2024 update, 45 site-years) for the current best estimate, and cite it as such.",
+      "checked_at": "2026-11-14",
+      "id": "inrs_rye_corn_yield_pct",
+      "claim": "INRS lists a -6% (SD 7) corn yield change after a rye cover crop; the 2024 Science Team update revised it to 0% (SD 10). INRS does not count soybean yield effects.",
+      "value": -6,
+      "unit": "% corn yield change",
+      "year": 2025,
+      "source_title": "INRS Section 2 Table 2 (Feb 2025) and INRS Nitrogen BMP Efficiencies update (Mar 2024)",
+      "publisher": "Iowa State Univ./IDALS/Iowa DNR",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "extra_quotes": [
+        {
+          "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
+          "quote": "Another important aspect is that the yield effects on corn from rye cover crops was reduced to zero with the additional data."
+        },
+        {
+          "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf",
+          "quote": "Soybean yield is not included as the practices are not expected to affect soybean yield."
+        }
+      ]
+    },
+    {
+      "range": null,
+      "date_published": "2024",
+      "quote": "Results showed that termination timing did not reduce soybean yield in 27 of 28 location-years compared to no cover crop treatment.",
+      "notes": "Regional (Midwest), not Iowa-only. Supports 'rye before soybean: little or no yield penalty', not 'yield boost'. ISU/PFI farmer-strip pages (extension news) returned 404 and were not used.",
+      "checked_at": "2026-11-14",
+      "id": "rye_before_soybean_yield",
+      "claim": "In 28 location-years of Midwest trials (2019-2021), terminating a cereal rye cover crop before, at or after soybean planting did not reduce soybean yield in 27 of 28 cases; there was also no significant yield gain.",
+      "value": 27,
+      "unit": "of 28 location-years with no yield reduction",
+      "year": 2024,
+      "source_title": "Cereal rye cover crop termination at or before soybean planting has minimal effect on soybean yield across the midwestern US (Severo Silva et al. 2024, Field Crops Research 312:109393)",
+      "publisher": "USDA Agricultural Research Service (publication record)",
+      "url": "https://www.ars.usda.gov/research/publications/publication/?seqNo115=405613",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "extra_quotes": [
+        {
+          "url": "https://www.ars.usda.gov/research/publications/publication/?seqNo115=405613",
+          "quote": "However, there were no significant soybean yield benefits that would justify the associated cost with the use of cover crops."
+        }
+      ]
+    },
+    {
+      "range": null,
+      "date_published": "2012-10",
+      "quote": "Grain yields, mass of harvested products, and profit in the more diverse systems were similar to, or greater than, those in the conventional system, despite reductions of agrichemical inputs.",
+      "notes": "The abstract does not give the % N-fertilizer cut (often cited as ~86% lower synthetic N in the paper; not read). 'Marsden Farm, Boone' is from secondary sources; the abstract just says 'in Iowa'. Profit result depends on the 2003-2011 prices and includes manure; it measured freshwater toxicity, not tile nitrate.",
+      "checked_at": "2026-11-14",
+      "id": "extended_rotation_marsden",
+      "claim": "In a 2003-2011 Iowa field trial (ISU Marsden Farm), 3- and 4-year rotations run with less synthetic N fertilizer and herbicide had grain yields and profit similar to or greater than the conventional corn-soybean rotation.",
+      "value": null,
+      "unit": "qualitative",
+      "year": 2012,
+      "source_title": "Increasing cropping system diversity balances productivity, profitability and environmental health (Davis, Hill, Chase, Johanns, Liebman 2012, PLoS ONE 7(10):e47149)",
+      "publisher": "USDA Agricultural Research Service (publication record)",
+      "url": "https://www.ars.usda.gov/research/publications/publication/?seqNo115=282234",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "extra_quotes": [
+        {
+          "url": "https://www.ars.usda.gov/research/publications/publication/?seqNo115=282234",
+          "quote": "a 4-yr rotation (maize-soybean-small grain + alfalfa-alfalfa) managed with lower synthetic N fertilizer and herbicide inputs and periodic applications of cattle manure"
+        }
+      ]
+    },
+    {
+      "range": {
+        "lo": 70,
+        "hi": 85
+      },
+      "date_published": "2017-10-03",
+      "quote": null,
+      "notes": "Search extraction only: news.iastate.edu and nrem.iastate.edu are blocked for this session. Small non-tiled watersheds at Neal Smith NWR; groundwater (footslope) and surface runoff, NOT tile drainage, so not comparable with INRS tile numbers. A Nebraska extension handout cites ~84-85% for runoff N export. Prairie strips are not an INRS Table 2 practice. Use as qualitative support only.",
+      "checked_at": "2026-11-14",
+      "id": "prairie_strips_nitrate",
+      "claim": "Converting about 10% of a cropped watershed to prairie strips cut nitrate concentration in shallow groundwater by about 72% and total N in surface runoff by about 70% (ISU STRIPS, Schulte et al. 2017 PNAS).",
+      "value": 72,
+      "unit": "% reduction groundwater NO3-N concentration",
+      "year": 2017,
+      "source_title": "Prairie strips improve biodiversity and the delivery of multiple ecosystem services from corn-soybean croplands (Schulte et al. 2017, PNAS); ISU news release 2017-10-03",
+      "publisher": "Iowa State University (STRIPS)",
+      "url": "https://news.iastate.edu/news/2017/10/03/strips10years",
+      "verification": "secondary",
+      "source_kind": "primary_publisher"
+    },
+    {
+      "range": null,
+      "date_published": "2026-06-09",
+      "quote": "The third stage is considered when customer demand exceeds 90% of the capacity of the treatment plants, said Amy Kahler, CEO of Des Moines Water Works",
+      "notes": "Mechanism for the app: high source nitrate -> less treatable river water -> lower effective capacity; lawn watering (up to 40% of summer demand) pushes demand over 90%.",
+      "checked_at": "2026-11-14",
+      "id": "stage3_trigger_demand_pct",
+      "claim": "CIWW considers a Stage III lawn-watering ban when customer demand exceeds 90% of treatment-plant capacity; in June 2026 demand crossed that threshold and was projected to hit 98%.",
+      "value": 90,
+      "unit": "% of treatment capacity",
+      "year": 2026,
+      "source_title": "Central Iowa Water Works issues lawn watering ban due to high nitrates levels",
+      "publisher": "Iowa Public Radio",
+      "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
+      "verification": "primary",
+      "source_kind": "news",
+      "extra_quotes": [
+        {
+          "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
+          "quote": "We estimate that customer demand will be at 98% of the treatment capacity [Tuesday] if we do not implement Stage III."
+        }
+      ]
+    },
+    {
+      "range": null,
+      "date_published": "2026-06-09",
+      "quote": "Lawn watering is the single largest discretionary use of water during the summer and can account for up to 40% of regional water demand.",
+      "notes": "Same page: the ban 'is not due to a lack of water in our rivers' but to reduced treatment capacity from nitrate.",
+      "checked_at": "2026-11-14",
+      "id": "lawn_watering_share_pct",
+      "claim": "Lawn watering can account for up to 40% of regional summer water demand in the CIWW system.",
+      "value": 40,
+      "unit": "% of summer demand (upper bound)",
+      "year": 2026,
+      "source_title": "Why has CIWW implemented a lawn watering ban?",
+      "publisher": "Central Iowa Water Works",
+      "url": "https://ciww.gov/why-is-ciww-implementing-a-lawn-watering-ban/",
+      "verification": "primary",
+      "source_kind": "primary_publisher"
+    },
+    {
+      "range": {
+        "lo": 70,
+        "hi": 80
+      },
+      "date_published": "2025-06-25",
+      "quote": "While highly effective, the nitrate removal facility has capacity for 10 million gallons a day. Morarend explained that’s a fraction of normal demand, which can be 70-80 million gallons.",
+      "notes": "Explains why blending, source switching and demand cuts are needed when rivers exceed 10 mg/L.",
+      "checked_at": "2026-11-14",
+      "id": "nrf_vs_demand",
+      "claim": "The 10 million gallon/day nitrate removal facility is a fraction of normal demand at the Des Moines plants, which can be 70-80 million gallons/day; treated water is blended.",
+      "value": 10,
+      "unit": "MGD vs 70-80 MGD demand",
+      "year": 2025,
+      "source_title": "Central Iowa Water Works shows how its Des Moines plant tests and treats drinking water with nitrates",
+      "publisher": "Iowa Public Radio",
+      "url": "https://www.iowapublicradio.org/ipr-news/2025-06-25/nitrate-levels-central-iowa-water-des-moines",
+      "verification": "primary",
+      "source_kind": "news"
+    },
+    {
+      "range": null,
+      "date_published": "2025-08-15",
+      "quote": "voted unanimously to resume normal irrigation and lawn watering practices for the first time since May 30, 2025",
+      "notes": "",
+      "checked_at": "2026-11-14",
+      "id": "restrictions_2025_start",
+      "claim": "2025 water restrictions began 30 May 2025 with a voluntary 25% cut, a 50% request on 11 June, and the mandatory ban on 12 June; all restrictions ended 15 August 2025.",
+      "value": "2025-05-30",
+      "unit": "date",
+      "year": 2025,
+      "source_title": "Iowa water quality: Central Iowa Water Works officials lift irrigation restrictions",
+      "publisher": "KCCI",
+      "url": "https://www.kcci.com/article/central-iowa-water-works-lifts-lawn-watering-restrictions-water-quality-nitrates/65789527",
+      "verification": "primary",
+      "source_kind": "news",
+      "extra_quotes": [
+        {
+          "url": "https://www.kcci.com/article/central-iowa-water-works-lifts-lawn-watering-restrictions-water-quality-nitrates/65789527",
+          "quote": "They asked for a 50% reduction on June 11 before putting the temporary ban in effect on June 12 ."
+        }
+      ]
     }
   ]
 }

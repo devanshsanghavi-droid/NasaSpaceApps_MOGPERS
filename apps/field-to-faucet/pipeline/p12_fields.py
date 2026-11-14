@@ -9,12 +9,22 @@ Inputs
 Field rule (CONTRACTS.md): 400 m x 400 m EPSG:5070 cell (centre inside a focus HUC-12) kept when >= 80% of its 30 m
 CDL pixels (pixel centre inside the cell) are ONE row crop letter (C corn, S soy, R other row crop) in >= 7 of 2016-2025.
 
-HLS per-field observation: mean over the cell's inner 30 m pixels (>= 30 m from the cell edge) that are Fmask-clear.
-An observation is `clear` when >= 60% of the inner pixels are clear; only clear observations are used downstream
-(rows with 20-60% clear pixels are kept in hls_field_ts with clear=False for transparency). Dormant-season scene QA:
-scenes between Nov 15 and Apr 30 whose median field NDVI exceeds 0.255 are scene-wide artefacts (residue/soil sits
-at ~0.21-0.25 and cover crops are < 10% of fields) and are marked clear=False. Same-day duplicates
-(L30 + S30 or two S30 granules) -> keep the one with more clear pixels (ties: L30).
+HLS per-field observation: mean over the cell's inner 30 m pixels (>= 30 m from the cell edge) that are Fmask-clear
+(Oct 1-May 31 also excluding Fmask high-aerosol pixels, see p11). An observation is `clear` when >= 60% of the inner
+pixels are clear; only clear observations are used downstream (rows with 20-60% clear pixels are kept in
+hls_field_ts with clear=False for transparency).
+
+S30 -> L30 dormant-season harmonisation: S30 reads greener than L30 over residue/soil. The offset is estimated from
+same-day L30/S30 pairs (both clear, same field cell) Nov-Apr: per pair-day median of (S30 - L30) cell-mean NDVI, then
+the median over pair-days. For S30 observations Oct 1-May 31 it is subtracted from every pixel's NDVI before
+thresholding (pixel shares at threshold t are read at t + offset from the per-cell count grid of cache v2);
+`ndvi_harm` = ndvi - offset on those rows (= ndvi elsewhere). Jun-Sep S30 is not adjusted.
+
+Scene spike QA (Oct 1-May 31, scenes with >= 20 clear field cells): a scene is marked clear=False when its median
+field NDVI (harmonised) is > 0.04 above BOTH its nearest earlier and nearest later scene within 20 days, or its living
+share (cell-median NDVI >= 0.30) is > 0.25 above both. Neighbours are unflagged scenes with >= 20 clear field cells
+on other dates; the test is repeated until no scene changes. Same-day duplicates (L30 + S30 or two S30 granules)
+-> keep the clear one, then the one with more clear pixels (ties: L30).
 
 Living cover (per clear observation) = at least half of the cell's clear inner pixels have NDVI >= 0.30, i.e. the
 cell-MEDIAN NDVI >= 0.30 (sensitivity 0.25 / 0.35). The median (not the mean) is used so grassed waterways, ditches
@@ -57,7 +67,13 @@ KEEP_MIN = 0.20      # rows kept in hls_field_ts (clear=False below CLEAR_MIN)
 MAX_GAP = 120        # days, max interpolation gap
 THRESH = [0.25, 0.30, 0.35]
 T0 = 0.30
-SCENE_MED_MAX = 0.255  # dormant-season scene QA (see main)
+QA_MONTHS = (10, 11, 12, 1, 2, 3, 4, 5)  # Oct 1 - May 31: aerosol mask (p11), S30 offset, spike test
+SPIKE_NDVI = 0.04      # scene median field NDVI above both neighbours
+SPIKE_LIVE = 0.25      # scene living share above both neighbours
+SPIKE_DAYS = 20        # neighbour search radius (days)
+SPIKE_MIN_FIELDS = 20
+T_GRID = np.round(np.arange(0.200, 0.4501, 0.005), 3)  # must match p11
+OFFSET_MONTHS = (11, 12, 1, 2, 3, 4)  # same-day pairs used to estimate the S30 - L30 offset
 
 
 # ---------------------------------------------------------------- inputs
@@ -135,9 +151,11 @@ def cdl_letters(C, lookup, bounds):
 
 
 # ---------------------------------------------------------------- HLS
-def load_hls(C):
-    rows = []
-    metas = []
+def load_hls(C, keep):
+    """All cached granules, rows of field cells only. Returns (df, manifest, grid); df.gi indexes grid (per-cell
+    counts of clear pixels with NDVI >= T_GRID, cache v2) or is -1."""
+    rows, metas, grids = [], [], []
+    ng = 0
     for f in sorted(glob.glob(str(HLS_RAW / "g" / "*.npz"))):
         if f.endswith(".tmp.npz"):
             continue
@@ -146,15 +164,92 @@ def load_hls(C):
         metas.append(meta)
         if len(z["cell"]) == 0:
             continue
-        rows.append(pd.DataFrame({"cell": z["cell"], "n_clear": z["n_clear"].astype(np.int32),
-                                  "ndvi": z["ndvi"], "ndti": z["ndti"], "gcvi": z["gcvi"],
-                                  "p25": z["live25"], "p30": z["live30"], "p35": z["live35"],
-                                  "item": meta["item_id"], "sensor": meta["sensor"],
+        sel = keep[z["cell"]]
+        if not sel.any():
+            continue
+        gi = np.full(sel.sum(), -1, np.int64)
+        if "grid" in z.files:
+            grids.append(z["grid"][sel]); gi = ng + np.arange(sel.sum()); ng += sel.sum()
+        rows.append(pd.DataFrame({"cell": z["cell"][sel], "n_clear": z["n_clear"][sel].astype(np.int32),
+                                  "ndvi": z["ndvi"][sel], "ndti": z["ndti"][sel], "gcvi": z["gcvi"][sel],
+                                  "p25": z["live25"][sel], "p30": z["live30"][sel], "p35": z["live35"][sel],
+                                  "gi": gi, "item": meta["item_id"], "sensor": meta["sensor"],
                                   "date": pd.Timestamp(meta["datetime"][:10])}))
     man = pd.DataFrame(metas)
     df = pd.concat(rows, ignore_index=True)
     df["clear_share"] = df.n_clear / C["npx"][df.cell]
-    return df, man
+    grid = np.concatenate(grids) if grids else np.zeros((0, len(T_GRID)), np.uint8)
+    return df, man, grid
+
+
+def s30_offset(df):
+    """Dormant-season S30 - L30 cell-mean NDVI offset from same-day pairs (both clear_share >= CLEAR_MIN)."""
+    g = df[df.clear_share >= CLEAR_MIN]
+    a = g[g.sensor == "L30"].groupby(["cell", "date"]).ndvi.mean()
+    b = g[g.sensor == "S30"].groupby(["cell", "date"]).ndvi.mean()
+    j = pd.concat([a.rename("l"), b.rename("s")], axis=1, join="inner").reset_index()
+    j["d"] = j.s - j.l
+    j["m"] = j.date.dt.month
+    day = j.groupby("date").agg(d=("d", "median"), n=("d", "size"), l=("l", "median"), m=("m", "first"))
+    day = day[day.n >= 50]
+    win = day[day.m.isin(OFFSET_MONTHS)]
+    off = float(win.d.median())
+    by_m = day.groupby("m").agg(n_days=("d", "size"), median=("d", "median")).round(4)
+    info = dict(offset=round(off, 4), n_pair_days=int(len(win)), n_pairs=int(win.n.sum()),
+                iqr=[round(float(win.d.quantile(.25)), 4), round(float(win.d.quantile(.75)), 4)],
+                summer_jun_sep=round(float(day[day.m.between(6, 9)].d.median()), 4),
+                by_month={int(k): dict(n_days=int(v.n_days), median=float(v["median"])) for k, v in by_m.iterrows()},
+                pair_days={str(k.date()): round(float(v), 4) for k, v in win.d.items()})
+    return off, info
+
+
+def harmonise(df, grid, off):
+    """Subtract `off` from S30 pixel NDVI Oct-May: pixel shares at t become shares at t + off (grid, linear)."""
+    m = (df.sensor == "S30") & df.date.dt.month.isin(QA_MONTHS)
+    assert (df.gi[m] >= 0).all(), "Oct-May S30 granules need cache v2 (rerun p11)"
+    df["ndvi_harm"] = df.ndvi.where(~m, df.ndvi - off).astype(np.float32)
+    gi = df.gi[m].to_numpy(); nc = df.n_clear[m].to_numpy().astype(np.float32)
+    for t_ in THRESH:
+        x = (t_ + off - T_GRID[0]) / (T_GRID[1] - T_GRID[0])
+        j0 = int(np.floor(x)); fr = x - j0
+        cnt = grid[gi, j0].astype(np.float32) * (1 - fr) + grid[gi, j0 + 1].astype(np.float32) * fr
+        df.loc[m, f"p{int(round(t_ * 100))}"] = (cnt / nc).astype(np.float32)
+    return int(m.sum())
+
+
+def spike_test(df):
+    """Scene spike QA (see module doc). Returns (scene table, flagged items)."""
+    g = df[df.clear_share >= CLEAR_MIN]
+    sc = g.groupby("item").agg(date=("date", "first"), sensor=("sensor", "first"), n=("ndvi", "size"),
+                               med=("ndvi_harm", "median"), live=("p30", lambda s: float((s >= 0.5).mean())))
+    sc = sc[sc.n >= SPIKE_MIN_FIELDS].sort_values(["date", "n"])
+    sc["flag"] = False
+    cand = sc.date.dt.month.isin(QA_MONTHS)
+    dn = sc.date.values.astype("datetime64[D]").astype(np.int64)
+    for _ in range(10):
+        new = []
+        ok = ~sc.flag.to_numpy()
+        for k, it in enumerate(sc.index):
+            if not cand.iloc[k] or not ok[k]:
+                continue
+            prev = np.flatnonzero(ok & (dn < dn[k]) & (dn >= dn[k] - SPIKE_DAYS))
+            nxt = np.flatnonzero(ok & (dn > dn[k]) & (dn <= dn[k] + SPIKE_DAYS))
+            if prev.size == 0 or nxt.size == 0:
+                continue
+            # nearest date; several scenes on that date -> the one with most fields
+            p = prev[dn[prev] == dn[prev].max()]; p = p[np.argmax(sc.n.to_numpy()[p])]
+            q = nxt[dn[nxt] == dn[nxt].min()]; q = q[np.argmax(sc.n.to_numpy()[q])]
+            md, lv = sc.med.to_numpy(), sc.live.to_numpy()
+            if (md[k] - md[p] > SPIKE_NDVI and md[k] - md[q] > SPIKE_NDVI) or \
+                    (lv[k] - lv[p] > SPIKE_LIVE and lv[k] - lv[q] > SPIKE_LIVE):
+                new.append((it, sc.index[p], sc.index[q]))
+        if not new:
+            break
+        for it, p, q in new:
+            sc.loc[it, "flag"] = True
+            sc.loc[it, "nb"] = f"{sc.date[p].date()} {sc.med[p]:.3f}/{sc.live[p]:.2f} | " \
+                               f"{sc.date[q].date()} {sc.med[q]:.3f}/{sc.live[q]:.2f}"
+    return sc, sc.index[sc.flag]
 
 
 def interp_daily(dates_obs, ndvi_obs, days):
@@ -272,38 +367,39 @@ def main():
     print(f"fields.parquet: {len(F)} rows, {os.path.getsize(PROC / 'fields.parquet') / 1e6:.2f} MB", flush=True)
 
     # ---------------- HLS per field
-    df, man = load_hls(C)
-    df = df[keep[df.cell] & (df.clear_share >= KEEP_MIN)].copy()
-    # dormant-season scene QA: with < 10% cover crops, the scene-median field NDVI between Nov 15 and Apr 30 should
-    # sit at the residue/soil level (~0.21-0.25). Scenes far above that are scene-wide artefacts (seen mostly on S30
-    # at low sun: e.g. 2021-03-05 S30 median 0.32 vs same-day L30 0.26), so they are not used.
-    md = df.date.dt.month * 100 + df.date.dt.day
-    dormant = (md >= 1115) | (md <= 430)
+    df, man, grid = load_hls(C, keep)
+    df = df[df.clear_share >= KEEP_MIN].copy()
+    # S30 -> L30 dormant-season offset, then the scene spike test (module doc)
+    off, off_info = s30_offset(df)
+    n_adj = harmonise(df, grid, off)
+    del grid
+    print(f"S30-L30 offset (Nov-Apr same-day pairs): {off:+.4f} NDVI from {off_info['n_pair_days']} pair-days "
+          f"(IQR {off_info['iqr']}; Jun-Sep {off_info['summer_jun_sep']:+.4f}); applied to {n_adj} S30 Oct-May rows",
+          flush=True)
     good = df.clear_share >= CLEAR_MIN
-    sc = df[good & dormant].groupby("item").ndvi.agg(["median", "size"])
-    bad_items = sc[(sc["size"] >= 20) & (sc["median"] > SCENE_MED_MAX)]
-    df["scene_ok"] = ~df.item.isin(bad_items.index)
+    scenes, bad_items = spike_test(df)
+    df["scene_ok"] = ~df.item.isin(bad_items)
     df["clear"] = good & df.scene_ok
     df["_l"] = (df.sensor != "L30").astype(np.int8)
     df = df.sort_values(["cell", "date", "clear", "n_clear", "_l"], ascending=[True, True, False, False, True])
     df = df.drop_duplicates(["cell", "date"], keep="first").drop(columns="_l")
-    print(f"dormant-season scene QA: {len(bad_items)} of {sc.shape[0]} dormant scenes dropped "
-          f"(median field NDVI > {SCENE_MED_MAX}): " + ", ".join(f"{i.split('.')[1]} {i.split('.')[3][:7]} "
-                                                               f"{m:.3f}" for i, m in bad_items["median"].items()),
-          flush=True)
+    nq = int(scenes.date.dt.month.isin(QA_MONTHS).sum())
+    print(f"scene spike QA: {len(bad_items)} of {nq} Oct-May scenes (>= {SPIKE_MIN_FIELDS} clear fields) flagged: "
+          + "; ".join(f"{i.split('.')[1]} {scenes.date[i].date()} med {scenes.med[i]:.3f} live {scenes.live[i]:.2f} "
+                      f"[{scenes.nb[i]}]" for i in bad_items), flush=True)
     df["field_id"] = fid[df.cell]
-    ts = df[["field_id", "date", "sensor", "ndvi", "ndti", "gcvi", "p30", "clear_share", "clear"]].rename(
+    ts = df[["field_id", "date", "sensor", "ndvi", "ndti", "gcvi", "p30", "clear_share", "clear", "ndvi_harm"]].rename(
         columns={"p30": "live_px_share"})
     ts["date"] = ts.date.dt.date
-    for c in ("ndvi", "ndti", "gcvi", "live_px_share", "clear_share"):
+    for c in ("ndvi", "ndti", "gcvi", "live_px_share", "clear_share", "ndvi_harm"):
         ts[c] = ts[c].round(3).astype(np.float32)
     schema = pa.schema([("field_id", pa.dictionary(pa.int16(), pa.string())), ("date", pa.date32()),
                         ("sensor", pa.dictionary(pa.int8(), pa.string())), ("ndvi", pa.float32()),
                         ("ndti", pa.float32()), ("gcvi", pa.float32()), ("live_px_share", pa.float32()),
-                        ("clear_share", pa.float32()), ("clear", pa.bool_())])
+                        ("clear_share", pa.float32()), ("clear", pa.bool_()), ("ndvi_harm", pa.float32())])
     tbl = pa.Table.from_pandas(ts.reset_index(drop=True), preserve_index=False).cast(schema)
     pq.write_table(tbl, PROC / "hls_field_ts.parquet", compression="zstd", compression_level=19,
-                   use_byte_stream_split=["ndvi", "ndti", "gcvi", "live_px_share", "clear_share"])
+                   use_byte_stream_split=["ndvi", "ndti", "gcvi", "live_px_share", "clear_share", "ndvi_harm"])
     print(f"hls_field_ts.parquet: {len(ts)} rows ({ts.clear.sum()} clear), "
           f"{os.path.getsize(PROC / 'hls_field_ts.parquet') / 1e6:.2f} MB", flush=True)
 
@@ -322,7 +418,7 @@ def main():
         g = groups.get(fi)
         if g is None:
             continue
-        d = g.date.values.astype("datetime64[D]"); nv = g.ndvi.to_numpy(np.float32)
+        d = g.date.values.astype("datetime64[D]"); nv = g.ndvi_harm.to_numpy(np.float32)
         P = {t_: g[f"p{int(round(t_ * 100))}"].to_numpy(np.float32) for t_ in THRESH}
         V = {t_: interp_daily(d.astype(np.int64), P[t_], dnum) for t_ in THRESH}
         v = V[T0]
@@ -342,19 +438,20 @@ def main():
             if nk[j] == 0 and no == 0:
                 continue
             lf = nl[j] / nk[j] if nk[j] else np.nan
-            fm_rows.append((fi, yy, mm, lf, 1 - lf if nk[j] else np.nan, no))
+            fm_rows.append((fi, yy, mm, lf, 1 - lf if nk[j] else np.nan, no, no == 0))
         # field_year (crop year)
         frow = F.loc[F.field_id == fi].iloc[0]
         for Y in range(2020, int(crop_y.max()) + 1):
             m = crop_y == Y
             if not m.any():
                 continue
-            if Y > int(cal_y.max()) or (Y == int(cal_y.max()) and cal_m[m].max() < 9):
-                continue  # crop year not complete enough (current, partial)
+            if days[m].max() < np.datetime64(f"{Y}-09-01"):
+                continue  # crop year not complete enough (current, partial: data end before Sep 1 of Y)
             wm = winter_metrics(d, nv, P[T0], Y)
             mapr = m & (cal_y == Y) & (cal_m >= 4) & (cal_m <= 6)
             moct = m & (cal_y == Y - 1) & (cal_m >= 10) & (cal_m <= 12)
-            # green-up: first DOY >= 60 in calendar Y with NDVI >= 0.30 sustained for the next 14 days
+            # green-up: first DOY >= 60 in calendar Y that starts >= 15 consecutive living days. On cover-crop or
+            # hay/volunteer fields this is the spring green-up of that cover, not cash-crop emergence.
             gm = (cal_y == Y) & (doy >= 60)
             gv = v[gm]; gd = doy[gm]
             okg = np.nan_to_num(gv, nan=-1) >= 0.5
@@ -373,7 +470,9 @@ def main():
             for t_ in THRESH:
                 sens[t_][(fi, Y)] = (winter_metrics(d, nv, P[t_], Y)["winter_cover"],
                                      float((V[t_][m] < 0.5).sum()))
-    FM = pd.DataFrame(fm_rows, columns=["field_id", "year", "month", "living_frac", "bare_frac", "n_obs"])
+    FM = pd.DataFrame(fm_rows, columns=["field_id", "year", "month", "living_frac", "bare_frac", "n_obs",
+                                        "interp_only"])
+    FM["interp_only"] = FM.interp_only.astype(bool)
     FM["year"] = FM.year.astype(np.int16); FM["month"] = FM.month.astype(np.int8)
     FM["n_obs"] = FM.n_obs.astype(np.int16)
     for c in ("living_frac", "bare_frac"):
@@ -389,7 +488,12 @@ def main():
     print(f"field_month: {len(FM)} rows; field_year: {len(FY)} rows", flush=True)
 
     # ---------------- report
-    rep = {"dormant_scenes_dropped": {i: round(float(m), 3) for i, m in bad_items["median"].items()},
+    rep = {"spike_scenes_dropped": {i: dict(date=str(scenes.date[i].date()), median_ndvi=round(float(scenes.med[i]), 3),
+                                            living_share=round(float(scenes.live[i]), 3), neighbours=scenes.nb[i])
+                                    for i in bad_items},
+           "s30_l30_offset": off_info,
+           "high_aerosol_masked_px_oct_may": {k: int(v) for k, v in man[man.aer_mask.fillna(False).astype(bool)]
+                                              .groupby("sensor").n_high_aer.sum().items()},
            "n_cells": int(n), "n_fields": int(len(F)), "cdl_source": {str(k): v for k, v in cdl_src.items()},
            "n_granules": int(len(man)), "n_granules_with_clear": int((man.n_clear > 0).sum()),
            "granules_by_sensor": man.groupby("sensor").size().to_dict(),

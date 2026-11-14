@@ -27,54 +27,19 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import featlib as F  # noqa: E402
 import reservoir as RV  # noqa: E402
+import qgbm as Q  # noqa: E402
 
 MODELS = F.OUT / "models"
 TRAIN_YEARS = list(range(2016, 2023))
 MCL = 10.0
-BASE_PARAMS = dict(learning_rate=0.03, feature_fraction=0.7, bagging_fraction=0.8, bagging_freq=1,
-                   lambda_l2=1.0, max_bin=127, verbose=-1, num_threads=4, seed=7,
-                   monotone_constraints_method="advanced")
+BASE_PARAMS = Q.BASE_PARAMS
 GRID = dict(num_leaves=[7, 15], min_child_samples=[50, 150], n_estimators=[150, 400, 800],
             longmem=[False, True], cdl=[False, True])
 
 
-class QGBM:
-    """LightGBM booster + constant init score. LightGBM's built-in quantile objective refuses monotone
-    constraints (leaf renewal), so quantiles are fitted with a custom pinball-loss objective
-    (gradient of the check loss, unit Hessian), which honours monotone constraints."""
-
-    def __init__(self, booster, init, feats, alpha):
-        self.booster, self.init, self.feats, self.alpha = booster, float(init), list(feats), alpha
-
-    def predict(self, X, num_iteration=None):
-        return self.init + self.booster.predict(X[self.feats], num_iteration=num_iteration)
-
-    def save(self, path):
-        self.booster.save_model(str(path))
-        json.dump(dict(init=self.init, feats=self.feats, alpha=self.alpha), open(str(path) + ".meta.json", "w"))
-
-    @staticmethod
-    def load(path):
-        meta = json.load(open(str(path) + ".meta.json"))
-        return QGBM(lgb.Booster(model_file=str(path)), meta["init"], meta["feats"], meta["alpha"])
-
-
-def pinball_obj(alpha):
-    def f(preds, data):
-        y = data.get_label()
-        grad = np.where(y > preds + data.init0, -alpha, 1.0 - alpha)
-        return grad, np.ones_like(grad)
-    return f
-
-
 def lgb_fit(X, y, feats, alpha, num_leaves, min_child_samples, n_estimators, seed=7):
-    init = float(np.quantile(y, alpha))
-    p = dict(BASE_PARAMS, objective=pinball_obj(alpha), num_leaves=num_leaves,
-             min_child_samples=min_child_samples, monotone_constraints=F.monotone_vector(feats), seed=seed)
-    ds = lgb.Dataset(X[feats], y - init, free_raw_data=False)
-    ds.init0 = 0.0  # labels are already centred on the init score
-    b = lgb.train(p, ds, num_boost_round=n_estimators)
-    return QGBM(b, init, feats, alpha)
+    return Q.fit(X, y, feats, alpha, F.monotone_vector(feats), num_leaves, min_child_samples, n_estimators,
+                 seed=seed, params=BASE_PARAMS)
 
 
 # ------------------------------------------------------------------ metrics

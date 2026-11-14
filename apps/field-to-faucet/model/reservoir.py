@@ -23,8 +23,8 @@ import pandas as pd
 from scipy.optimize import least_squares
 
 PNAMES = ["fert", "ff", "u", "d", "k", "p", "tau_d", "tau_r", "c0", "a", "beta"]
-LO = np.array([0.0, 0.0, 1e-4, 1e-5, 1e-4, 0.0, 1.0, 1.0, 0.05, 1e-4, 0.0])
-HI = np.array([3000.0, 0.7, 0.3, 0.05, 1.0, 6.0, 120.0, 400.0, 6.0, 50.0, 1.2])
+LO = np.array([1.0, 0.0, 1e-4, 1e-5, 1e-5, 0.0, 1.0, 1.0, 0.05, 1e-6, 0.0])
+HI = np.array([3000.0, 0.7, 0.3, 0.05, 1.0, 6.0, 120.0, 400.0, 6.0, 1e4, 1.2])
 X0 = np.array([150.0, 0.25, 0.02, 0.002, 0.02, 2.0, 15.0, 30.0, 1.0, 0.5, 0.3])
 
 
@@ -75,38 +75,50 @@ def simulate(theta, dr, qmed, spin_days=365, n_spin=3):
     return c0 + a * O / qn ** beta
 
 
-def fit(g: pd.DataFrame, train_mask: np.ndarray, seeds=4, verbose=True):
+NL = PNAMES                                                            # all fitted jointly
+LOGP = {"fert", "u", "d", "k", "tau_d", "tau_r", "c0", "a"}           # fitted in log space
+
+
+def fit(g: pd.DataFrame, train_mask: np.ndarray, seeds=4, verbose=True, max_nfev=200):
     dr = _drivers(g)
     qmed = float(np.nanmedian(g.loc[train_mask, "q_cfs"]))
-    y = np.log(g["no3"].values)
-    m = train_mask & np.isfinite(y)
+    no3 = g["no3"].values
+    m = train_mask & np.isfinite(no3) & (no3 > 0) & np.isfinite(dr["q"]) & (dr["q"] > 0)
+    y = np.log(no3[m])
+    lo = np.array([np.log(LO[j]) if k in LOGP else LO[j] for j, k in enumerate(PNAMES)])
+    hi = np.array([np.log(HI[j]) if k in LOGP else HI[j] for j, k in enumerate(PNAMES)])
+    ia, ic = PNAMES.index("a"), PNAMES.index("c0")
+
+    def to_th(z):
+        return np.array([np.exp(z[j]) if k in LOGP else z[j] for j, k in enumerate(PNAMES)])
+
+    def to_z(th):
+        return np.array([np.log(th[j]) if k in LOGP else th[j] for j, k in enumerate(PNAMES)])
 
     def resid(z):
-        th = LO + (HI - LO) / (1 + np.exp(-z))
-        c = simulate(th, dr, qmed)
-        r = np.log(np.clip(c[m], 1e-3, None)) - y[m]
-        return np.nan_to_num(r, nan=5.0)
-
-    def to_z(x):
-        f = np.clip((x - LO) / (HI - LO), 1e-4, 1 - 1e-4)
-        return np.log(f / (1 - f))
+        c = simulate(to_th(z), dr, qmed)[m]
+        return np.nan_to_num(np.log(np.clip(c, 1e-3, None)) - y, nan=5.0)
 
     rng = np.random.default_rng(0)
     best = None
     for s in range(seeds):
-        x0 = X0 if s == 0 else np.clip(X0 * np.exp(rng.normal(0, 0.8, len(X0))), LO + 1e-6, HI - 1e-6)
-        try:
-            res = least_squares(resid, to_z(x0), loss="soft_l1", f_scale=0.3, max_nfev=400, x_scale=1.0)
-        except Exception as e:  # pragma: no cover
-            if verbose:
-                print("   reservoir seed", s, "failed:", e)
-            continue
+        th = X0.copy()
+        if s > 0:
+            th = np.clip(to_th(to_z(X0) + rng.normal(0, 0.6, len(X0)) *
+                               np.array([1.0 if k in LOGP else 0.2 for k in PNAMES])), LO * 1.001 + 1e-9, HI * 0.999)
+        # start with the output scale matched to the observed mean (the scale is otherwise arbitrary)
+        th[ia], th[ic] = 1.0, 0.0
+        X = simulate(th, dr, qmed)[m]
+        th[ic] = 0.3 * np.exp(y).mean()
+        th[ia] = np.clip(0.7 * np.exp(y).mean() / max(np.nanmean(X), 1e-9), LO[ia] * 1.01, HI[ia] * 0.99)
+        res = least_squares(resid, np.clip(to_z(th), lo + 1e-6, hi - 1e-6), bounds=(lo, hi), loss="soft_l1",
+                            f_scale=0.3, max_nfev=max_nfev, x_scale="jac", diff_step=1e-3)
         if verbose:
-            print(f"   reservoir seed {s}: cost {res.cost:.2f} nfev {res.nfev}")
+            print(f"   reservoir seed {s}: cost {res.cost:.2f} rmse_log {np.sqrt(np.mean(res.fun ** 2)):.3f} "
+                  f"nfev {res.nfev}")
         if best is None or res.cost < best.cost:
             best = res
-    th = LO + (HI - LO) / (1 + np.exp(-best.x))
-    return dict(zip(PNAMES, map(float, th))), qmed
+    return dict(zip(PNAMES, map(float, to_th(best.x)))), qmed
 
 
 def predict(params: dict, qmed: float, g: pd.DataFrame, living: np.ndarray | None = None) -> np.ndarray:

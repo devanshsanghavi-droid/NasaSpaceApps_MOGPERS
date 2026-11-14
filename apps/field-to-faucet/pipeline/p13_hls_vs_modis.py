@@ -9,12 +9,18 @@ and MODIS valid_frac >= 0.5. Also pairs at the whole-focus level, and mean NDVI 
 Expected bias: MODIS composites keep the max-NDVI day of 16 (MVC), and 250 m row-crop pixels include field edges,
 so MODIS should read greener than HLS, mostly in the shoulder seasons.
 
+Beyond the pooled r (dominated by the shared seasonal cycle) it reports: the deseasonalized r (both series minus
+their all-HUC mean for the calendar month), Mar-May r and bias, and HUC-12 ranking agreement (Pearson/Spearman r of
+the 10 HUC-12 Apr-May means, and the median per-composite Spearman across HUC-12s for Apr-May composites with >= 5
+HUC-12s paired).
+
 Output: data/processed/hls_vs_modis.json. If the MODIS file is missing it writes a 'skipped' note (rerun later).
 """
 import json
 
 import numpy as np
 import pandas as pd
+from scipy.stats import spearmanr
 
 from common import PROC
 from fields_common import load_focus
@@ -91,12 +97,47 @@ def main():
     doy = P.date.dt.dayofyear
     out["spring_window"] = stats(P.hls_live[(doy >= 74) & (doy <= 130)], P.modis_live[(doy >= 74) & (doy <= 130)])
     out["fall_window"] = stats(P.hls_live[(doy >= 288) & (doy <= 349)], P.modis_live[(doy >= 288) & (doy <= 349)])
+    # seasonality removed: anomalies from the all-HUC monthly means
+    clim = P.groupby("month")[["hls_live", "modis_live"]].transform("mean")
+    out["deseasonalized"] = stats(P.hls_live - clim.hls_live, P.modis_live - clim.modis_live)
+    out["deseasonalized"].pop("agree_class_pct", None)
+    mam = P.month.between(3, 5)
+    out["mar_may"] = stats(P.hls_live[mam], P.modis_live[mam])
+    # HUC-12 ranking agreement in Apr-May (the spring leak window)
+    am = P[P.month.between(4, 5)]
+    hm = am.groupby("huc12")[["hls_live", "modis_live"]].mean()
+    per = []
+    for _, g in am.groupby(["date", "sensor"]):
+        if len(g) >= 5 and g.hls_live.nunique() > 1 and g.modis_live.nunique() > 1:
+            per.append(spearmanr(g.hls_live, g.modis_live).statistic)
+    per = np.array(per, float)
+    out["huc12_ranking_apr_may"] = dict(
+        n_huc12=int(len(hm)), pearson_r_huc_means=round(float(np.corrcoef(hm.hls_live, hm.modis_live)[0, 1]), 3),
+        spearman_r_huc_means=round(float(spearmanr(hm.hls_live, hm.modis_live).statistic), 3),
+        n_composites=int(np.isfinite(per).sum()), per_composite_spearman_median=round(float(np.nanmedian(per)), 3),
+        per_composite_spearman_mean=round(float(np.nanmean(per)), 3),
+        huc_means={k: dict(hls=round(float(v.hls_live), 3), modis=round(float(v.modis_live), 3))
+                   for k, v in hm.iterrows()},
+        hls_range=[round(float(hm.hls_live.min()), 3), round(float(hm.hls_live.max()), 3)],
+        modis_range=[round(float(hm.modis_live.min()), 3), round(float(hm.modis_live.max()), 3)])
+    hr = out["huc12_ranking_apr_may"]
+    out["conclusion"] = (
+        f"MODIS ranks HUC-12s well in spring (Apr-May HUC-12 means r = {hr['pearson_r_huc_means']}, Spearman "
+        f"{hr['spearman_r_huc_means']}; per-composite Spearman median {hr['per_composite_spearman_median']}) but "
+        f"overstates the spring living share in absolute terms (Apr-May HUC-12 means MODIS "
+        f"{hr['modis_range'][0]:.2f}-{hr['modis_range'][1]:.2f} vs HLS {hr['hls_range'][0]:.2f}-"
+        f"{hr['hls_range'][1]:.2f}; Mar-May r = {out['mar_may'].get('r')}, bias {out['mar_may'].get('bias_modis_minus_hls'):+}). "
+        f"The pooled r ({out['living_share'].get('r')}) is mostly the shared seasonal cycle; deseasonalized r = "
+        f"{out['deseasonalized'].get('r')}. Use MODIS as a relative (ranking) index across HUC-12s and HLS for the "
+        f"absolute field-level bare share.")
     mon = P.groupby("month")[["hls_live", "modis_live"]].mean().round(3)
     out["monthly_mean_living_share"] = {int(k): dict(hls=float(v.hls_live), modis=float(v.modis_live))
                                         for k, v in mon.iterrows()}
     OUT.write_text(json.dumps(out, indent=1))
     print(json.dumps({k: out[k] for k in ("living_share", "mean_ndvi", "focus_level", "by_season", "spring_window",
-                                          "fall_window")}, indent=1))
+                                          "fall_window", "deseasonalized", "mar_may")}, indent=1))
+    print(json.dumps({k: v for k, v in out["huc12_ranking_apr_may"].items() if k != "huc_means"}))
+    print(out["conclusion"])
     print(mon.to_string())
 
 
