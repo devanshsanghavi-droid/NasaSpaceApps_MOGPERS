@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-11-14T22:47:56Z",
+ "generated_at": "2026-11-14T22:57:42Z",
  "strategies": [
   {
    "id": "S0",
    "name": "Current corn-soybean (no cover)",
    "short": "Keep today's rotation: the reference every other option is compared to",
-   "why": "This is what most fields here do now. Satellites show these fields bare about 92% of the time from October to May. About 93% of the modelled nitrate leak falls in those months, when rain and snowmelt drain through wet soil and no living roots take up nitrate.",
+   "why": "This is what most fields here do now. Satellites show these fields bare about 92% of the time from October to May. About 91% of the modelled nitrate leak falls in those months, when rain and snowmelt drain through wet soil and no living roots take up nitrate.",
    "evidence": [
     {
      "text": "Iowa State: an average Iowa corn or soybean acre loses about 30 lb nitrate-N a year (15-50 typical; corn and soybean years are similar).",
@@ -13,7 +13,7 @@
      "url": "https://stories.cals.iastate.edu/2015/11/the-science-behind-nitrate-transport"
     },
     {
-     "text": "River-calibrated estimate for the Raccoon basin, 2016-2025: about 16 lb N per row-crop acre per year reaches the Van Meter gauge (range by year shown on the field card). This is what is left after losses in ditches and streams, so the loss at the field edge is likely higher.",
+     "text": "River-calibrated estimate for the Raccoon basin, 2016-2025: about 17 lb N per row-crop acre per year reaches the Van Meter gauge (range by year shown on the field card). This is what is left after losses in ditches and streams, so the loss at the field edge is likely higher.",
      "source": "Field to Faucet calibration to USGS 05484500 nitrate sensor + flow",
      "url": "https://waterdata.usgs.gov/monitoring-location/05484500/"
     }
@@ -42,13 +42,14 @@
     "lo": 0,
     "hi": 0,
     "source": "reference"
-   }
+   },
+   "fert_value_note": "Reference: no change."
   },
   {
    "id": "S1",
    "name": "Cereal rye before soybean",
    "short": "Drill rye after corn harvest; end it before or at soybean planting (every other winter)",
-   "why": "Living rye roots take up nitrate in the months these fields sit bare. On the average field here, 93% of the modelled leak falls October-May, and Apr-Jun gets 34% of the year's big-storm days. Rye before soybean is the lowest-risk niche: soybean yield is rarely hurt.",
+   "why": "Living rye roots take up nitrate in the months these fields sit bare. On the average field here, 91% of the modelled leak falls October-May, and Apr-Jun gets 34% of the year's big-storm days. Rye before soybean is the lowest-risk niche: soybean yield is rarely hurt.",
    "evidence": [
     {
      "text": "Iowa Nutrient Reduction Strategy (2024 science update): rye cuts nitrate-N in drainage by 28% on average, SD 26 (earlier INRS table: 31%, SD 29). Very variable: it depends on how much rye grows.",
@@ -79,8 +80,8 @@
    "satellite_evidence": "HLS sees a rye-like spring green-up (NDVI >= 0.30 in mid-March to early May) on only 2.5% of field-winters here (2021-2026); 9% of fields showed it at least once. The bare window it would fill is visible on each field's leak calendar.",
    "n_loss_reduction": {
     "mean": 0.28,
-    "lo": 0.0,
-    "hi": 0.605,
+    "lo": 0.058,
+    "hi": 0.536,
     "source": "INRS 2024 update 28% (SD 26, 2024 update); applies in the soybean years only, so a corn-soy field keeps about half of this per year on average (earlier INRS table: 31%, SD 29)"
    },
    "yield_risk": {
@@ -108,7 +109,7 @@
    "who_pays": [
     {
      "program": "NRCS EQIP practice 340 (Cover Crop)",
-     "detail": "about $74/acre (FY2026 Iowa, single species, regular rate); $89/acre for historically underserved producers (secondary source; confirm before relying on it)",
+     "detail": "about $74/acre (FY2026 Iowa, single species, regular rate); $89/acre for historically underserved producers (rate from a third-party guide, not the NRCS booklet; confirm with your NRCS office)",
      "url": "https://soilpractice.com/guides/eqip-csp-after-2025-budget-law/"
     },
     {
@@ -137,7 +138,8 @@
     "basis": "per acre per year, averaged over the corn-soybean rotation (rye is planted every other fall); seed + custom drilling, termination pass not included",
     "source": "ISU custom rate survey (drilling $9-25) + ISU rye seed ($15-30)",
     "url": "https://www.extension.iastate.edu/agdm/crops/pdf/a3-10.pdf"
-   }
+   },
+   "fert_value_note": "Upper bound: the value of the N kept at today's N price; the next crop does not recover all of it. N kept ahead of soybean has little fertilizer value for that soybean crop (soybean fixes its own N); some may carry over to the next corn crop."
   },
   {
    "id": "S2",
@@ -169,8 +171,8 @@
    "satellite_evidence": "HLS: alfalfa and oat/clover fields stay green from April to October and regrow in fall; in this area almost no field shows that pattern today (the fields here are corn or soybean in at least 7 of 10 years, CDL).",
    "n_loss_reduction": {
     "mean": 0.27,
-    "lo": 0.0,
-    "hi": 0.584,
+    "lo": 0.052,
+    "hi": 0.525,
     "source": "INRS 2024 update, 4+ yr rotation 27% (SD 25, 2024 update) (earlier INRS table: 42%, SD 12)"
    },
    "yield_risk": {
@@ -208,7 +210,8 @@
     "basis": "not quantified",
     "source": "ISU Marsden trial: profit of the 4-yr system similar to or greater than corn-soy (2003-2011 prices, with manure); no verified $/acre for a farm switching today",
     "url": "https://www.ars.usda.gov/research/publications/publication/?seqNo115=282234"
-   }
+   },
+   "fert_value_note": "Upper bound: the value of the N kept at today's N price; the next crop does not recover all of it. The N that alfalfa supplies to the next corn crop is a separate saving and is not counted here."
   },
   {
    "id": "S3",
@@ -240,8 +243,8 @@
    "satellite_evidence": "HLS would show a strip that stays green from April to November; the field leak calendar shows where the bare-and-wet months are, but a 40-acre square cannot show which part of your field is wettest.",
    "n_loss_reduction": {
     "mean": 0.085,
-    "lo": 0.073,
-    "hi": 0.096,
+    "lo": 0.074,
+    "hi": 0.095,
     "source": "whole-field effect = 10% converted x INRS CRP 85% (SD 9); assumes the converted strip leaked like the field average"
    },
    "yield_risk": {
@@ -267,29 +270,33 @@
    "who_pays": [
     {
      "program": "USDA FSA Continuous CRP, practice CP-43 (prairie strips)",
-     "detail": "annual rental payment plus establishment cost-share on the strip acres; ISU STRIPS reports this cuts the farmer's cost by roughly three-quarters (secondary, web summary)",
+     "detail": "annual rental payment plus establishment cost-share on the strip acres; ISU STRIPS estimates a 15-year contract cuts the cost by about 75%, to about $7-8 per treated acre per year (secondary: https://strips.nrem.iastate.edu/chapter-5-economics)",
      "url": "https://www.fsa.usda.gov/programs-and-services/conservation-programs/conservation-reserve-program/"
     },
     {
-     "program": "ISU STRIPS team (free planning help)",
-     "detail": "site design, seed mixes and cost calculator",
+     "program": "ISU STRIPS team",
+     "detail": "planning and design resources for prairie strips",
      "url": "https://strips.nrem.iastate.edu/"
     }
    ],
    "cost_usd_ac": {
-    "lo": 24,
-    "hi": 39,
+    "lo": 26,
+    "hi": 33,
     "basis": "per treated (whole-field) acre per year, mostly rent/income lost on the strip acres, before CRP payments",
-    "source": "ISU STRIPS economics ($24-35 in the 2013 study, $28-39 in the 2017 edition); secondary (web search summary, not yet in facts.json)",
+    "source": "ISU STRIPS economics (facts.json strips_cost_usd_treated_ac, secondary)",
     "url": "https://strips.nrem.iastate.edu/chapter-5-economics",
     "verification": "secondary"
-   }
+   },
+   "fert_value_note": "Upper bound: the value of the N kept at today's N price; the next crop does not recover all of it. On the prairie acres no crop uses it."
   }
  ],
  "disclaimer": "Decision support, not a replacement for your agronomist. Numbers are estimates from satellite data, weather, soils and Iowa field trials, calibrated to the rivers at Des Moines; check every option with your agronomist, NRCS or county office before changing anything.",
- "method": "Field leak (lb N/acre/yr) = satellite-seen bare ground x wet-soil drainage (NASA POWER) x soil drainage class, calibrated each year so all fields and sub-watersheds add up to the nitrate load measured by USGS at Van Meter / Des Moines. Ranges: 10th-90th percentile over 2016-2025 weather years, the calibration uncertainty and the trial range of each practice. Fertilizer value uses N price U[$0.53, $0.70]/lb N: high = USDA AMS Iowa anhydrous (secondary, https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/2863/2026-04-27/1321477/ams_2863_00161.pdf, $0.668 central); low = ISU A1-88 2026 budget $0.53/lb N; it is an upper bound because the next crop does not recover all retained N. Leak and N kept are counted as nitrate that would have reached the river gauge; some nitrate is removed in ditches and streams on the way, so the N kept at the field edge is likely larger than shown.",
+ "method": "The model places leak in time and space where bare ground meets wet soil, and fields sum to the measured river load; how much each practice cuts nitrate comes from Iowa trials (INRS 2024), not from our satellite data. Year-to-year load is explained mostly by water. Field leak (lb N/acre/yr) = satellite-seen bare ground x wet-soil drainage (NASA POWER) x soil drainage class, calibrated each year so all fields and sub-watersheds add up to the nitrate load measured by USGS at Van Meter / Des Moines. Ranges: 10th-90th percentile over 2016-2025 weather years, the calibration uncertainty and the trial range of each practice. Fertilizer value uses N price U[$0.53, $0.70]/lb N: high = USDA AMS Iowa anhydrous (secondary, https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/2863/2026-04-27/1321477/ams_2863_00161.pdf, $0.668 central); low = ISU A1-88 2026 budget $0.53/lb N; it is an upper bound because the next crop does not recover all retained N. Leak and N kept are counted as nitrate that would have reached the river gauge; some nitrate is removed in ditches and streams on the way, so the N kept at the field edge is likely larger than shown.",
  "units": {
   "lbN_kept_ac": "lb N per acre per year, averaged over the rotation",
-  "cost_usd_ac": "see each strategy's cost basis"
- }
+  "cost_usd_ac": "see each strategy's cost basis",
+  "headline": "mean = long-run average lb/acre/year (use this as the headline); p10-p90 = range for a single year, in 8 of 10 years; p50 = a typical single year",
+  "wet_year_2016": "what the practice would have kept in 2016, a wet high-loss year; S1 assumes rye was in place that year"
+ },
+ "efficiency_draws": "normal truncated to [0, 1] with its location solved so the mean equals the stated INRS efficiency (scale = stated SD)"
 }

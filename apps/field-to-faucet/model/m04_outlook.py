@@ -31,7 +31,7 @@ TAUS = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 MCL = 10.0
 PARAMS = dict(objective="quantile", learning_rate=0.03, num_leaves=7, min_child_samples=50,
               feature_fraction=0.8, bagging_fraction=0.8, bagging_freq=1, lambda_l2=1.0, max_bin=127,
-              verbose=-1, num_threads=4, seed=11)
+              verbose=-1, num_threads=1, seed=11)
 N_TREES = 300
 DRIVERS = ["rain_3", "rain_7", "rain_14", "rain_30", "rain_90", "api_k95", "gwr", "gwt", "gwr_30",
            "wetrain_7", "wetrain_30", "melt_7", "snodp", "t2m_7", "gdd5_mar1", "bare", "bare_30", "barewet_30"]

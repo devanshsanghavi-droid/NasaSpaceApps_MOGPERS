@@ -27,6 +27,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy import optimize, stats
 
 APP = Path(__file__).resolve().parents[1]
 OUT = APP / "model" / "out"
@@ -34,6 +35,12 @@ FACTS = APP / "docs" / "facts.json"
 PRIORS = APP.parents[1] / "shared" / "evidence" / "evidence_priors.json"
 N_DRAWS = 4000
 SEED = 20261115
+WET_YEAR = 2016          # wet-year example: 2016 is the wettest-loading year in the record here (2025 was below average in the focus area)
+NDVI_MAX_POINTS = 40
+SINGLE_FILE_MAX_MB = 3.0
+METHOD_LEAD = ("The model places leak in time and space where bare ground meets wet soil, and fields sum to the measured river load; "
+               "how much each practice cuts nitrate comes from Iowa trials (INRS 2024), not from our satellite data. "
+               "Year-to-year load is explained mostly by water.")
 DISCLAIMER = ("Decision support, not a replacement for your agronomist. Numbers are estimates from satellite data, "
               "weather, soils and Iowa field trials, calibrated to the rivers at Des Moines; check every option with "
               "your agronomist, NRCS or county office before changing anything.")
@@ -92,6 +99,13 @@ def q3(a):
     return p
 
 
+def thin_ndvi(dates, vals, nmax=NDVI_MAX_POINTS):
+    if len(dates) > nmax:
+        idx = np.unique(np.round(np.linspace(0, len(dates) - 1, nmax)).astype(int))
+        dates, vals = [dates[k] for k in idx], [vals[k] for k in idx]
+    return {"dates": dates, "ndvi": [None if v is None else round(float(v), 2) for v in vals]}
+
+
 def rnd(x, nd=1):
     return None if x is None or not np.isfinite(x) else round(float(x), nd)
 
@@ -130,8 +144,17 @@ def main():
     idx = rng.integers(0, nq, (N_DRAWS, nf))
     L = np.take_along_axis(Q.T, idx, axis=0)              # [draw, field] leak draws (independent per field)
 
+    def trunc_params(e):
+        """Normal truncated to [0, 1] whose MEAN equals the stated efficiency (location solved; scale = stated SD).
+        Plain clipping of N(28, 26) at 0 would inflate the mean to ~30%."""
+        m, sd = e["mean"] / 100, e["sd"] / 100
+        f = lambda mu: stats.truncnorm((0 - mu) / sd, (1 - mu) / sd, loc=mu, scale=sd).mean() - m
+        mu = optimize.brentq(f, -5, 2)
+        return (0 - mu) / sd, (1 - mu) / sd, mu, sd
+
     def red(e, n):
-        return np.clip(rng.normal(e["mean"] / 100, e["sd"] / 100, n), 0, 1)
+        a, b, mu, sd = trunc_params(e)
+        return stats.truncnorm.rvs(a, b, loc=mu, scale=sd, size=n, random_state=rng)
 
     r1, r2, r3 = red(rye, N_DRAWS), red(ext, N_DRAWS), red(crp, N_DRAWS)
     price = rng.uniform(p_lo, p_hi, N_DRAWS)
@@ -145,9 +168,17 @@ def main():
     fert = {k: v * price[:, None] for k, v in kept.items()}
     kq = {k: q3(v) for k, v in kept.items()}
     fq = {k: q3(v) for k, v in fert.items()}
-    kmean = {k: v.mean(axis=0) for k, v in kept.items()}      # long-run average per year (p50 = typical single year)
-    fmean = {k: v.mean(axis=0) for k, v in fert.items()}
-    lmean = L.mean(axis=0)
+    # HEADLINE = long-run mean lb/ac/yr (p10/p90 = single-year spread "in 8 of 10 years"). A single-year median is
+    # misleading for a practice that acts only in some years. Leak and practice draws are independent, so the mean
+    # of kept is exactly mean leak x mean efficiency x coverage.
+    lmean = fs["leak_lbN_ac_yr_mean"].to_numpy(float)
+    eff = {"S0": 0.0, "S1": rye["mean"] / 100 * freq_cs, "S2": ext["mean"] / 100 + 0 * freq_cs, "S3": strip_frac * crp["mean"] / 100 + 0 * freq_cs}
+    kmean = {k: lmean * eff[k] for k in kept}
+    fmean = {k: v * 0.5 * (p_lo + p_hi) for k, v in kmean.items()}
+    # wet-year example (field's central calibrated leak in WET_YEAR); S1 shown for a year with rye in place
+    leak_wet = fs[f"lbN_ac_{WET_YEAR}"].to_numpy(float)
+    rq = {k: (np.percentile(r, 10), r.mean(), np.percentile(r, 90)) for k, r in {"S1": r1, "S2": r2, "S3": strip_frac * r3}.items()}
+    log("efficiency draws mean (should equal prior):", {k: round(float(v[1]), 3) for k, v in rq.items()})
 
     def nlr(r):
         return {"lo": round(float(np.percentile(r, 10)), 3), "hi": round(float(np.percentile(r, 90)), 3)}
@@ -191,7 +222,13 @@ def main():
         f = facts.get(fid)
         if not usable(f):
             return None
-        return {"program": program, "detail": detail_fmt(f) + ("" if f["verification"] == "primary" else " (secondary source; confirm before relying on it)"), "url": f["url"]}
+        if f["verification"] == "primary":
+            tail = ""
+        elif f.get("source_kind") == "third_party":
+            tail = " (rate from a third-party guide, not the NRCS booklet; confirm with your NRCS office)"
+        else:
+            tail = " (secondary source; confirm before relying on it)"
+        return {"program": program, "detail": detail_fmt(f) + tail, "url": f["url"]}
 
     who_s1 = clean([
         prog("eqip_340_usd_ac", "NRCS EQIP practice 340 (Cover Crop)", lambda f: f"about ${f['value']:.0f}/acre (FY2026 Iowa, single species, regular rate); ${f['range']['hi']:.0f}/acre for historically underserved producers"),
@@ -203,10 +240,15 @@ def main():
     who_s2 = [{"program": "NRCS EQIP practice 328 (Conservation Crop Rotation)",
                "detail": (f"about ${e328['value']:.2f}/acre" if usable(e328) else "payment rate not verified yet; ask your NRCS field office") + "; CSP can also support resource-conserving rotations",
                "url": "https://www.nrcs.usda.gov/programs-initiatives/eqip-environmental-quality-incentives-program"}]
+    crpc = facts.get("strips_crp_cost_reduction_pct")
+    cp43 = "annual rental payment plus establishment cost-share on the strip acres"
+    if usable(crpc):
+        cp43 += (f"; ISU STRIPS estimates a 15-year contract cuts the cost by about {crpc['value']:.0f}%, to about "
+                 f"${crpc['range']['lo']}-{crpc['range']['hi']} per treated acre per year ({crpc['verification']}: {crpc['url']})")
     who_s3 = [
-        {"program": "USDA FSA Continuous CRP, practice CP-43 (prairie strips)", "detail": "annual rental payment plus establishment cost-share on the strip acres; ISU STRIPS reports this cuts the farmer's cost by roughly three-quarters (secondary, web summary)",
+        {"program": "USDA FSA Continuous CRP, practice CP-43 (prairie strips)", "detail": cp43,
          "url": "https://www.fsa.usda.gov/programs-and-services/conservation-programs/conservation-reserve-program/"},
-        {"program": "ISU STRIPS team (free planning help)", "detail": "site design, seed mixes and cost calculator", "url": "https://strips.nrem.iastate.edu/"},
+        {"program": "ISU STRIPS team", "detail": "planning and design resources for prairie strips", "url": "https://strips.nrem.iastate.edu/"},
     ]
 
     # ---------------- costs ($/acre)
@@ -225,9 +267,13 @@ def main():
     cost_s2 = {"lo": None, "hi": None, "basis": "not quantified",
                "source": "ISU Marsden trial: profit of the 4-yr system similar to or greater than corn-soy (2003-2011 prices, with manure); no verified $/acre for a farm switching today",
                "url": facts.get("extended_rotation_marsden", {}).get("url")}
-    cost_s3 = {"lo": 24, "hi": 39, "basis": "per treated (whole-field) acre per year, mostly rent/income lost on the strip acres, before CRP payments",
-               "source": "ISU STRIPS economics ($24-35 in the 2013 study, $28-39 in the 2017 edition); secondary (web search summary, not yet in facts.json)",
-               "url": "https://strips.nrem.iastate.edu/chapter-5-economics", "verification": "secondary"}
+    stc = facts.get("strips_cost_usd_treated_ac")
+    if usable(stc):
+        cost_s3 = {"lo": stc["range"]["lo"], "hi": stc["range"]["hi"],
+                   "basis": "per treated (whole-field) acre per year, mostly rent/income lost on the strip acres, before CRP payments",
+                   "source": f"ISU STRIPS economics (facts.json strips_cost_usd_treated_ac, {stc['verification']})", "url": stc["url"], "verification": stc["verification"]}
+    else:
+        cost_s3 = {"lo": None, "hi": None, "basis": "not quantified (no verified source)", "source": None, "url": None}
 
     def pct(x):
         return f"{x:.0f}%"
@@ -254,6 +300,7 @@ def main():
                      "Your own N rate, timing, manure and tile layout are not known to the model."],
             "risks_local_review": ["Doing nothing keeps fall-to-spring nitrate losses where they are, and the most loss comes in wet years like 2016-2019 and 2024-2025."],
             "who_pays": [], "cost_usd_ac": {"lo": 0, "hi": 0, "source": "reference"},
+            "fert_value_note": "Reference: no change.",
         },
         {
             "id": "S1", "name": "Cereal rye before soybean", "short": "Drill rye after corn harvest; end it before or at soybean planting (every other winter)",
@@ -287,6 +334,7 @@ def main():
                                    "Cash flow: seed and seeding are paid in fall, cost-share comes later.",
                                    "Crop-insurance rules for cover crop termination (NRCS/RMA guidelines)."],
             "who_pays": who_s1, "cost_usd_ac": cost_s1,
+            "fert_value_note": "Upper bound: the value of the N kept at today's N price; the next crop does not recover all of it. N kept ahead of soybean has little fertilizer value for that soybean crop (soybean fixes its own N); some may carry over to the next corn crop.",
         },
         {
             "id": "S2", "name": "Extended rotation: corn-soybean-oats-alfalfa (4 years)", "short": "Add oats seeded with alfalfa, then a full alfalfa year, to the corn-soy rotation",
@@ -316,6 +364,7 @@ def main():
                                    "Lease terms, base acres and crop insurance for small grains and hay.",
                                    "Cash flow during the switch-over years."],
             "who_pays": who_s2, "cost_usd_ac": cost_s2,
+            "fert_value_note": "Upper bound: the value of the N kept at today's N price; the next crop does not recover all of it. The N that alfalfa supplies to the next corn crop is a separate saving and is not counted here.",
         },
         {
             "id": "S3", "name": f"Prairie on about {strip_frac:.0%} of the field", "short": "Plant native prairie strips (or retire the wettest corner) on about a tenth of the field",
@@ -343,17 +392,21 @@ def main():
                                    "CRP contract length and rules (haying/grazing limits).",
                                    "Lost income on the strip acres; landlord agreement if rented."],
             "who_pays": who_s3, "cost_usd_ac": cost_s3,
+            "fert_value_note": "Upper bound: the value of the N kept at today's N price; the next crop does not recover all of it. On the prairie acres no crop uses it.",
         },
     ]
     sj = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "strategies": strategies,
         "disclaimer": DISCLAIMER,
-        "method": ("Field leak (lb N/acre/yr) = satellite-seen bare ground x wet-soil drainage (NASA POWER) x soil drainage class, calibrated each year so all fields "
+        "method": (METHOD_LEAD + " Field leak (lb N/acre/yr) = satellite-seen bare ground x wet-soil drainage (NASA POWER) x soil drainage class, calibrated each year so all fields "
                    "and sub-watersheds add up to the nitrate load measured by USGS at Van Meter / Des Moines. Ranges: 10th-90th percentile over 2016-2025 weather years, "
                    "the calibration uncertainty and the trial range of each practice. Fertilizer value uses " + price_src + "; it is an upper bound because the next crop "
                    "does not recover all retained N. Leak and N kept are counted as nitrate that would have reached the river gauge; some nitrate is removed in ditches and streams on the way, so the N kept at the field edge is likely larger than shown."),
-        "units": {"lbN_kept_ac": "lb N per acre per year, averaged over the rotation", "cost_usd_ac": "see each strategy's cost basis"},
+        "units": {"lbN_kept_ac": "lb N per acre per year, averaged over the rotation", "cost_usd_ac": "see each strategy's cost basis",
+                  "headline": "mean = long-run average lb/acre/year (use this as the headline); p10-p90 = range for a single year, in 8 of 10 years; p50 = a typical single year",
+                  "wet_year_2016": f"what the practice would have kept in {WET_YEAR}, a wet high-loss year; S1 assumes rye was in place that year"},
+        "efficiency_draws": "normal truncated to [0, 1] with its location solved so the mean equals the stated INRS efficiency (scale = stated SD)",
     }
     (OUT / "strategies.json").write_text(json.dumps(sj, indent=1))
 
@@ -363,8 +416,11 @@ def main():
     fd = {}
     for i, r in enumerate(fs.itertuples()):
         lsh = np.array(r.cal_leak_share)
-        ks = {k: {"lbN_kept_ac": {"p10": rnd(kq[k][0, i]), "p50": rnd(kq[k][1, i]), "p90": rnd(kq[k][2, i]), "mean": rnd(kmean[k][i])},
-                  "fert_value_usd_ac": {"p10": rnd(fq[k][0, i], 2), "p50": rnd(fq[k][1, i], 2), "p90": rnd(fq[k][2, i], 2), "mean": rnd(fmean[k][i], 2)}} for k in kept}
+        ks = {k: {"lbN_kept_ac": {"mean": rnd(kmean[k][i]), "p10": rnd(kq[k][0, i]), "p50": rnd(kq[k][1, i]), "p90": rnd(kq[k][2, i])},
+                  "fert_value_usd_ac": {"mean": rnd(fmean[k][i], 2), "p10": rnd(fq[k][0, i], 2), "p50": rnd(fq[k][1, i], 2), "p90": rnd(fq[k][2, i], 2)}} for k in kept}
+        for k, (a, mu_, b) in rq.items():
+            ks[k]["wet_year_2016"] = {"lbN_kept_ac": {"mean": rnd(leak_wet[i] * mu_), "p10": rnd(leak_wet[i] * a), "p90": rnd(leak_wet[i] * b)}}
+        ks["S0"]["wet_year_2016"] = {"lbN_kept_ac": {"mean": 0.0, "p10": 0.0, "p90": 0.0}}
         if freq_cs[i] == 0:
             ks["S1"]["note"] = "No soybean-after-corn years in this field's 2016-2025 history, so rye before soybean does not apply as is."
         bare_ = np.array(r.cal_bare_frac)
@@ -372,29 +428,47 @@ def main():
                      f"{r.frac_leak_apr_jun:.0%} falls April-June.")
         fd[r.field_id] = {
             "seq": r.seq, "crop_2025": r.crop_2025, "drainage": r.drainage, "slope_pct": rnd(r.slope_pct, 2),
-            "leak": {"lbN_ac_yr": {"p10": rnd(r.leak_lbN_ac_yr_p10), "p50": rnd(r.leak_lbN_ac_yr_p50), "p90": rnd(r.leak_lbN_ac_yr_p90), "mean": rnd(lmean[i])},
+            "leak": {"lbN_ac_yr": {"mean": rnd(lmean[i]), "p10": rnd(r.leak_lbN_ac_yr_p10), "p50": rnd(r.leak_lbN_ac_yr_p50), "p90": rnd(r.leak_lbN_ac_yr_p90)},
+                     "wet_year_2016": rnd(leak_wet[i]),
                      "by_year": {c[-4:]: rnd(getattr(r, c)) for c in years}},
             "calendar": {"months": list(range(1, 13)),
                          "bare_frac": [rnd(v, 2) for v in r.cal_bare_frac], "rain_mm": [rnd(v, 0) for v in r.cal_rain_mm],
                          "storm_days": [rnd(v, 2) for v in r.cal_storm_days], "wetness": [rnd(v, 3) for v in r.cal_wetness],
                          "leak_risk": [rnd(v, 2) for v in r.cal_leak_risk], "leak_share": [rnd(v, 3) for v in lsh],
+                         "leak_lb_ac": [rnd(v * lmean[i], 2) for v in lsh],
                          "interp_only": [bool(v) for v in r.cal_interp_only],
                          "interp_only_share": [rnd(v, 2) for v in r.cal_interp_only_share]},
-            "ndvi_recent": {"dates": list(r.ndvi_dates), "ndvi": [rnd(v, 2) for v in r.ndvi_vals]},
+            "ndvi_recent": thin_ndvi(list(r.ndvi_dates), list(r.ndvi_vals)),
             "cover_years": json.loads(r.cover_years_json),
             "strategies": ks,
             "why_field": why_field,
         }
-    (OUT / "field_detail.json").write_text(json.dumps(fd, separators=(",", ":")))
-    size = (OUT / "field_detail.json").stat().st_size / 1e6
+    # split files by HUC-12 (always) + single file only if small enough
+    sdir = OUT / "field_detail"
+    sdir.mkdir(exist_ok=True)
+    for old in sdir.glob("*.json"):
+        old.unlink()
+    for hh, g in fs.groupby("huc12"):
+        (sdir / f"{hh}.json").write_text(json.dumps({f: fd[f] for f in g["field_id"]}, separators=(",", ":")))
+    blob = json.dumps(fd, separators=(",", ":"))
+    size = len(blob.encode()) / 1e6
+    single = OUT / "field_detail.json"
+    if size <= SINGLE_FILE_MAX_MB:
+        single.write_text(blob)
+    elif single.exists():
+        single.unlink()          # stale single file from an earlier run; the split files are the output
+    log(f"field_detail: {len(list(sdir.glob('*.json')))} split files; single file {'written' if size <= SINGLE_FILE_MAX_MB else 'NOT written'} ({size:.2f} MB)")
 
     summ = {k: {"p10_of_field_p50": rnd(np.percentile(kq[k][1], 10)), "median_field_p50": rnd(np.median(kq[k][1])), "p90_of_field_p50": rnd(np.percentile(kq[k][1], 90)),
                 "median_field_p10": rnd(np.median(kq[k][0])), "median_field_p90": rnd(np.median(kq[k][2])),
                 "median_fert_usd_p50": rnd(np.median(fq[k][1]), 2), "median_field_mean": rnd(np.median(kmean[k])),
                 "median_fert_usd_mean": rnd(np.median(fmean[k]), 2)} for k in kept}
-    summ["leak"] = {"median_field_mean": rnd(np.median(lmean)), "median_field_p50": rnd(float(fs["leak_lbN_ac_yr_p50"].median()))}
+    summ["leak"] = {"median_field_mean": rnd(np.median(lmean)), "median_field_p50": rnd(float(fs["leak_lbN_ac_yr_p50"].median())),
+                    f"median_field_{WET_YEAR}": rnd(np.median(leak_wet))}
+    for k, (a, mu_, b) in rq.items():
+        summ[k][f"median_field_{WET_YEAR}_rye_or_practice_year"] = rnd(np.median(leak_wet * mu_))
     log("N kept (lb/ac/yr) summary:", json.dumps(summ))
-    log(f"field_detail.json {size:.1f} MB, {len(fd)} fields; done in {time.time() - t0:.0f}s")
+    log(f"{len(fd)} fields; done in {time.time() - t0:.0f}s")
     return summ
 
 

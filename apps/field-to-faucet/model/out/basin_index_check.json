@@ -2,23 +2,23 @@
  "question": "Does the uncalibrated basin leak index (sum over HUC-12s of MODIS-bare x wet-soil drainage x soil factor x row-crop area, per row-crop ha) track the measured annual nitrate-N load per row-crop ha, 2016-2025?",
  "index_definition": "per row-crop ha and year: sum_days (bare + eps*(1-bare)) * D * (1 + (m-1)*poorly_drained_share), m = 2.5",
  "pooled_both_basins": {
-  "pearson": 0.741,
-  "pearson_p": 0.000183,
-  "spearman": 0.777,
-  "spearman_p": 5.49e-05,
+  "pearson": 0.752,
+  "pearson_p": 0.00013,
+  "spearman": 0.839,
+  "spearman_p": 3.77e-06,
   "n": 20
  },
  "within_basin": {
   "raccoon": {
-   "pearson": 0.753,
-   "pearson_p": 0.012,
-   "spearman": 0.697,
-   "spearman_p": 0.0251,
+   "pearson": 0.764,
+   "pearson_p": 0.0101,
+   "spearman": 0.879,
+   "spearman_p": 0.000814,
    "n": 10
   },
   "desmoines": {
-   "pearson": 0.733,
-   "pearson_p": 0.0159,
+   "pearson": 0.746,
+   "pearson_p": 0.0133,
    "spearman": 0.782,
    "spearman_p": 0.00755,
    "n": 10
@@ -63,7 +63,7 @@
   {
    "basin": "raccoon",
    "year": 2016,
-   "index_per_ha": 636.951,
+   "index_per_ha": 660.404,
    "drain_only_per_ha": 880.494,
    "rain_per_ha": 878.685,
    "load_kg_ha": 46.664,
@@ -72,7 +72,7 @@
   {
    "basin": "raccoon",
    "year": 2017,
-   "index_per_ha": 491.279,
+   "index_per_ha": 498.442,
    "drain_only_per_ha": 565.657,
    "rain_per_ha": 769.143,
    "load_kg_ha": 27.46,
@@ -81,7 +81,7 @@
   {
    "basin": "raccoon",
    "year": 2018,
-   "index_per_ha": 538.736,
+   "index_per_ha": 574.619,
    "drain_only_per_ha": 911.353,
    "rain_per_ha": 1057.411,
    "load_kg_ha": 38.42,
@@ -90,7 +90,7 @@
   {
    "basin": "raccoon",
    "year": 2019,
-   "index_per_ha": 848.032,
+   "index_per_ha": 896.687,
    "drain_only_per_ha": 1353.27,
    "rain_per_ha": 970.106,
    "load_kg_ha": 34.297,
@@ -99,7 +99,7 @@
   {
    "basin": "raccoon",
    "year": 2020,
-   "index_per_ha": 426.097,
+   "index_per_ha": 433.164,
    "drain_only_per_ha": 499.476,
    "rain_per_ha": 581.333,
    "load_kg_ha": 13.379,
@@ -108,7 +108,7 @@
   {
    "basin": "raccoon",
    "year": 2021,
-   "index_per_ha": 127.216,
+   "index_per_ha": 129.038,
    "drain_only_per_ha": 146.132,
    "rain_per_ha": 695.907,
    "load_kg_ha": 1.683,
@@ -117,7 +117,7 @@
   {
    "basin": "raccoon",
    "year": 2022,
-   "index_per_ha": 137.689,
+   "index_per_ha": 140.423,
    "drain_only_per_ha": 166.073,
    "rain_per_ha": 577.502,
    "load_kg_ha": 11.257,
@@ -126,7 +126,7 @@
   {
    "basin": "raccoon",
    "year": 2023,
-   "index_per_ha": 137.195,
+   "index_per_ha": 137.967,
    "drain_only_per_ha": 145.213,
    "rain_per_ha": 657.46,
    "load_kg_ha": 4.054,
@@ -135,7 +135,7 @@
   {
    "basin": "raccoon",
    "year": 2024,
-   "index_per_ha": 276.952,
+   "index_per_ha": 288.532,
    "drain_only_per_ha": 397.195,
    "rain_per_ha": 803.74,
    "load_kg_ha": 19.12,
@@ -144,7 +144,7 @@
   {
    "basin": "raccoon",
    "year": 2025,
-   "index_per_ha": 127.147,
+   "index_per_ha": 148.879,
    "drain_only_per_ha": 352.812,
    "rain_per_ha": 860.866,
    "load_kg_ha": 27.962,
@@ -153,7 +153,7 @@
   {
    "basin": "desmoines",
    "year": 2016,
-   "index_per_ha": 754.271,
+   "index_per_ha": 793.916,
    "drain_only_per_ha": 1165.95,
    "rain_per_ha": 962.503,
    "load_kg_ha": 54.162,
@@ -162,7 +162,7 @@
   {
    "basin": "desmoines",
    "year": 2017,
-   "index_per_ha": 602.819,
+   "index_per_ha": 616.107,
    "drain_only_per_ha": 740.805,
    "rain_per_ha": 780.621,
    "load_kg_ha": 28.746,
@@ -171,7 +171,7 @@
   {
    "basin": "desmoines",
    "year": 2018,
-   "index_per_ha": 812.726,
+   "index_per_ha": 878.594,
    "drain_only_per_ha": 1496.71,
    "rain_per_ha": 1136.66,
    "load_kg_ha": 43.958,
@@ -180,7 +180,7 @@
   {
    "basin": "desmoines",
    "year": 2019,
-   "index_per_ha": 1020.569,
+   "index_per_ha": 1086.54,
    "drain_only_per_ha": 1705.624,
    "rain_per_ha": 1016.142,
    "load_kg_ha": 31.226,
@@ -189,7 +189,7 @@
   {
    "basin": "desmoines",
    "year": 2020,
-   "index_per_ha": 550.734,
+   "index_per_ha": 568.303,
    "drain_only_per_ha": 733.169,
    "rain_per_ha": 633.207,
    "load_kg_ha": 17.27,
@@ -198,7 +198,7 @@
   {
    "basin": "desmoines",
    "year": 2021,
-   "index_per_ha": 129.462,
+   "index_per_ha": 131.799,
    "drain_only_per_ha": 153.73,
    "rain_per_ha": 687.622,
    "load_kg_ha": 1.859,
@@ -207,7 +207,7 @@
   {
    "basin": "desmoines",
    "year": 2022,
-   "index_per_ha": 208.869,
+   "index_per_ha": 212.161,
    "drain_only_per_ha": 243.058,
    "rain_per_ha": 597.149,
    "load_kg_ha": 9.714,
@@ -216,7 +216,7 @@
   {
    "basin": "desmoines",
    "year": 2023,
-   "index_per_ha": 227.489,
+   "index_per_ha": 227.828,
    "drain_only_per_ha": 231.007,
    "rain_per_ha": 661.97,
    "load_kg_ha": 5.952,
@@ -225,7 +225,7 @@
   {
    "basin": "desmoines",
    "year": 2024,
-   "index_per_ha": 492.086,
+   "index_per_ha": 527.775,
    "drain_only_per_ha": 862.685,
    "rain_per_ha": 900.288,
    "load_kg_ha": 34.826,
@@ -234,7 +234,7 @@
   {
    "basin": "desmoines",
    "year": 2025,
-   "index_per_ha": 231.761,
+   "index_per_ha": 266.266,
    "drain_only_per_ha": 590.059,
    "rain_per_ha": 871.872,
    "load_kg_ha": 29.444,
@@ -243,8 +243,8 @@
  ],
  "cover_adds_beyond_drainage": {
   "test": "partial correlation of log(index/drainage-only) [the cover part] with log(load), controlling for log(drainage-only) and basin",
-  "pearson": -0.397,
-  "pearson_p": 0.0829,
+  "pearson": -0.394,
+  "pearson_p": 0.0856,
   "spearman": -0.277,
   "spearman_p": 0.238,
   "n": 20
@@ -252,62 +252,63 @@
  "eps_sensitivity_pooled_pearson": {
   "0.0": 0.713,
   "0.15": 0.741,
+  "0.232": 0.752,
   "0.3": 0.76,
   "0.5": 0.775,
   "1.0": 0.789
  },
  "per_area_ratio_raccoon_over_desmoines": {
-  "index_mean": 0.728,
+  "index_mean": 0.723,
   "measured_mean": 0.881,
-  "index_10yr_total": 0.75,
+  "index_10yr_total": 0.742,
   "measured_10yr_total": 0.875,
   "by_year": {
    "2016": {
-    "index": 0.844,
+    "index": 0.832,
     "measured": 0.862
    },
    "2017": {
-    "index": 0.815,
+    "index": 0.809,
     "measured": 0.955
    },
    "2018": {
-    "index": 0.663,
+    "index": 0.654,
     "measured": 0.874
    },
    "2019": {
-    "index": 0.831,
+    "index": 0.825,
     "measured": 1.098
    },
    "2020": {
-    "index": 0.774,
+    "index": 0.762,
     "measured": 0.775
    },
    "2021": {
-    "index": 0.983,
+    "index": 0.979,
     "measured": 0.905
    },
    "2022": {
-    "index": 0.659,
+    "index": 0.662,
     "measured": 1.159
    },
    "2023": {
-    "index": 0.603,
+    "index": 0.606,
     "measured": 0.681
    },
    "2024": {
-    "index": 0.563,
+    "index": 0.547,
     "measured": 0.549
    },
    "2025": {
-    "index": 0.549,
+    "index": 0.559,
     "measured": 0.95
    }
   },
   "year_to_year_corr_of_ratios": {
-   "pearson": 0.329,
-   "pearson_p": 0.353,
-   "spearman": 0.236,
-   "spearman_p": 0.511,
+   "pearson": 0.361,
+   "pearson_p": 0.306,
+   "spearman": 0.37,
+   "spearman_p": 0.293,
    "n": 10
   }
  },
@@ -345,14 +346,25 @@
   "n_grid": 896
  },
  "eps_living_cover_leak_fraction": {
+  "value": 0.232,
+  "source": "calibrated: HLS-observed winter-cover field-years (field_year.winter_cover, crop years 2021-2025, n=187) vs uncovered fields in the same HUC-12 and crop year, drainage differences divided out; eps chosen so the mean modelled cut = INRS 2024 rye 28%. Cut at eps=0.15 (CRP-based, previous version) was 32%.",
+  "diagnostics": {
+   "n_cover_fieldyears": 187,
+   "cut_at_0": 0.411,
+   "cut_at_0.15": 0.32,
+   "target": 0.28,
+   "cut_at_eps": 0.28
+  }
+ },
+ "eps_nonrowcrop_land_leak_fraction": {
   "value": 0.15,
   "source": "1 - inrs_crp_pct (85%, https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf)"
  },
  "rowcrop_share_of_river_load": {
-  "lo": 0.7,
+  "lo": 0.759,
   "hi": 0.892,
-  "central": 0.796,
-  "note": "s ~ U[0.700, 0.892]: lower = CISWRA agriculture share lo (https://www.yahoo.com/news/polk-county-research-report-confirms-232521328.html); upper = row-crop share of land-based load if non-row-crop land (grass, hay, small grain, forest, other; CDL) leaks eps=0.15 of row-crop land per ha, times (1 - point share); point sources 8% = 1 - INRS nonpoint share 92% (https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/1%202025%20INRS%20Executive%20Summary%20and%20Section%201_Policy%20-%20FINAL%20February%204%202025.pdf). Per-basin upper: raccoon 0.892, desmoines 0.900; the smaller one is used for both."
+  "central": 0.825,
+  "note": "s ~ U[0.759, 0.892] = (1 - point share) x row-crop share of the land-based load, with non-row-crop land (grass, hay, small grain, forest, other; CDL 2016-2025) leaking per ha either as much as row crop (lower bound) or 0.15 of it (upper bound; 1 - inrs_crp_pct (85%, https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/2%202025%20INRS%20Section%202%20Feb%202025.pdf)); point sources 8% = 1 - INRS nonpoint share 92% (https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/1%202025%20INRS%20Executive%20Summary%20and%20Section%201_Policy%20-%20FINAL%20February%204%202025.pdf). Per-basin lower/upper: raccoon 0.759/0.892, desmoines 0.804/0.900; the smaller of each is used for both. (CISWRA's '70-80% from agriculture' is consistent but only secondary, so not used.)"
  },
  "tile_multiplier_m": {
   "grid": [
@@ -457,13 +469,13 @@
    "rowcrop_km2": 6839.7,
    "kgN_ha_rowcrop_all_sources": 46.66,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 37.13,
-    "lo": 32.66,
+    "central": 38.5,
+    "lo": 35.4,
     "hi": 41.6
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 33.13,
-    "lo": 29.14,
+    "central": 34.35,
+    "lo": 31.58,
     "hi": 37.12
    },
    "fwm_no3_mgL": 10.22,
@@ -478,13 +490,13 @@
    "rowcrop_km2": 6862.1,
    "kgN_ha_rowcrop_all_sources": 27.46,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 21.85,
-    "lo": 19.22,
+    "central": 22.66,
+    "lo": 20.83,
     "hi": 24.48
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 19.5,
-    "lo": 17.15,
+    "central": 20.21,
+    "lo": 18.58,
     "hi": 21.84
    },
    "fwm_no3_mgL": 9.41,
@@ -499,13 +511,13 @@
    "rowcrop_km2": 6856.3,
    "kgN_ha_rowcrop_all_sources": 38.42,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 30.57,
-    "lo": 26.89,
+    "central": 31.7,
+    "lo": 29.14,
     "hi": 34.25
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 27.28,
-    "lo": 23.99,
+    "central": 28.28,
+    "lo": 26.0,
     "hi": 30.56
    },
    "fwm_no3_mgL": 7.53,
@@ -520,13 +532,13 @@
    "rowcrop_km2": 6910.0,
    "kgN_ha_rowcrop_all_sources": 34.3,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 27.29,
-    "lo": 24.01,
+    "central": 28.3,
+    "lo": 26.02,
     "hi": 30.58
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 24.35,
-    "lo": 21.42,
+    "central": 25.25,
+    "lo": 23.21,
     "hi": 27.28
    },
    "fwm_no3_mgL": 6.52,
@@ -541,13 +553,13 @@
    "rowcrop_km2": 6871.3,
    "kgN_ha_rowcrop_all_sources": 13.38,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 10.65,
-    "lo": 9.37,
+    "central": 11.04,
+    "lo": 10.15,
     "hi": 11.93
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 9.5,
-    "lo": 8.36,
+    "central": 9.85,
+    "lo": 9.05,
     "hi": 10.64
    },
    "fwm_no3_mgL": 6.96,
@@ -562,13 +574,13 @@
    "rowcrop_km2": 6780.9,
    "kgN_ha_rowcrop_all_sources": 1.68,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 1.34,
-    "lo": 1.18,
+    "central": 1.39,
+    "lo": 1.28,
     "hi": 1.5
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 1.19,
-    "lo": 1.05,
+    "central": 1.24,
+    "lo": 1.14,
     "hi": 1.34
    },
    "fwm_no3_mgL": 2.94,
@@ -583,13 +595,13 @@
    "rowcrop_km2": 6754.3,
    "kgN_ha_rowcrop_all_sources": 11.26,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 8.96,
-    "lo": 7.88,
+    "central": 9.29,
+    "lo": 8.54,
     "hi": 10.04
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 7.99,
-    "lo": 7.03,
+    "central": 8.29,
+    "lo": 7.62,
     "hi": 8.95
    },
    "fwm_no3_mgL": 9.15,
@@ -604,13 +616,13 @@
    "rowcrop_km2": 6727.7,
    "kgN_ha_rowcrop_all_sources": 4.05,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 3.23,
-    "lo": 2.84,
+    "central": 3.34,
+    "lo": 3.08,
     "hi": 3.61
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 2.88,
-    "lo": 2.53,
+    "central": 2.98,
+    "lo": 2.74,
     "hi": 3.22
    },
    "fwm_no3_mgL": 4.5,
@@ -625,13 +637,13 @@
    "rowcrop_km2": 6829.3,
    "kgN_ha_rowcrop_all_sources": 19.12,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 15.22,
-    "lo": 13.38,
+    "central": 15.77,
+    "lo": 14.5,
     "hi": 17.05
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 13.57,
-    "lo": 11.94,
+    "central": 14.07,
+    "lo": 12.94,
     "hi": 15.21
    },
    "fwm_no3_mgL": 10.94,
@@ -646,13 +658,13 @@
    "rowcrop_km2": 6668.1,
    "kgN_ha_rowcrop_all_sources": 27.96,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 22.25,
-    "lo": 19.57,
+    "central": 23.07,
+    "lo": 21.21,
     "hi": 24.93
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 19.85,
-    "lo": 17.46,
+    "central": 20.58,
+    "lo": 18.92,
     "hi": 22.24
    },
    "fwm_no3_mgL": 10.28,
@@ -667,13 +679,13 @@
    "rowcrop_km2": 12676.1,
    "kgN_ha_rowcrop_all_sources": 54.16,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 43.1,
-    "lo": 37.91,
+    "central": 44.69,
+    "lo": 41.08,
     "hi": 48.29
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 38.45,
-    "lo": 33.83,
+    "central": 39.87,
+    "lo": 36.65,
     "hi": 43.08
    },
    "fwm_no3_mgL": 10.81,
@@ -688,13 +700,13 @@
    "rowcrop_km2": 12674.1,
    "kgN_ha_rowcrop_all_sources": 28.75,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 22.88,
-    "lo": 20.12,
+    "central": 23.72,
+    "lo": 21.8,
     "hi": 25.63
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 20.41,
-    "lo": 17.95,
+    "central": 21.16,
+    "lo": 19.45,
     "hi": 22.86
    },
    "fwm_no3_mgL": 8.77,
@@ -709,13 +721,13 @@
    "rowcrop_km2": 12675.1,
    "kgN_ha_rowcrop_all_sources": 43.96,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 34.98,
-    "lo": 30.77,
+    "central": 36.27,
+    "lo": 33.34,
     "hi": 39.19
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 31.21,
-    "lo": 27.45,
+    "central": 32.36,
+    "lo": 29.75,
     "hi": 34.96
    },
    "fwm_no3_mgL": 5.97,
@@ -730,13 +742,13 @@
    "rowcrop_km2": 12265.6,
    "kgN_ha_rowcrop_all_sources": 31.23,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 24.85,
-    "lo": 21.86,
+    "central": 25.76,
+    "lo": 23.69,
     "hi": 27.84
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 22.17,
-    "lo": 19.5,
+    "central": 22.98,
+    "lo": 21.13,
     "hi": 24.84
    },
    "fwm_no3_mgL": 4.96,
@@ -751,13 +763,13 @@
    "rowcrop_km2": 12782.2,
    "kgN_ha_rowcrop_all_sources": 17.27,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 13.74,
-    "lo": 12.09,
+    "central": 14.25,
+    "lo": 13.1,
     "hi": 15.4
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 12.26,
-    "lo": 10.79,
+    "central": 12.71,
+    "lo": 11.69,
     "hi": 13.74
    },
    "fwm_no3_mgL": 6.38,
@@ -772,13 +784,13 @@
    "rowcrop_km2": 12662.8,
    "kgN_ha_rowcrop_all_sources": 1.86,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 1.48,
-    "lo": 1.3,
+    "central": 1.53,
+    "lo": 1.41,
     "hi": 1.66
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 1.32,
-    "lo": 1.16,
+    "central": 1.37,
+    "lo": 1.26,
     "hi": 1.48
    },
    "fwm_no3_mgL": 2.47,
@@ -793,13 +805,13 @@
    "rowcrop_km2": 12652.5,
    "kgN_ha_rowcrop_all_sources": 9.71,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 7.73,
-    "lo": 6.8,
+    "central": 8.01,
+    "lo": 7.37,
     "hi": 8.66
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 6.9,
-    "lo": 6.07,
+    "central": 7.15,
+    "lo": 6.57,
     "hi": 7.73
    },
    "fwm_no3_mgL": 7.25,
@@ -814,13 +826,13 @@
    "rowcrop_km2": 12619.8,
    "kgN_ha_rowcrop_all_sources": 5.95,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 4.74,
-    "lo": 4.17,
+    "central": 4.91,
+    "lo": 4.52,
     "hi": 5.31
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 4.23,
-    "lo": 3.72,
+    "central": 4.38,
+    "lo": 4.03,
     "hi": 4.73
    },
    "fwm_no3_mgL": 3.96,
@@ -835,13 +847,13 @@
    "rowcrop_km2": 12633.7,
    "kgN_ha_rowcrop_all_sources": 34.83,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 27.71,
-    "lo": 24.38,
+    "central": 28.73,
+    "lo": 26.42,
     "hi": 31.05
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 24.73,
-    "lo": 21.75,
+    "central": 25.63,
+    "lo": 23.57,
     "hi": 27.7
    },
    "fwm_no3_mgL": 9.86,
@@ -856,13 +868,13 @@
    "rowcrop_km2": 12434.4,
    "kgN_ha_rowcrop_all_sources": 29.44,
    "kgN_ha_rowcrop_from_rowcrop": {
-    "central": 23.43,
-    "lo": 20.61,
+    "central": 24.29,
+    "lo": 22.33,
     "hi": 26.25
    },
    "lbN_ac_rowcrop_from_rowcrop": {
-    "central": 20.9,
-    "lo": 18.39,
+    "central": 21.67,
+    "lo": 19.93,
     "hi": 23.42
    },
    "fwm_no3_mgL": 9.69,
@@ -873,26 +885,35 @@
  "modis_hls_gapfill_rows_used": 4913,
  "fields": {
   "n": 1769,
+  "lbN_ac_yr_mean_distribution": {
+   "p5": 8.8,
+   "p10": 9.8,
+   "p25": 11.5,
+   "p50": 13.7,
+   "p75": 16.4,
+   "p90": 18.5,
+   "p95": 20.0
+  },
   "lbN_ac_yr_p50_distribution": {
-   "p5": 6.5,
-   "p10": 7.4,
-   "p25": 8.8,
-   "p50": 10.5,
-   "p75": 12.5,
-   "p90": 14.7,
-   "p95": 15.9
+   "p5": 6.9,
+   "p10": 7.8,
+   "p25": 9.0,
+   "p50": 10.8,
+   "p75": 12.8,
+   "p90": 14.9,
+   "p95": 16.3
   },
   "lbN_ac_yr_central_by_year_focus_mean": {
-   "2016": 32.4,
-   "2017": 18.5,
-   "2018": 25.3,
-   "2019": 23.1,
-   "2020": 8.7,
+   "2016": 33.4,
+   "2017": 19.1,
+   "2018": 26.1,
+   "2019": 23.9,
+   "2020": 9.0,
    "2021": 0.7,
-   "2022": 4.2,
+   "2022": 4.4,
    "2023": 1.6,
-   "2024": 10.9,
-   "2025": 11.2
+   "2024": 11.2,
+   "2025": 12.0
   },
   "hls_fallback_share_mean": 0.041,
   "calendar_interp_only_months_share_by_month": {
@@ -909,18 +930,18 @@
    "11": 0.0,
    "12": 0.547
   },
-  "poorly_vs_well_p50_ratio": 1.337,
+  "poorly_vs_well_p50_ratio": 1.352,
   "field_mean_vs_huc12_mean_check_max_abs_rel_diff": 0.0,
   "hls_vs_modis_annual_index_focus": {
-   "2020": 1.064,
-   "2021": 1.222,
-   "2022": 1.36,
-   "2023": 1.336,
-   "2024": 1.093,
-   "2025": 1.254
+   "2020": 1.061,
+   "2021": 1.227,
+   "2022": 1.364,
+   "2023": 1.338,
+   "2024": 1.082,
+   "2025": 1.252
   }
  },
- "generated_at": "2026-11-14T22:47:54Z",
+ "generated_at": "2026-11-14T22:55:36Z",
  "input_mtimes": {
   "hls_field_ts.parquet": "2026-11-14 22:43",
   "field_year.parquet": "2026-11-14 22:43",

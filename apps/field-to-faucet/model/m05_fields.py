@@ -10,8 +10,8 @@ Idea (details and justification in notes/fields_model.md):
                f rises linearly from 0 at w0 to 1 at w0+dw. w0, dw (and a routing constant only used for
                the fit) are fitted to MEASURED monthly runoff (USGS flow) of both basins.
     cover    = bare + eps x (1 - bare); bare from NASA HLS per field, from MODIS (corrected to HLS by
-               month) per HUC-12. eps = 1 - INRS land-retirement reduction (facts.json, inrs_crp_pct):
-               land under living cover leaks that fraction of bare land.
+               month) per HUC-12. eps is calibrated so that a winter with HLS-observed living cover cuts that
+               field's crop-year leak by the INRS 2024 rye efficiency (facts.json), as the S1 card assumes.
     soil     = 1 + (m - 1) x poorly-drained share. Poorly drained Iowa row-crop land is tile drained;
                m = delivery multiplier of tiled vs. naturally drained land, uncertain, U[1, 4]
                (upper end from McIsaac & Hu 2004 via David et al. 2010), central 2.5.
@@ -368,6 +368,49 @@ def hls_daily(h: pd.DataFrame, fids: list[str], dates: pd.DatetimeIndex):
     return B
 
 
+# ----------------------------------------------------------------------------- living-cover calibration
+def calibrate_cover_eps(BF, DF, fdates, fh, fy, fids, target):
+    """Crop-year (Oct-Sep) leak J(eps) = sum(DF*(BF + eps*(1-BF))). For each field-year with HLS-observed winter cover,
+    ratio = [J_f / mean J of uncovered fields in the same HUC-12 & crop year] / [same ratio of drainage alone], so
+    weather differences cancel and only the cover effect remains. Solve mean(1 - ratio) = target for eps in [0, 1]."""
+    mo, yr = fdates.month.to_numpy(), fdates.year.to_numpy()
+    wy = np.where(mo >= 10, yr + 1, yr)
+    cys = [y for y in range(2021, 2026)]
+    SD = np.array([DF[:, wy == y].sum(axis=1) for y in cys]).T            # [field, cy]
+    SB = np.array([(DF * BF)[:, wy == y].sum(axis=1) for y in cys]).T
+    cov = fy[fy["year"].isin(cys)].pivot(index="field_id", columns="year", values="winter_cover").reindex(index=fids, columns=cys)
+    C = cov.fillna(False).to_numpy(bool)
+
+    def cut(eps):
+        J = eps * SD + (1 - eps) * SB
+        ratios = []
+        for k in range(len(cys)):
+            for hh in np.unique(fh[C[:, k]]):
+                peers = (fh == hh) & ~C[:, k]
+                if peers.sum() < 5:
+                    continue
+                jp, dp = J[peers, k].mean(), SD[peers, k].mean()
+                for i in np.where((fh == hh) & C[:, k])[0]:
+                    ratios.append((J[i, k] / jp) / (SD[i, k] / dp))
+        return 1.0 - float(np.mean(ratios)), len(ratios)
+
+    c0, n = cut(0.0)
+    diag = {"n_cover_fieldyears": n, "cut_at_0": round(c0, 3), "cut_at_0.15": round(cut(0.15)[0], 3), "target": round(target, 3)}
+    if c0 <= target:
+        diag["note"] = "even eps=0 gives less than the target cut; eps=0 used"
+        return 0.0, diag
+    lo, hi = 0.0, 1.0
+    for _ in range(40):
+        mid = 0.5 * (lo + hi)
+        if cut(mid)[0] > target:
+            lo = mid
+        else:
+            hi = mid
+    eps = 0.5 * (lo + hi)
+    diag["cut_at_eps"] = round(cut(eps)[0], 3)
+    return eps, diag
+
+
 # ----------------------------------------------------------------------------- helpers
 def bilinear_weights(lon, lat, cells: pd.DataFrame, cidx: dict, dlat=0.5, dlon=0.625):
     W = np.zeros((len(lon), len(cidx)))
@@ -428,10 +471,10 @@ def main():
     cidx = {c: i for i, c in enumerate(cell_ids)}
     log("  fit:", {k: dfit[k] for k in ("w0", "dw", "routing_k_days_fit_only", "r_monthly", "baseline_f1_r_monthly")})
 
-    # ---------------- living-cover leak fraction eps (facts)
+    # ---------------- leak of perennial (non-row-crop) land relative to row-crop land: 1 - INRS CRP efficiency
     crp = fact_value(facts, "inrs_crp_pct")
-    eps = 1.0 - float(crp["value"]) / 100.0 if crp else 0.15
-    eps_src = f"1 - inrs_crp_pct ({crp['value']}%, {crp['url']})" if crp else "fallback 0.15 (inrs_crp_pct missing)"
+    eps_land = 1.0 - float(crp["value"]) / 100.0 if crp else 0.15
+    eps_land_src = f"1 - inrs_crp_pct ({crp['value']}%, {crp['url']})" if crp else "fallback 0.15 (inrs_crp_pct missing)"
 
     # ---------------- 2. loads
     log("measured annual loads with gap filling (+ cross-validation)")
@@ -439,7 +482,6 @@ def main():
 
     # ---------------- share of load from row-crop land, s ~ U[s_lo, s_hi]
     ag = fact_value(facts, "ag_share_river_nitrate_pct")
-    s_lo = float(ag["range"]["lo"]) / 100.0 if ag and ag.get("range") else 0.70
     npf = fact_value(facts, "inrs_nonpoint_share_pct")
     if npf:   # primary: INRS statewide nonpoint share of stream N; point sources = the rest
         point = 1.0 - float(npf["value"]) / 100.0
@@ -448,18 +490,21 @@ def main():
         m_city = re.search(r"cities\s*([\d.]+)\s*-\s*([\d.]+)\s*%", (ag or {}).get("notes", "") or "")
         point = float(m_city.group(2)) / 100.0 if m_city else 0.0
         point_src = f"point sources {point:.1%} (cities, facts note on ag_share_river_nitrate_pct)"
-    s_hi_b = {}
+    s_hi_b, s_lo_b = {}, {}
     for b in SITES:
         cb = cdlb[(cdlb["basin"] == b) & cdlb["year"].isin(CAL_YEARS)].mean(numeric_only=True)
         nonrc_land = cb["small_grain"] + cb["hay"] + cb["grass_pasture"] + cb["forest"] + cb["other"]
         rc = cb["row_crop"]
-        s_hi_b[b] = (rc / (rc + nonrc_land * eps)) * (1.0 - point)
+        s_hi_b[b] = (rc / (rc + nonrc_land * eps_land)) * (1.0 - point)   # non-row-crop land leaks like CRP land
+        s_lo_b[b] = (rc / (rc + nonrc_land * 1.0)) * (1.0 - point)        # extreme: leaks as much as row crop per ha
     s_hi = float(min(s_hi_b.values()))
+    s_lo = float(min(s_lo_b.values()))
     s_c = 0.5 * (s_lo + s_hi)
-    share_note = (f"s ~ U[{s_lo:.3f}, {s_hi:.3f}]: lower = CISWRA agriculture share lo ({ag['url'] if ag else 'n/a'}); "
-                  f"upper = row-crop share of land-based load if non-row-crop land (grass, hay, small grain, forest, other; CDL) "
-                  f"leaks eps={eps:.2f} of row-crop land per ha, times (1 - point share); {point_src}. "
-                  f"Per-basin upper: {', '.join(f'{k} {v:.3f}' for k, v in s_hi_b.items())}; the smaller one is used for both.")
+    share_note = (f"s ~ U[{s_lo:.3f}, {s_hi:.3f}] = (1 - point share) x row-crop share of the land-based load, with non-row-crop land "
+                  f"(grass, hay, small grain, forest, other; CDL 2016-2025) leaking per ha either as much as row crop (lower bound) or "
+                  f"{eps_land:.2f} of it (upper bound; {eps_land_src}); {point_src}. "
+                  f"Per-basin lower/upper: {', '.join(f'{k} {s_lo_b[k]:.3f}/{s_hi_b[k]:.3f}' for k in SITES)}; the smaller of each is used for both. "
+                  f"(CISWRA's '70-80% from agriculture' is consistent but only secondary, so not used.)")
     log("  row-crop share of river load:", share_note)
 
     # ---------------- 3. HUC-12 index
@@ -488,6 +533,39 @@ def main():
         cov = pd.concat([cov, fill[[c for c in fill.columns if c in cov.columns]]], ignore_index=True)
     log(f"  MODIS composites + {n_hls_fill} HLS gap-fill rows")
     BH, BHfilled = modis_daily(cov, dates, bias_doy, huc_list, basin_of)
+
+    # ---------------- field inputs (needed here to calibrate the living-cover factor)
+    fl = pd.read_parquet(PROC / "fields.parquet")
+    fy = pd.read_parquet(PROC / "field_year.parquet")
+    h = pd.read_parquet(PROC / "hls_field_ts.parquet")
+    h = h[h["clear"]].copy()
+    h["date"] = pd.to_datetime(h["date"])
+    spikes = hls_spike_scenes(h)
+    h = h[~h["date"].dt.strftime("%Y-%m-%d").isin(spikes)]
+    log("  dropped spike scenes:", spikes)
+    fids = list(fl["field_id"])
+    fsel = (dates >= "2020-01-01") & (dates <= "2025-12-31")
+    fdates = dates[fsel]
+    BF = hls_daily(h, fids, fdates)
+    fh = np.array([hidx[x] for x in fl["huc12"]])
+    BHf = BH[:, fsel][fh]                                   # fallback MODIS (HLS-corrected) of the field's HUC-12
+    fallback = np.isnan(BF)
+    BF = np.where(fallback, BHf, BF)
+    # weather at the field: bilinear interpolation between the 4 surrounding POWER cell centres (MERRA-2 grid
+    # 0.5 x 0.625 deg). Nearest-cell lookup put an artificial step at the 42.25 N cell edge through two HUC-12s.
+    WF = bilinear_weights(fl["lon"].to_numpy(float), fl["lat"].to_numpy(float), cells, cidx)
+    DF = WF @ DR[:, fsel]
+
+    # ---------------- living-cover factor eps, calibrated so an HLS-observed cover winter cuts the crop-year leak by the
+    # INRS 2024 rye efficiency (same prior the S1 card uses) -> the index and the strategy cards agree.
+    rye_f = facts.get("inrs_cover_rye_pct", {})
+    upd = rye_f.get("inrs_2024_update") if isinstance(rye_f.get("inrs_2024_update"), dict) else None
+    rye_target = float(upd["value"] if upd else rye_f.get("value", 28)) / 100.0
+    eps, eps_diag = calibrate_cover_eps(BF, DF, fdates, fh, fy, fids, rye_target)
+    eps_src = (f"calibrated: HLS-observed winter-cover field-years (field_year.winter_cover, crop years 2021-2025, n={eps_diag['n_cover_fieldyears']}) "
+               f"vs uncovered fields in the same HUC-12 and crop year, drainage differences divided out; eps chosen so the mean modelled cut = "
+               f"INRS 2024 rye {rye_target:.0%}. Cut at eps=0.15 (CRP-based, previous version) was {eps_diag['cut_at_0.15']:.0%}.")
+    log(f"  living-cover factor eps = {eps:.3f} ({eps_diag})")
     JH = (BH + eps * (1 - BH)) * DH                # cover x drainage (mm-equivalent), per row-crop ha-day
     yr = dates.year.to_numpy()
     mo = dates.month.to_numpy()
@@ -575,7 +653,7 @@ def main():
     }
     # eps sensitivity
     sens = {}
-    for e in [0.0, 0.15, 0.3, 0.5, 1.0]:
+    for e in sorted({0.0, 0.15, 0.3, 0.5, 1.0, round(eps, 3)}):
         JHe = (BH + e * (1 - BH)) * DH
         xs = []
         for b in SITES:
@@ -654,26 +732,6 @@ def main():
 
     # ---------------- 5. fields
     log("fields: HLS daily bare x drainage x soil")
-    fl = pd.read_parquet(PROC / "fields.parquet")
-    fy = pd.read_parquet(PROC / "field_year.parquet")
-    h = pd.read_parquet(PROC / "hls_field_ts.parquet")
-    h = h[h["clear"]].copy()
-    h["date"] = pd.to_datetime(h["date"])
-    spikes = hls_spike_scenes(h)
-    h = h[~h["date"].dt.strftime("%Y-%m-%d").isin(spikes)]
-    log("  dropped spike scenes:", spikes)
-    fids = list(fl["field_id"])
-    fsel = (dates >= "2020-01-01") & (dates <= "2025-12-31")
-    fdates = dates[fsel]
-    BF = hls_daily(h, fids, fdates)
-    fh = np.array([hidx[x] for x in fl["huc12"]])
-    BHf = BH[:, fsel][fh]                                   # fallback MODIS (HLS-corrected) of the field's HUC-12
-    fallback = np.isnan(BF)
-    BF = np.where(fallback, BHf, BF)
-    # weather at the field: bilinear interpolation between the 4 surrounding POWER cell centres (MERRA-2 grid
-    # 0.5 x 0.625 deg). Nearest-cell lookup put an artificial step at the 42.25 N cell edge through two HUC-12s.
-    WF = bilinear_weights(fl["lon"].to_numpy(float), fl["lat"].to_numpy(float), cells, cidx)
-    DF = WF @ DR[:, fsel]
     JF = (BF + eps * (1 - BF)) * DF                         # [field, day]
     fyr = fdates.year.to_numpy()
     fmo = fdates.month.to_numpy()
@@ -702,6 +760,7 @@ def main():
     err = 1.0 + z_d[:, None] * sd_rel[fh][:, yi_d].T
     draws = draws * s_d[:, None] * np.clip(err, 0.2, None) * KG_HA_TO_LB_AC
     q = np.quantile(draws, [0.1, 0.5, 0.9], axis=0)
+    dmean = draws.mean(axis=0)                                # long-run mean lb N/ac/yr = the headline
     qf = np.quantile(draws, (np.arange(N_Q) + 0.5) / N_Q, axis=0).T.astype(np.float32)   # [field, N_Q]
 
     # monthly calendar (2020-2025 averages)
@@ -772,8 +831,9 @@ def main():
         fs[f"lbN_ac_{y}"] = lb_c[yi]
     fs["lbN_ac_mean_central"] = lb_c.mean(axis=0)
     fs["leak_lbN_ac_yr_p10"], fs["leak_lbN_ac_yr_p50"], fs["leak_lbN_ac_yr_p90"] = q
-    fs["leak_index"] = fs["lbN_ac_mean_central"] / fs["lbN_ac_mean_central"].mean()     # 1 = focus-area average
-    fs["leak_pctile"] = (fs["leak_lbN_ac_yr_p50"].rank(pct=True, method="average") * 100).round().astype(int).clip(0, 100)
+    fs["leak_lbN_ac_yr_mean"] = dmean
+    fs["leak_index"] = fs["leak_lbN_ac_yr_mean"] / fs["leak_lbN_ac_yr_mean"].mean()     # 1 = focus-area average (mean basis)
+    fs["leak_pctile"] = (fs["leak_lbN_ac_yr_mean"].rank(pct=True, method="average") * 100).round().astype(int).clip(0, 100)
     fs["hls_index_rel_huc"] = REL[M_C, CAL_YEARS.index(2025)]
     fs["hls_fallback_share"] = fallback.mean(axis=1)
     fs["frac_leak_oct_may"] = frac_octmay
@@ -799,7 +859,7 @@ def main():
         feats.append({"type": "Feature", "properties": {
             "field_id": r.field_id, "huc12": r.huc12, "seq": r.seq, "leak_index": round(r.leak_index, 3),
             "leak_pctile": int(r.leak_pctile), "drainage": r.drainage, "slope_pct": round(r.slope_pct, 2),
-            "lbN_ac_yr_p50": round(r.leak_lbN_ac_yr_p50, 1)},
+            "lbN_ac_yr_mean": round(r.leak_lbN_ac_yr_mean, 1), "lbN_ac_yr_p50": round(r.leak_lbN_ac_yr_p50, 1)},
             "geometry": {"type": "Polygon", "coordinates": [ring]}})
     (OUT / "fields.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
 
@@ -808,7 +868,8 @@ def main():
     fmean_by_huc = fs.groupby("huc12")["lbN_ac_mean_central"].mean()
     chk.update({
         "drainage_fit": dfit,
-        "eps_living_cover_leak_fraction": {"value": round(eps, 3), "source": eps_src},
+        "eps_living_cover_leak_fraction": {"value": round(eps, 3), "source": eps_src, "diagnostics": eps_diag},
+        "eps_nonrowcrop_land_leak_fraction": {"value": round(eps_land, 3), "source": eps_land_src},
         "rowcrop_share_of_river_load": {"lo": round(s_lo, 3), "hi": round(s_hi, 3), "central": round(s_c, 3), "note": share_note},
         "tile_multiplier_m": {"grid": M_GRID.tolist(), "central": float(M_GRID[M_C]),
                               "source": "U[1, 4]: 1 = no difference (null); 4 = upper end implied by McIsaac & Hu (2004), cited in David, Drinkwater & McIsaac (2010) J. Environ. Qual. 39:1657-1667: riverine nitrate export = 100% of net N inputs in tile-drained central Illinois vs 25-37% in the non-tiled south (ratio 2.7-4). Our inference, not a number stated by the authors."},
@@ -819,12 +880,13 @@ def main():
         "modis_hls_gapfill_rows_used": n_hls_fill,
         "fields": {
             "n": len(fs),
+            "lbN_ac_yr_mean_distribution": {k: round(float(v), 1) for k, v in zip(["p5", "p10", "p25", "p50", "p75", "p90", "p95"], np.percentile(fs["leak_lbN_ac_yr_mean"], [5, 10, 25, 50, 75, 90, 95]))},
             "lbN_ac_yr_p50_distribution": {k: round(float(v), 1) for k, v in zip(["p5", "p10", "p25", "p50", "p75", "p90", "p95"], np.percentile(fs["leak_lbN_ac_yr_p50"], [5, 10, 25, 50, 75, 90, 95]))},
             "lbN_ac_yr_central_by_year_focus_mean": {int(y): round(float(lb_c[yi].mean()), 1) for yi, y in enumerate(CAL_YEARS)},
             "hls_fallback_share_mean": round(float(fallback.mean()), 4),
             "calendar_interp_only_months_share_by_month": {m + 1: round(float(cal["interp_only"][:, m].mean()), 3) for m in range(12)},
-            "poorly_vs_well_p50_ratio": round(float(fs[fs.drainage.str.contains("Poorly|Very poorly", regex=True) & ~fs.drainage.str.contains("Somewhat")]["leak_lbN_ac_yr_p50"].median()
-                                                   / fs[fs.drainage.isin(["Well drained", "Moderately well drained"])]["leak_lbN_ac_yr_p50"].median()), 3),
+            "poorly_vs_well_p50_ratio": round(float(fs[fs.drainage.str.contains("Poorly|Very poorly", regex=True) & ~fs.drainage.str.contains("Somewhat")]["leak_lbN_ac_yr_mean"].median()
+                                                   / fs[fs.drainage.isin(["Well drained", "Moderately well drained"])]["leak_lbN_ac_yr_mean"].median()), 3),
             "field_mean_vs_huc12_mean_check_max_abs_rel_diff": round(float(np.max(np.abs(fmean_by_huc / huc_focus.set_index("huc12")["lbN_ac_mean"].reindex(fmean_by_huc.index) - 1))), 4),
             "hls_vs_modis_annual_index_focus": {int(y): round(float(JFy[:, FIELD_YEARS.index(y)].mean() / JHy[[hidx[x] for x in huc_focus["huc12"]], CAL_YEARS.index(y)].mean()), 3) for y in FIELD_YEARS},
         },
@@ -842,6 +904,7 @@ def main():
     for c in calib:
         log("  calib", c["basin"], c["year"], c["load_t"], "t;", c["kgN_ha_rowcrop_from_rowcrop"], "kg/ha; filled", c["filled_share"], "sd", c["load_sd_rel"])
     log("fields p50 distribution:", chk["fields"]["lbN_ac_yr_p50_distribution"])
+    log("fields mean distribution:", chk["fields"]["lbN_ac_yr_mean_distribution"])
     log("fields by year:", chk["fields"]["lbN_ac_yr_central_by_year_focus_mean"])
 
 

@@ -1404,6 +1404,67 @@
           "quote": "They asked for a 50% reduction on June 11 before putting the temporary ban in effect on June 12 ."
         }
       ]
+    },
+    {
+      "id": "strips_cost_usd_treated_ac",
+      "claim": "ISU STRIPS estimates prairie strips cost about $26-33 per treated crop acre per year (one acre of prairie treats about nine acres of crop), before CRP payments; most of the cost is land rent / foregone revenue.",
+      "value": null,
+      "unit": "USD per treated crop acre per year",
+      "range": {
+        "lo": 26,
+        "hi": 33
+      },
+      "year": null,
+      "source_title": "STRIPS: Chapter 5, Economics",
+      "publisher": "Iowa State University STRIPS team",
+      "url": "https://strips.nrem.iastate.edu/chapter-5-economics",
+      "date_published": null,
+      "quote": "Per treated crop acre $33 $30 $26",
+      "verification": "secondary",
+      "source_kind": "primary_publisher",
+      "notes": "Added by fields_model (m06) on 2026-11-14 from web-search extraction only: the page host is not reachable from this session (DNS blocked), so wording and numbers were not read on the original. Re-check before a slide. Search extraction also reports $24-35 (2013 study) and $28-39 (2017 edition); land-quality classes give $33/$30/$26. Opportunity cost is 'up to 82%' of the total. Possibly from ISU Extension PDF https://store.extension.iastate.edu/product/15222.pdf.",
+      "checked_at": "2026-11-14"
+    },
+    {
+      "id": "strips_crp_cost_reduction_pct",
+      "claim": "Under a 15-year continuous CRP contract (CP-43: 55% cost share, 90% annual rent, signing bonus 32.5% of rent), ISU STRIPS estimates the cost of prairie strips falls by about 75%, to about $7-8 per treated crop acre per year.",
+      "value": 75,
+      "unit": "% cost reduction",
+      "range": {
+        "lo": 7,
+        "hi": 8,
+        "unit": "USD per treated crop acre per year after CRP"
+      },
+      "year": null,
+      "source_title": "STRIPS: Chapter 5, Economics",
+      "publisher": "Iowa State University STRIPS team",
+      "url": "https://strips.nrem.iastate.edu/chapter-5-economics",
+      "date_published": null,
+      "quote": "approximately 75% reduction, thus costing about $8 per year per crop acre treated with prairie",
+      "verification": "secondary",
+      "source_kind": "primary_publisher",
+      "notes": "Added by fields_model (m06) on 2026-11-14 from web-search extraction only: the page host is not reachable from this session (DNS blocked), so wording and numbers were not read on the original. Re-check before a slide.",
+      "checked_at": "2026-11-14"
+    },
+    {
+      "id": "tile_delivery_mcisaac_hu",
+      "claim": "In tile-drained central Illinois, riverine nitrate-N export equalled net N inputs (NNI); in non-tiled southern Illinois it was 25-37% of NNI (McIsaac & Hu 2004, cited in David, Drinkwater & McIsaac 2010, J. Environ. Qual. 39:1657-1667).",
+      "value": null,
+      "unit": "% of NNI exported by rivers (non-tiled region)",
+      "range": {
+        "lo": 25,
+        "hi": 37
+      },
+      "year": 2010,
+      "source_title": "Sources of Nitrate Yields in the Mississippi River Basin (David, Drinkwater, McIsaac 2010, JEQ 39(5):1657-1667)",
+      "publisher": "Journal of Environmental Quality",
+      "url": "https://opensource.ncsa.illinois.edu/confluence/download/attachments/94832692/David_2010_JEQ_39_1657-1667.pdf?api=v2",
+      "date_published": "2010-09",
+      "quote": "In the tile-drained region (central Illinois) NNI was equal to riverine nitrate N export, whereas in the non-tiled region (southern Illinois) riverine export was between 25 and 37% of NNI.",
+      "verification": "secondary",
+      "source_kind": "peer_reviewed",
+      "notes": "Added by fields_model (m06) on 2026-11-14 from web-search extraction only: the page host is not reachable from this session (DNS blocked), so wording and numbers were not read on the original. Re-check before a slide. Derived (our arithmetic, used as the upper end of the field model's tile-delivery multiplier m ~ U[1, 4]): 100%/37% to 100%/25% = 2.7-4x. The paper also reports tile drainage explained 17% of spatial variation in winter-spring nitrate yield. Catalog records: https://agris.fao.org/search/en/records/65df4fcdb766d82b18012752",
+      "checked_at": "2026-11-14"
     }
   ]
 }

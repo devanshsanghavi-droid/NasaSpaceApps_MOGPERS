@@ -1,209 +1,206 @@
 # Module `fields_model`: field leak score, HUC-12 hotspot index, river calibration, farmer strategies
 
-Scripts (re-runnable end to end, no network, about 1.5 min in total):
+Scripts (re-runnable end to end, no network, about 30 s each):
 ```
-python3 model/m05_fields.py       # drainage fit, loads, HUC-12 index, calibration, validation, field scores
+python3 model/m05_fields.py       # drainage fit, loads, living-cover calibration, HUC-12 index, river calibration, validation, field scores
 python3 model/m06_strategies.py   # strategy cards + per-field Monte Carlo of N kept
 ```
 Every number comes from `data/processed/*`, `docs/facts.json` (read by id at run time) and
-`shared/evidence/evidence_priors.json`. Nothing is copied by hand into the code except model settings: thresholds, grids and seeds.
+`shared/evidence/evidence_priors.json`. The code only adds model settings: thresholds, grids and seeds.
 
-Outputs (model/out/):
+> **What the model does and does not show.** The model places leak in time and space where bare ground meets wet soil, and fields sum to the measured river load. How much each practice cuts nitrate comes from Iowa trials (INRS 2024), not from our satellite data. Year-to-year load is explained mostly by water. The river does **not** validate practice effects.
+
+**Headline statistic = the long-run mean (lb N/acre/yr).** p10-p90 is the single-year spread ("in 8 of 10 years"); p50 is one typical year. A one-year median is misleading for a practice that acts only in some years: rye before soybean acts in about half the years. `leak_pctile` and `leak_index` use the mean.
+
+## Outputs (model/out/)
 
 | file | content |
 |---|---|
-| `field_scores.parquet` | 1,769 rows. field_id, huc12, seq, crop_2025, drainage, poorly_share, slope_pct; `lbN_ac_<2016..2025>` (central calibrated leak); `leak_lbN_ac_yr_p10/p50/p90`; `leak_index` (1 = focus-area average); `leak_pctile` (0-100); calendar list columns `cal_*` (12 months); `frac_leak_oct_may`, `frac_leak_apr_jun`; `freq_soy_after_corn_2016_2025`; `hls_fallback_share`; `leak_q200` (200-point quantile function of lb N/ac/yr, input to m06); cover_years_json; ndvi_dates/vals; polygon |
-| `huc12_scores.parquet` | 290 HUC-12s. kgN_ha_<year> per row-crop ha, kgN_ha_mean, lbN_ac_mean, contrib_t_mean, share_of_basin_leak (2016-2025 mean), share_of_basin_leak_recent (2023-25), share_of_basin_area, leak_index (1 = basin average per row-crop ha), rank (1 = largest share in its basin), bare_days_wet, row_crop_share, poorly_drained_share, modis_filled_share_recent |
-| `huc12_props.json` | `{huc12: props}` in the web `huc12.geojson` contract shape, plus extras `lbN_ac_yr`, `share_of_basin_leak_recent`, `n_in_basin` |
-| `fields.geojson` | web contract: field_id, huc12, seq, leak_index, leak_pctile, drainage, slope_pct (+ `lbN_ac_yr_p50`) |
-| `field_detail.json` | web contract, a single file (5.0 MB, 1,769 fields). Extras: `leak.lbN_ac_yr.mean`, `leak.by_year`, `calendar.leak_share`, `calendar.interp_only` (bool per month: no clear HLS observation in ≥ half of 2020-2025, so grey it out) and `calendar.interp_only_share`, `strategies.<S>.*.mean`, `strategies.S1.note` (fields without soybean-after-corn years), `why_field` |
-| `strategies.json` | web contract (S0-S3) + `method`, `units`; `cost_usd_ac` carries `basis` and `source`; S3 cost has `verification` |
-| `basin_index_check.json` | drainage fit, loads + gap-fill cross-validation, calibration table, validation check, sensitivities, input mtimes |
+| `field_scores.parquet` | 1,769 fields, one row each. Leak values: `leak_lbN_ac_yr_mean` (headline), `leak_lbN_ac_yr_p10/p50/p90`, `lbN_ac_<2016..2025>` (central). Ranking: `leak_index` (mean ÷ focus-area mean), `leak_pctile` (0-100, on the mean). Calendar: `cal_*` (12-month lists incl. `cal_interp_only`). Rotation: `frac_leak_oct_may`, `frac_leak_apr_jun`, `freq_soy_after_corn_2016_2025`. Also `hls_fallback_share` and `leak_q200` (quantile function for m06) |
+| `huc12_scores.parquet` | 290 HUC-12s. kgN_ha_<year> per row-crop ha, kgN_ha_mean, lbN_ac_mean, contrib_t_mean, share_of_basin_leak (2016-25 mean), share_of_basin_leak_recent (2023-25), share_of_basin_area, leak_index (1 = basin average per row-crop ha), rank, bare_days_wet, row_crop_share, poorly_drained_share |
+| `huc12_props.json` | `{huc12: props}` in the web `huc12.geojson` contract shape, plus `lbN_ac_yr`, `share_of_basin_leak_recent`, `n_in_basin` |
+| `fields.geojson` | contract props + `lbN_ac_yr_mean` (headline) and `lbN_ac_yr_p50` |
+| `field_detail/<huc12>.json` | web contract, split into 10 files (0.23-0.86 MB each, 5.0 MB total). The single `field_detail.json` is written only if it is ≤ 3 MB, which it is not, so it is removed. Extras are listed below the table |
+| `strategies.json` | web contract S0-S3 + `fert_value_note` per card, `method` (opens with the sentence in the box above), `units.headline`, `efficiency_draws`. `cost_usd_ac` has `basis` and `source` |
+| `basin_index_check.json` | drainage fit, loads + gap-fill cross-validation, living-cover calibration, calibration table, validation check, sensitivities, input mtimes |
+
+Extras in `field_detail`:
+- `leak.lbN_ac_yr.mean`, `leak.wet_year_2016`, `leak.by_year`;
+- `strategies.<S>.lbN_kept_ac.mean` and `fert_value_usd_ac.mean`;
+- `strategies.<S>.wet_year_2016.lbN_kept_ac{mean, p10, p90}`;
+- `strategies.S1.note` (fields with no soybean-after-corn years);
+- `calendar.leak_share`, `calendar.leak_lb_ac` (= leak_share × mean, lb/ac per month), `calendar.interp_only` (bool per month; grey it out) and `calendar.interp_only_share`;
+- `why_field`;
+- `ndvi_recent` thinned evenly to ≤ 40 points, 2 decimals.
 
 ## 1. Daily drainage driver (per NASA POWER cell)
 `D = (liquid rain + snowmelt) × clip((GWETROOT_yesterday − w0)/dw, 0, 1)`, in mm/day.
+- **Liquid rain:** PRECTOTCORR − PRECSNOLAND.
+- **Snowmelt:** a snow-water store fills with snowfall and releases water in proportion to the day's relative loss of snow depth (SNODP), so no snow density is assumed.
+- **Missing snowfall:** PRECSNOLAND is missing from 2026-10-01; precipitation then counts as snow when T2M ≤ 0 °C.
 
-How the inputs are built:
-- **Liquid water:** liquid rain is `PRECTOTCORR − PRECSNOLAND`.
-- **Snowmelt:** snowfall fills a snow-water store. The store releases water in proportion to the day's relative loss of snow depth (`SNODP`), so no snow density has to be assumed.
-- **Missing snowfall:** from 2026-10-01, PRECSNOLAND is missing; precipitation then counts as snow when T2M ≤ 0 °C.
+Why the wetness gate: tiles drain only near or above field capacity, so rain on dry soil refills storage instead (the 2020-23 drought).
 
-Why this functional form:
-- Tiles and shallow subsurface flow drain only when the root zone is near or above field capacity.
-- Rain on dry soil refills storage and produces almost no drainage, which is the 2020-23 drought story.
-- A ramp on yesterday's root-zone wetness is the simplest form with that threshold behaviour.
-
-**Fitted, not assumed.** w0, dw and a routing constant (used only for the fit) were grid-searched (896 combinations). The target was **measured monthly runoff** (USGS flow ÷ basin area, 2016-2025, both basins). Result: **w0 = 0.45, dw = 0.10, k = 10 d**.
+**Fitted to measured monthly runoff** (USGS flow ÷ basin area, 2016-2025, 896-point grid): **w0 = 0.45, dw = 0.10**. The routing constant k = 10 d is used only in the fit.
 
 | Pearson r vs measured runoff | monthly, Raccoon | monthly, Des Moines | annual, Raccoon | annual, Des Moines |
 |---|---|---|---|---|
-| wet-soil drainage driver | 0.91 | 0.91 | 0.95 | 0.96 |
-| all rain + melt (no wetness gate) | 0.64 | 0.70 | 0.85 | 0.92 |
+| wet-soil gate | 0.91 | 0.91 | 0.95 | 0.96 |
+| no gate (all rain + melt) | 0.64 | 0.70 | 0.85 | 0.92 |
 
 ## 2. Measured annual loads (calibration target)
-Daily load = no3_mgL × q_cfs × 2.4466.
+**Gap filling.** Load = no3_mgL × q_cfs × 2.4466. Gaps are filled with a regression of ln C on ln Q, ln Q², two seasonal harmonics and a calendar-year level, plus residuals interpolated linearly in time.
 
-**Gap filling.** On observed days, ln C is regressed on ln Q, ln Q², two seasonal harmonics and a calendar-year level. The residuals are then interpolated linearly in time between observed days.
-- Short gaps therefore behave like interpolating the concentration.
-- Long gaps borrow the flow and season signal.
-- Missing flow (0.2% of Des Moines days) is interpolated in time.
+**Gap-fill uncertainty from cross-validation.** Hidden blocks of 3-90 days had a load-normalised RMSE of 7-34%. Errors are combined per year by gap length.
+- Annual SD is ≤ 2.5%, except Des Moines 2016 at 7.9% (Jan-Mar 2016 missing; 32% of that year's load is filled).
+- Sensor and rating-curve error are not included.
 
-**Gap-fill uncertainty from cross-validation.** Blocks of 3-90 observed days were hidden and refilled, 120 blocks per length per site. The load-normalised RMSE was 7-34%. Each year's gaps get that error by gap length, combined as a root-sum-square.
-- The filled share is 0.1-13% of the annual load, except **Des Moines 2016 (32%: no nitrate data Jan-Mar 2016)**.
-- Resulting annual load SD is ≤ 2.5%, except Des Moines 2016 at 7.9%.
-- Sensor and rating-curve error are **not** included.
+**Share of the river load from row-crop land, s ~ U[0.759, 0.892].** Both bounds come from INRS (primary) and CDL:
 
-**Share of the river load from row-crop land, s ~ U[0.70, 0.89].**
-- Lower bound: CISWRA's "70-80% from agriculture" (lo; secondary).
-- Upper bound: INRS nonpoint share 92% (primary), so point sources ≈ 8%. Non-row-crop land (grass, hay, small grain, forest, other; CDL) is assumed to leak ε = 15% of row-crop land per ha (see §3). That gives 0.89 for the Raccoon and 0.90 for the Des Moines; the smaller value is used for both.
+s = (1 − point share) × row-crop share of the land-based load
 
-**Calibration table.** Values are kg N per row-crop ha per year from row-crop land, central s = 0.80 (lb/ac in brackets). The lo-hi range is ×0.88 to ×1.12.
+- Point sources are 8% (= 1 − INRS nonpoint 92%).
+- Non-row-crop land (grass, hay, small grain, forest, other) leaks per ha either as much as row crop (lower bound) or 15% of it (= 1 − INRS CRP 85%; upper bound).
+- CISWRA's "70-80% from agriculture" (secondary) is no longer used.
+
+**Calibration table.** kg N per row-crop ha per year from row-crop land, central s = 0.825 (lb/ac in brackets). The lo-hi range is ×0.92 to ×1.08.
 
 | year | Raccoon (05484500) | Des Moines (05482000) |
 |---|---|---|
-| 2016 | 37.1 (33.1) | 43.1 (38.5) |
-| 2017 | 21.9 (19.5) | 22.9 (20.4) |
-| 2018 | 30.6 (27.3) | 35.0 (31.2) |
-| 2019 | 27.3 (24.4) | 24.9 (22.2) |
-| 2020 | 10.7 (9.5) | 13.7 (12.3) |
-| 2021 | 1.3 (1.2) | 1.5 (1.3) |
-| 2022 | 9.0 (8.0) | 7.7 (6.9) |
-| 2023 | 3.2 (2.9) | 4.7 (4.2) |
-| 2024 | 15.2 (13.6) | 27.7 (24.7) |
-| 2025 | 22.3 (19.9) | 23.4 (20.9) |
-| mean | 17.9 (15.9) | 20.5 (18.3) |
+| 2016 | 38.5 (34.4) | 44.7 (39.9) |
+| 2017 | 22.7 (20.2) | 23.7 (21.2) |
+| 2018 | 31.7 (28.3) | 36.3 (32.4) |
+| 2019 | 28.3 (25.3) | 25.8 (23.0) |
+| 2020 | 11.0 (9.9) | 14.3 (12.7) |
+| 2021 | 1.4 (1.2) | 1.5 (1.4) |
+| 2022 | 9.3 (8.3) | 8.0 (7.2) |
+| 2023 | 3.3 (3.0) | 4.9 (4.4) |
+| 2024 | 15.8 (14.1) | 28.7 (25.6) |
+| 2025 | 23.1 (20.6) | 24.3 (21.7) |
+| mean | 18.5 (16.5) | 21.2 (18.9) |
 
-How to read these numbers:
-- These are loads **delivered to the gauges**. Nitrate removed in ditches, streams, and (for the Des Moines) Saylorville Reservoir is not counted. Edge-of-field losses are therefore larger.
-- That is consistent with ISU's "about 30 lb N/ac in an average year, 15-50" (facts.json) once the 2020-23 drought years are included.
+These are loads **delivered to the gauges**. Nitrate removed in ditches, streams and Saylorville is not counted, so edge-of-field losses are larger. That fits ISU's "about 30 lb N/ac, 15-50" once the drought years are included.
 
-## 3. Leak index structure (HUC-12 and field)
+## 3. Leak index
 `daily leak = [bare + ε·(1 − bare)] × D × [1 + (m − 1)·poorly_drained_share]`, calibrated per basin and year.
 
 | factor | value | source / estimation |
 |---|---|---|
-| bare (HUC-12) | MODIS 13Q1 bare share on row-crop pixels | MODIS living share minus the MODIS−HLS monthly bias (focus area, `hls_vs_modis.json`, interpolated by day of year; May bias 0.34). MODIS is used as a relative index calibrated to HLS, as the orchestrator asked. Gaps > 60 d use HUC-12 day-of-year climatology. The Jul-Nov 2025 PC gap is filled with `cover_hls_huc12_8day.parquet` (HLS quantile-mapped to MODIS, 4,913 rows) |
-| bare (field) | 1 − interpolated HLS `live_px_share` (share of the cell's pixels with NDVI ≥ 0.30) | Linear between clear observations, gaps ≤ 120 d (as in the fields module). Longer gaps (winter snow/cloud, and Jan-mid-Feb 2020) fall back to the field's HUC-12 corrected-MODIS bare: 4.1% of field-days. A generic spring spike-scene filter is in the code; it dropped 0 scenes on the fixed data (it dropped 2021-05-09, 2024-05-03 and 2024-05-24 on the old data) |
-| ε, leak under living cover | 0.15 | 1 − INRS land-retirement (CRP) reduction 85% (`inrs_crp_pct`) |
-| m, tile delivery | U[1, 4] grid, central 2.5 | Poorly and very poorly drained Iowa row-crop land is tile drained. The upper end comes from McIsaac & Hu (2004), cited by David, Drinkwater & McIsaac (2010, JEQ 39:1657): riverine nitrate export = 100% of net N inputs in tiled central Illinois vs 25-37% in the non-tiled south. The 2.7-4× ratio is **our inference**; 1 = no difference. HUC-12 share ranking vs m: Spearman ≥ 0.975 |
-| crop year | 1 for corn and soybean | facts.json `isu_lbN_acre_yr` note: "Corn and soybean losses are similar". Not estimated; 20 basin-years cannot separate it |
-| weather at a field | bilinear between the 4 surrounding POWER cell centres | Nearest-cell lookup created a false 5× step at the 42.25° N cell edge inside two focus HUC-12s |
+| bare, HUC-12 | MODIS 13Q1 bare share on row-crop pixels | MODIS is used as a relative index on the HLS scale: the monthly MODIS−HLS bias (`hls_vs_modis.json`, by day of year; May 0.34) is subtracted. Gaps > 60 d use HUC-12 day-of-year climatology. The Jul-Nov 2025 gap uses `cover_hls_huc12_8day.parquet` (HLS quantile-mapped to MODIS, 4,913 rows) |
+| bare, field | 1 − interpolated HLS `live_px_share` | Linear between clear observations, gaps ≤ 120 d. Otherwise the HUC-12 corrected MODIS is used (4.1% of field-days, mostly winter snow). A generic spring spike-scene filter drops 0 scenes on the fixed data |
+| **ε, living-cover factor** | **0.232, calibrated** | Fields with **HLS-observed winter cover** (`field_year.winter_cover`, crop years 2021-25, n = 187 field-years) are compared with uncovered fields in the same HUC-12 and crop year, with drainage differences divided out. ε is set so the mean modelled crop-year cut equals the **INRS 2024 rye efficiency, 28%**, the prior the S1 card uses. With the previous ε = 0.15 (CRP-based) the cut was 32%; with ε = 0 it is 41%. Index and cards are now consistent |
+| m, tile delivery | U[1, 4] grid, central 2.5 | 1 = no difference. 4 = upper end implied by McIsaac & Hu (2004) via David et al. (2010): river export = 100% of net N inputs in tiled central Illinois vs 25-37% in the non-tiled south. That fact is now `tile_delivery_mcisaac_hu` (secondary); the 2.7-4× ratio is our arithmetic. HUC-12 share ranking vs m: Spearman ≥ 0.975 |
+| crop year | 1 for corn and soybean | facts.json `isu_lbN_acre_yr` note: "Corn and soybean losses are similar" |
+| weather at a field | bilinear between the 4 surrounding POWER cell centres | Nearest-cell lookup created a false step at the 42.25° N cell edge |
 
-**Calibration.** For each basin and year, HUC-12 kg/ha = k × index, so that Σ(kg/ha × row-crop ha) = s × measured load. Fields are then scaled **within their HUC-12**:
+**Calibration.** HUC-12 kg/ha = k × index, so that Σ(kg/ha × row-crop ha) = s × measured load, per basin and year. Fields are scaled within their HUC-12:
 
 field kg/ha(y) = HUC-12 kg/ha(y) × field index(y) / mean field index in that HUC-12(y)
 
-This removes the HLS-vs-MODIS level difference: the HLS index is 1.06-1.36× the MODIS index. For 2016-2019, before HLS, each field's mean 2020-25 relative index is used.
+The HLS index is 1.06-1.36× the MODIS index. For 2016-19 each field's mean 2020-25 relative index is used.
 
-**Field uncertainty (p10/p50/p90).** A Monte Carlo of 4,000 draws over four sources:
-- the weather year, uniform 2016-2025;
-- s ~ U[0.70, 0.89];
-- the gap-fill load error, normal with the basin-year SD;
-- m on its grid.
+**Field uncertainty.** A Monte Carlo of 4,000 draws over the weather year (uniform 2016-2025), s, the load gap-fill error and m.
 
-Year-to-year weather dominates. **Median field: p10 0.8, p50 10.5, p90 29.3 lb N/ac/yr; long-run mean 13.2.**
+| lb N/ac/yr | value |
+|---|---|
+| median field, long-run mean (headline) | **13.7** |
+| median field, single-year p10 / p50 / p90 | 0.8 / 10.8 / 30.6 |
+| field means, p5-p95 across fields | 8.8-20.0 |
+| field means, median across fields | 13.7 |
+| 2016 wet year, median field | 33.1 |
 
-Spread of field p50s:
+Poorly drained fields leak 1.35× more than well-drained ones.
 
-| percentile | p5 | p25 | median | p75 | p95 |
-|---|---|---|---|---|---|
-| field p50, lb N/ac/yr | 6.5 | 8.8 | 10.5 | 12.6 | 15.9 |
-
-Poorly drained fields: median p50 is 1.34× that of well and moderately well drained fields.
-
-**Leak calendar (2020-2025 means).**
-- `bare_frac`: HLS.
-- `rain_mm`, `storm_days` (days ≥ 25 mm) and `wetness` (GWETROOT 0-1): bilinear POWER.
-- `leak_risk`: monthly leak index ÷ the field's maximum month.
-
-On the average field, 93% of the leak falls Oct-May and 54% Apr-Jun.
-
-**Interpolation-only months.** `interp_only[m]` is true when the field had no clear HLS observation in that month (`field_month.interp_only`, or no row, as in Jan 2020) in at least half of 2020-2025. Share of fields flagged: Jan 64%, Feb 72%, Dec 55%, other months ≈ 0. Mar-Jun, the main leak window, is observed.
+**Calendar (2020-25 means).**
+- `bare_frac` comes from HLS; `rain_mm`, `storm_days` (≥ 25 mm) and `wetness` (GWETROOT) from bilinear POWER.
+- `leak_risk` = month ÷ the field's maximum month.
+- `leak_lb_ac` = leak_share × the field's mean (magnitude).
+- `interp_only[m]` = no clear HLS observation in that month in ≥ half of 2020-25. Fields flagged: Jan 64%, Feb 72%, Dec 55%, other months ≈ 0.
+- On the average field, 91% of the leak falls Oct-May and 54% Apr-Jun.
 
 **HUC-12 outputs.**
-- `share_of_basin_leak` and `rank` use the 2016-2025 mean (the most climate-representative); 2023-25 values are in `*_recent`.
-- `bare_days_wet` = Σ bare share on days with D ≥ 1 mm, Mar-Jun + Sep-Dec, averaged over 2023-2025.
+- `share_of_basin_leak` and `rank` use the 2016-25 mean.
+- `bare_days_wet` = Σ bare share on days with D ≥ 1 mm, Mar-Jun + Sep-Dec, mean of 2023-25.
 
-## 4. Validation check: does the uncalibrated index track the river? (`basin_index_check.json`)
-The uncalibrated basin index per row-crop ha is compared with measured load per row-crop ha, 2016-2025, n = 20.
+## 4. Validation check (uncalibrated index vs measured load per row-crop ha, 2016-2025, n = 20)
 
 | test | Pearson | Spearman |
 |---|---|---|
-| pooled, both basins | 0.74 (p = 2e-4) | 0.78 |
-| Raccoon only (n = 10) | 0.75 | 0.76 |
-| Des Moines only (n = 10) | 0.73 | 0.78 |
+| pooled, both basins | 0.75 (p = 1e-4) | 0.84 |
+| Raccoon only (n = 10) | 0.76 | 0.88 |
+| Des Moines only (n = 10) | 0.75 | 0.78 |
 | drainage only, no cover term | 0.79 | 0.90 |
 | POWER precipitation only | 0.83 | 0.83 |
-| measured runoff (reference, not a predictor) | 0.87 | 0.93 |
+| measured runoff (reference) | 0.87 | 0.93 |
 
-**Honest reading.**
-1. Year-to-year load is driven by water. The index tracks it well (r ≈ 0.74), but not better than drainage or rain alone.
-2. The satellite cover term does **not** improve interannual tracking.
-   - The partial correlation of the cover part with load, controlling for drainage, is −0.40 (p ≈ 0.08).
-   - In the ε sensitivity, pooled r rises from 0.71 (ε = 0) to 0.79 (ε = 1, cover ignored).
-   - The reason is that interannual MODIS bare-share variation is mostly green-up timing (weather), not management, which the modis module already noted.
-   - The cover term is kept on physical and trial grounds (INRS land-retirement efficiency). It matters for the seasonal calendar, for field-to-field differences and for the strategy logic, none of which the 20 basin-years can test.
-3. **Per-area ratio Raccoon / Des Moines.** Index 0.73-0.75 vs measured 0.88; the year-to-year correlation of the ratios is r = 0.33 (n = 10, n.s.).
-   - The index puts the Des Moines basin relatively higher. It is wetter and more poorly drained (0.52 vs 0.44 poorly drained share).
-   - Saylorville Reservoir retention, which the index does not model, would push the measured Des Moines load lower, yet the measured ratio is still higher than the index's. So the index does not capture the between-basin level well; the per-basin calibration absorbs it.
-4. **No sub-basin gauge is used, so the within-basin HUC-12 pattern is unvalidated.**
-   - In the Raccoon the hotspot ranking follows bare-and-wet days (r = 0.78), which are dominated by POWER (50 km MERRA-2) wetness and rain differences, more than by poorly drained share (r = 0.09).
-   - The southern Raccoon HUC-12s (Mosquito, Panther Creek) rank top.
-   - The focus area (North Raccoon headwaters) ranks mid-pack: leak_index 0.64-1.06, ranks 16-105 of 105.
-   - Present this as "where bare ground meets wet soil", not as measured sub-basin loads.
+**Reading.**
+1. Year-to-year load is driven by water. The index tracks it (r ≈ 0.75) but not better than drainage or rain alone.
+2. The cover term does not improve interannual tracking. The partial r of the cover part with load, controlling for drainage, is −0.39 (p = 0.09). Pooled r runs 0.71 (ε = 0) → 0.75 (ε = 0.232) → 0.79 (ε = 1). Interannual MODIS bare share is mostly green-up timing (weather). The cover term rests on the INRS trial calibration in §3 and drives seasonal and field differences, which 20 basin-years cannot test.
+3. **Per-area ratio Raccoon / Des Moines.** Index 0.72 vs measured 0.88; the year-to-year correlation of the ratios is r = 0.36 (n.s.). The index misses the between-basin level; the per-basin calibration absorbs it.
+4. **Within-basin HUC-12 pattern unvalidated** (no sub-basin gauges).
+   - The Raccoon ranking follows bare-and-wet days (r = 0.80), which come mostly from 50 km POWER weather, more than poorly drained share (r = 0.06).
+   - The southern Raccoon HUC-12s rank top (Lower Mosquito Creek, Happy Run-Hardin Creek, West Branch Panther Creek).
+   - The focus area ranks 17-105 of 105 (leak_index 0.64-1.06).
+   - Present this as "where bare ground meets wet soil".
 
 ## 5. Strategies (m06)
-Practice efficiencies are read from facts.json. The **Mar 2024 INRS Science Team update** (`inrs_2024_update`) is the primary prior, per the orchestrator's decision; the older table value is shown on the card as context. Reductions are drawn as normal(mean, SD) and clipped to [0, 1]. Each is applied to the field's own leak distribution, `leak_q200`, by Monte Carlo (4,000 draws). N price is U[$0.53 (ISU A1-88 budget), $0.70 (AMS anhydrous high)].
+**Priors.** INRS **Mar 2024 update** (`inrs_2024_update` in facts.json) is primary; the older table is shown as context.
 
-| id | practice | prior (2024 update; older) | what is kept per field | yield risk | cost $/ac (basis) |
+**Draws.** Each efficiency is a normal **truncated to [0, 1] with its location solved so the mean equals the stated efficiency**; scale = stated SD. Draw means: 0.278, 0.270, 0.085. Each practice is applied to the field's own leak distribution, `leak_q200`, by Monte Carlo (4,000 draws).
+
+**Headline mean** = field mean leak × efficiency × coverage, which is exact because the draws are independent.
+
+**N price** U[$0.53 (ISU A1-88), $0.70 (AMS high)]. `fert_value_note` on each card says the value is an upper bound. For S1 it also says that N kept ahead of soybean has little fertilizer value for that crop.
+
+| id | practice | prior | coverage | yield risk | cost $/ac (basis) |
 |---|---|---|---|---|---|
 | S0 | corn-soy, no cover | reference | 0 | low | 0 |
-| S1 | cereal rye before soybean | 28% (SD 26); older 31% (29) | leak × r × (share of the field's 2016-25 years that are soybean after corn; median 0.44) | low: 27/28 Midwest location-years with no soy loss; PFI 20 of 29 trials no effect | 12-27.5 per ac per year (= $24-55 seed + drilling per planting, every other fall; termination not included) |
-| S2 | 4-yr corn-soy-oats/alfalfa-alfalfa | 27% (SD 25); older 42% (12); 3-yr 15% (34) as context | leak × r | moderate (Marsden: yields similar or higher; 2 of 4 years are oats and hay) | not quantified (Marsden profit similar or greater; no verified $/ac) |
-| S3 | prairie on ~10% of the field | CRP 85% (SD 9) on the converted 10% | leak × 0.10 × r (strip assumed to leak like the field average) | low per cropped acre | 24-39 per treated acre per year (ISU STRIPS; secondary, not yet in facts.json) |
+| S1 | cereal rye before soybean | 28% (SD 26); older 31% (29) | × share of the field's 2016-25 years that are soybean after corn (median 0.44) | low (27/28 Midwest location-years no soy loss; PFI 20/29) | 12-27.5 per ac per year (= $24-55 seed + drilling per planting, every other fall) |
+| S2 | 4-yr corn-soy-oats/alfalfa-alfalfa | 27% (SD 25); older 42% (12); 3-yr 15% (34) as context | whole rotation | moderate | null, not quantified (Marsden profit similar or greater) |
+| S3 | prairie on ~10% of the field | CRP 85% (SD 9) on the 10% | strip assumed to leak like the field average | low per cropped acre | 26-33 per treated acre per year (`strips_cost_usd_treated_ac`, secondary) |
 
-**Why S3 is prairie on part of the field** (not bioreactors or saturated buffers):
-- It is a rotation-type change the farmer controls on the field.
-- It has Iowa evidence (STRIPS; INRS land retirement).
-- The INRS 2024 tile-water practices (saturated buffers 45%, bioreactors 24% of treated drainage) are named in the S3 gaps as the options to ask about for tile water.
-- We do not credit strips with intercepting tile water.
+**N kept, lb N/ac/yr, median field.**
 
-**N kept, lb N/ac/yr.** p50 is a typical single year; the mean is the long-run average.
-
-| | median field p50 | spread of field p50 (p10-p90 across fields) | median field p10-p90 | median field mean | fertilizer value, median field mean |
+| | long-run mean (headline) | single year p10-p90 | typical year (p50) | 2016 wet year | fertilizer value (mean) |
 |---|---|---|---|---|---|
-| S1 | 0.7 | 0.3-1.5 | 0.0-4.9 | 1.7 | $1.06/ac |
-| S2 | 1.7 | 0.8-3.0 | 0.0-10.9 | 3.8 | $2.34/ac |
-| S3 | 0.9 | 0.6-1.3 | 0.1-2.5 | 1.1 | $0.69/ac |
+| S1 | 1.7 | 0.0-4.5 | 0.9 | 9.2 (a year with rye in place) | $1.02 |
+| S2 | 3.7 | 0.2-9.9 | 2.0 | 8.9 | $2.28 |
+| S3 | 1.2 | 0.1-2.5 | 0.9 | 2.8 | $0.72 |
 
-Why these are small:
-1. They are river-delivered amounts.
-2. Drought years (2020-23) leak almost nothing.
+Why the numbers are small:
+1. They are counted as nitrate that would have reached the river.
+2. The drought years leaked almost nothing.
 3. The 2024 efficiencies are lower than the older table.
-4. Rye before soybean acts only about every other year.
+4. Rye before soybean acts about every other year.
 
-Fertilizer value is an upper bound (the next crop does not recover all retained N). It is also counted at the river, so in that sense it understates the N kept at the field edge. The cards say both.
+**Who pays.**
+- The EQIP 340 rate is labelled as coming from a third-party guide, not the NRCS booklet.
+- The CP-43 "about 75% lower cost, $7-8 per treated acre" claim now cites the new fact `strips_crp_cost_reduction_pct` (secondary).
+- The EQIP 328 rate stays hidden while it is unverified.
 
-## 6. Limitations
+## 6. facts.json additions (made in this fix pass, appended; nothing else changed)
+`strips_cost_usd_treated_ac`, `strips_crp_cost_reduction_pct` and `tile_delivery_mcisaac_hu` are all `secondary`. They come from web-search extraction because strips.nrem.iastate.edu and the David et al. PDF host do not resolve from this session. Allowing those hosts would let a verifier upgrade them.
+
+## 7. Limitations
 - **Grid cells, not fields.** A field is a 400 m grid cell. Its N rate, manure, tile layout and tillage are unknown.
-- **Coarse weather.** POWER is about 50 km MERRA-2; IMERG daily is blocked (BLOCKERS.md). Storm days ≥ 25 mm are rare at that scale (about 2-7 per year).
-- **Interannual signal is water.** The calibration makes basin totals match by construction. The independent evidence is the r ≈ 0.74 interannual tracking, which is mostly water-driven.
-- **Uncertain multipliers.** The tile multiplier m and ε are literature-anchored but not estimated from our data. m barely changes rankings (Spearman ≥ 0.975).
-- **2016-19 field values** reuse each field's 2020-25 relative cover pattern.
-- **No lag modelled.** Annual calibration on calendar years ignores within-year carry-over (for example fall-applied N leaving the next spring) and the Saylorville lag.
+- **Coarse weather.** POWER is about 50 km; IMERG daily is blocked.
+- **Validation is mostly water.** Calibration matches basin totals by construction. The independent evidence is r ≈ 0.75 interannual tracking, which is mostly water-driven.
+- **ε calibration.** ε is calibrated from 187 field-years and assumes HLS-detected cover behaves like INRS rye.
+- **Tile multiplier.** m is literature-anchored; rankings are insensitive to it.
+- **2016-19 field values** reuse each field's 2020-25 cover pattern. No carry-over or reservoir lag is modelled.
 
-## 7. Inputs that changed during this build / rerun needs
-Final outputs were generated **after** the orchestrator's refresh landed. Mtimes are recorded in `basin_index_check.json` → `input_mtimes`:
-- hls_field_ts / field_year / field_month: 22:43 (spike-scene fix);
-- cover_huc12_8day and cover_hls_huc12_8day (the HLS fill for the 2025 MODIS gap, now used): 22:43;
-- hls_vs_modis.json: 22:44 (the monthly MODIS→HLS bias is read from it).
+## 8. Inputs and reruns
+The final run postdates all refreshed inputs; mtimes are in `basin_index_check.json` → `input_mtimes`:
+- hls_field_ts / field_year / field_month: 22:43;
+- cover_huc12_8day and cover_hls_huc12_8day: 22:43;
+- hls_vs_modis.json: 22:44.
 
-The final run came after all of these; results moved by less than 0.1 lb/ac between the pre- and post-refresh runs. Rerun both scripts after any change to POWER, NWIS, cover, HLS or facts.json; no code change is needed.
+After any change to POWER, NWIS, cover, HLS or facts.json, rerun m05 then m06; no code change is needed.
 
-## 8. Notes for the exporter and frontend
-- Strategy `n_loss_reduction.mean/lo/hi` are fractions; lo/hi are p10/p90 of the clipped prior. For S3 they are the whole-field effect (0.085).
-- **S2 `cost_usd_ac.lo/hi` are null (not quantified).** `farmer.js` currently treats a null midpoint as $0 in the "low net cost" ranking. It should treat it as unknown.
-- `leak_index`: fields use 1 = focus-area average; HUC-12s use 1 = basin average per row-crop ha. `share_of_basin_leak` is 0-1.
-- Grey out calendar months where `calendar.interp_only` is true.
-- `field_detail.json` is 5.0 MB as one file; split by HUC-12 if the web budget needs it.
-- Facts to add for verification: the ISU STRIPS cost ($24-39 per treated acre per year), and the McIsaac & Hu / David et al. 2010 tile-delivery ratio.
+## 9. Notes for the exporter and frontend
+- Use `mean` as the headline number for leak, N kept and fertilizer value. Label p10-p90 as "in 8 of 10 years".
+- `n_loss_reduction` values are fractions; lo/hi are p10/p90 of the truncated prior.
+- S2 cost is null (unknown). It should not be ranked as $0.
+- Grey out calendar months where `interp_only` is true.
+- `field_detail` comes as split files only (`field_detail/<huc12>.json`).
+- `leak_index`: fields 1 = focus-area mean; HUC-12s 1 = basin mean per row-crop ha.

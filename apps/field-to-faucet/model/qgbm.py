@@ -13,7 +13,7 @@ import lightgbm as lgb
 import numpy as np
 
 BASE_PARAMS = dict(learning_rate=0.03, feature_fraction=0.7, bagging_fraction=0.8, bagging_freq=1,
-                   lambda_l2=1.0, max_bin=127, verbose=-1, num_threads=4, seed=7,
+                   lambda_l2=1.0, max_bin=127, verbose=-1, num_threads=1, seed=7,
                    monotone_constraints_method="advanced")
 
 
