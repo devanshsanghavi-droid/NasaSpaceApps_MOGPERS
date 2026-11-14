@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T23:31:26+00:00",
+ "generated_at": "2026-11-14T23:46:51+00:00",
  "region": "Western Kansas Groundwater Management Districts 1, 3 and 4 (26 counties, High Plains / Ogallala aquifer)",
  "data_sources": [
   {
@@ -62,8 +62,8 @@
    "url": "https://ds.nccs.nasa.gov/thredds/catalog/AMES/NEX/GDDP-CMIP6/catalog.html"
   },
   {
-   "name": "OpenET",
-   "nasa": true,
+   "name": "OpenET (NASA-supported; not a NASA dataset)",
+   "nasa": false,
    "role": "Field-scale ET",
    "status": "blocked",
    "url": "https://openetdata.org/",
@@ -162,7 +162,7 @@
   "0 years means the central estimate is already below the threshold; many wells still pump below 30 ft of saturated thickness, at reduced capacity.",
   "100 means 100 years or more (flat or rising water levels).",
   "County clocks summarise the groundwater-irrigated points of diversion (WIMAS) weighted by reported acres.",
-  "GRACE sees a ~300 km footprint; its storage trend is about a quarter of the well-based trend here, so it is used as a timing / sign check, not to scale the clock.",
+  "GRACE sees a ~300 km footprint; its 2003-2026 storage trend is about 1/4 of the well-based trend here (Sy 0.15; larger gap with the water-balance Sy), so it is used as a timing / sign check, not to scale the clock.",
   "Income uses ERS regional costs that do not separate irrigated from dryland farms and excludes pumping energy; irrigated yields after 2018 are estimated from earlier NASS ratios.",
   "Wallace County is kept in GMD4 as in the contract list, although 90% of its irrigated acres lie inside the GMD1 polygon (econ module check).",
   "This is decision support, not a replacement for your agronomist or for local water-right rules."

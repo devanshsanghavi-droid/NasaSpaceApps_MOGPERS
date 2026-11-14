@@ -98,8 +98,9 @@ def cards(v):
             applies_where="Anywhere, but best where saturated thickness is already thin or wells are weak.",
         ),
         "S3": dict(
-            why=("Grain sorghum is more drought tolerant than corn and here farmers report applying about a third less water "
-                 f"to it ({v['sorghum_in']:.1f} vs {v['corn_in']:.1f} in/acre)."),
+            why=("Grain sorghum is more drought tolerant than corn and here farmers report applying about "
+                 f"{(1 - v['sorghum_in'] / v['corn_in']) * 100:.0f}% less water to it ({v['sorghum_in']:.1f} vs "
+                 f"{v['corn_in']:.1f} in/acre)."),
             evidence=[
                 dict(text=(f"Kansas water-use reports, 2011-2025: sorghum {v['sorghum_in']:.1f} in/acre vs corn {v['corn_in']:.1f} in/acre "
                            "(region medians of single-crop points)."), source="Kansas WIMAS water-use reports", url=WIMAS_URL),
@@ -109,7 +110,8 @@ def cards(v):
             ],
             benefits=["Uses less water with a similar machine setup to corn", "Tolerates heat and drought better"],
             gaps=["Irrigated sorghum yields are scarce in NASS (county irrigated sorghum ends 2009); estimates rest on old ratios",
-                  "ERS sorghum costs come from mostly dryland farms (about 4% irrigated)"],
+                  (f"ERS sorghum costs come from mostly dryland farms (about {v['sorghum_ers_irr_pct']:.0f}% of surveyed "
+                   f"acres irrigated, ERS {v['sorghum_ers_year']})")],
             risks=["Lower price per bushel than corn and fewer nearby buyers", "Sugarcane aphid and bird damage"],
             soil_health="Similar to corn; sorghum residue is durable and protects soil well.",
             yield_risk="Medium-low: sorghum keeps more yield than corn when water runs short.",

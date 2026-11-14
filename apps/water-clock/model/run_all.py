@@ -66,6 +66,8 @@ def main():
     pub, sat09 = clock.published_check(A, G)
     log("fields", len(F), "grid", len(G), "published check", {k: pub[k] for k in ("mae_ft", "median_diff_ft", "r")})
     cty, gmd, reg = clock.aggregate(F, Ct, regime)
+    # sensitivity: Wallace (90% of its WIMAS irrigated acres lie in the GMD1 polygon) moved from GMD4 to GMD1
+    _, gmd_wal, _ = clock.aggregate(F, Ct, regime, gmd_override={"20199": "GMD1"})
 
     # 4. county tables ----------------------------------------------------------------------------------
     WC = pd.read_parquet(PROC / "wimas_county_year.parquet")
@@ -87,6 +89,11 @@ def main():
 
     def sigma_reg(d):
         return math.sqrt(regime["floor_ft_yr"] ** 2 + (regime["k_rel"] * abs(d)) ** 2)
+
+    # Observed decline averaged over the county's aquifer cells (same areal basis as the water-balance
+    # pumping-attributable decline, which is pumping / (aquifer area x Sy_app)).
+    Gaq = G[G.present & np.isfinite(G.sat)]
+    d_aq_cty = Gaq.groupby("fips").decl.mean()
 
     counties_out, scen = [], {}
     Fv = F[np.isfinite(F.sat)]
@@ -119,13 +126,31 @@ def main():
             town_note = ("Main towns: " + ", ".join(f"{t['name']} ({t['population_2025']:,})" for t in towns) +
                          ". Town public-supply wells are not linked to this clock (not verified).")
         pa = float(pump_recent.get(f, np.nan))
-        dpump = float(WBi.loc[f, "invsy_post"] * pa / WBi.loc[f, "A_aq_acres"])
-        ftper = float(WBi.loc[f, "invsy_post"] * irr_ac / WBi.loc[f, "A_aq_acres"]) if irr_ac else None
-        sat_avail = {}
+        # Pumping-attributable decline. The water balance gives it on an aquifer-area basis (dpump_aq); the clock's
+        # decline is an acre-weighted mean over irrigated points (higher, local). Put both on one basis: the pumping
+        # share of the aquifer-mean observed decline, capped at 1, applied to the point decline.
+        rel_se = WBi.loc[f, "invsy_post_se"] / WBi.loc[f, "invsy_post"]
+        dpump_aq = float(WBi.loc[f, "invsy_post"] * pa / WBi.loc[f, "A_aq_acres"])
+        d_aq = float(d_aq_cty.get(f, np.nan))
+        def share_of(x):
+            return float(np.clip(x / d_aq, 0, 1)) if (np.isfinite(d_aq) and d_aq > 0) else 1.0
+        share = share_of(dpump_aq)
+        share_lo, share_hi = share_of(dpump_aq * (1 - 1.2816 * rel_se)), share_of(dpump_aq * (1 + 1.2816 * rel_se))
+        dpump = share * max(d_est, 0.0)
+        k_loc = dpump / dpump_aq if dpump_aq > 0 else 1.0     # aquifer-area -> irrigated-point scaling
+        ftper_aq = float(WBi.loc[f, "invsy_post"] * irr_ac / WBi.loc[f, "A_aq_acres"]) if irr_ac else None
+        ftper = ftper_aq * k_loc if ftper_aq is not None else None
+        sat_avail, below = {}, {}
         for t in THRESHOLDS:
             y50 = yl[str(t)]["p50"]
+            below[str(t)] = bool(y50 is not None and y50 <= 0)
             if decl["est"] > 0:
-                sat_avail[str(t)] = rnd(y50 * decl["est"], 5)
+                if y50 >= CAP:
+                    # capped clock: y50 x decline would understate the thickness; use the median saturated thickness
+                    # above T (never less than CAP x decline, so X = 0 still reproduces 100)
+                    sat_avail[str(t)] = rnd(max(CAP * decl["est"], c["sat_thick_ft"]["p50"] - t), 3)
+                else:
+                    sat_avail[str(t)] = rnd(y50 * decl["est"], 5)
             else:
                 sat_avail[str(t)] = rnd(max(c["sat_thick_ft"]["p50"] - t, 0.0), 2)
         counties_out.append(dict(
@@ -147,15 +172,26 @@ def main():
         scen[f] = dict(
             name=name, gmd=g, sat_avail_ft=sat_avail, decline_ft_yr=decl,
             decline_from_pumping_ft_yr=rnd(dpump, 3),
-            decline_from_pumping_ft_yr_range=rng3(dpump * (1 - 1.2816 * WBi.loc[f, "invsy_post_se"] / WBi.loc[f, "invsy_post"]),
-                                                  dpump * (1 - 1.2816 * WBi.loc[f, "invsy_post_se"] / WBi.loc[f, "invsy_post"]),
-                                                  dpump * (1 + 1.2816 * WBi.loc[f, "invsy_post_se"] / WBi.loc[f, "invsy_post"]), 3),
+            decline_from_pumping_ft_yr_range=rng3(dpump, share_lo * d_est, share_hi * d_est, 3),
+            pumping_share=rnd(share, 3), pumping_share_capped=bool(np.isfinite(d_aq) and d_aq > 0 and dpump_aq >= d_aq),
+            decline_from_pumping_aquifer_mean_ft_yr=rnd(dpump_aq, 3), decline_aquifer_mean_ft_yr=rnd(d_aq, 3),
             irrigated_corn_acres=rnd(corn_ac, 0), irrigated_acres=rnd(irr_ac, 0), pumping_af_yr=rnd(pa, 0),
-            sy=rnd(WBi.loc[f, "sy_post"], 3), ft_per_af_ac=rnd(ftper, 4),
+            sy=rnd(WBi.loc[f, "sy_post"], 3), ft_per_af_ac=rnd(ftper, 4), ft_per_af_ac_aquifer_mean=rnd(ftper_aq, 4),
             aquifer_area_acres=rnd(WBi.loc[f, "A_aq_acres"], 0),
             years_p50={t: yl[t]["p50"] for t in map(str, THRESHOLDS)},
+            median_below_threshold=below,
+            median_below_threshold_note={t: (f"The median irrigated acre is already below {t} ft of saturated thickness, so "
+                                             f"this threshold cannot show a gain; see the 15 ft threshold or field view.")
+                                         if below[t] else None for t in below},
             decline_flag=flag)
-        scen[f]["decline_from_pumping_ft_yr_range"]["est"] = rnd(dpump, 3)
+
+    se_gmd = Ct.groupby("gmd").se_gmd.first().to_dict()
+
+    def quality_of(fl):
+        """Plurality of irrigated acres: good if >= 50% of acres are in 'good' counties, fair if good+fair >= 50%."""
+        tot = sum(x["irrigated_acres"] or 0 for x in fl) or 1.0
+        sh = {q: sum(x["irrigated_acres"] or 0 for x in fl if x["data_quality"] == q) / tot for q in ("good", "fair", "thin")}
+        return "good" if sh["good"] >= 0.5 else ("fair" if sh["good"] + sh["fair"] >= 0.5 else "thin")
 
     def agg_block(key, sub_c, res):
         fl = [x for x in counties_out if x["fips"] in sub_c]
@@ -163,15 +199,20 @@ def main():
         corn = sum(x["irrigated_corn_acres"] or 0 for x in fl)
         pump = sum(x["pumping_af_yr"] or 0 for x in fl)
         d = res["decline_est"]
-        se = 0.1
-        sd = math.sqrt(se ** 2 + sigma_reg(d) ** 2)
+        # SE of the mean decline: EB GMD-level SE (wells_state.pool_slopes); region = acre-weighted GMD SEs combined
+        if key in se_gmd:
+            se = float(se_gmd[key])
+        else:
+            wg = {gn: sum(x["irrigated_acres"] or 0 for x in counties_out if x["gmd"] == gn) for gn in GMDS}
+            se = math.sqrt(sum((wg[gn] * se_gmd[gn]) ** 2 for gn in GMDS)) / sum(wg.values())
         return dict(sat_thick_ft={p: rnd(v, 0) for p, v in res["sat_thick_ft"].items()},
                     decline_ft_yr=rng3(d, d - 1.2816 * sd, d + 1.2816 * sd),
                     years_left={t: {p: rnd(v, 1) for p, v in res["years_left"][t].items()} for t in res["years_left"]},
                     irrigated_acres=rnd(irr, 0), pumping_af_yr=rnd(pump, 0), corn_share_irrigated=rnd(corn / irr if irr else None, 3),
                     irrigated_corn_acres=rnd(corn, 0), n_wells=int(sum(x["n_wells"] for x in fl)), n_fields=res["n_fields"],
                     share_irrigated_acres_under_25y=rnd(res["share_acres_lt25y"], 3),
-                    data_quality="good")
+                    share_irrigated_acres_capped=rnd(res["share_acres_capped"], 3),
+                    decline_se_ft_yr=rnd(se, 3), data_quality=quality_of(fl), town_note=None)
     gmds_out = []
     for gname in GMDS:
         sub_c = [f for f, (n, g) in COUNTIES.items() if g == gname]
@@ -180,12 +221,20 @@ def main():
     region = dict(name="Western Kansas GMD 1, 3 and 4 (26 counties)", **agg_block("region", list(COUNTIES), reg),
                   method=("Acre-weighted median over the region's groundwater-irrigated points of diversion of each point's "
                           "p10 / p50 / p90 years left."))
+    wal = {gn: {t: {p: rnd(v, 1) for p, v in gmd_wal[gn]["years_left"][t].items()} for t in gmd_wal[gn]["years_left"]}
+           for gn in ("GMD1", "GMD4")}
     clocks = dict(threshold_default_ft=THR_DEFAULT, thresholds_ft=THRESHOLDS, counties=counties_out, gmds=gmds_out,
                   region=region,
+                  sensitivity=dict(wallace_in_gmd1=dict(
+                      note=("Wallace is kept in GMD4 (contract county list) although 90% of its WIMAS irrigated acres lie in "
+                            "the GMD1 polygon. Years left for GMD1 and GMD4 if Wallace is moved to GMD1:"),
+                      years_left=wal)),
                   method=("Per field: saturated thickness (kriged winter 2024-2026 water level minus aquifer base at wells) and "
                           "weather-normalised 2011-2026 decline rate (local-linear-trend Kalman filter, kriged), Monte Carlo "
-                          "(2000 draws) over kriging + aquifer-base uncertainty and decadal decline variability. County value = "
-                          "acre-weighted median of its irrigated points' p10/p50/p90. 100 = 100 or more years (rising or flat)."),
+                          f"({clock.MC_DRAWS} draws) over kriging + aquifer-base uncertainty and decadal decline variability. County value = "
+                          "acre-weighted median of its irrigated points' p10/p50/p90. 100 = 100 or more years (rising or flat); "
+                          "share_irrigated_acres_capped = share of acres whose p50 is at that cap. Saturated thickness is "
+                          "kriged from wells with a reliable aquifer base (sat_flag 'ok')."),
                   generated_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"))
     write_json(WEB / "county_clocks.json", clocks, nd=3)
 
@@ -200,23 +249,26 @@ def main():
     write_json(WEB / "counties.geojson", geo, nd=5)
 
     # fields.json (all groundwater irrigation points with use in 2021-2025; no subsample needed for size)
-    cols = ["id", "lon", "lat", "fips", "acres", "crop", "af_yr", "sat_ft", "decl", "y10", "y50", "y90"]
+    cols = ["id", "lon", "lat", "fips", "acres", "crop", "af_yr", "sat_ft", "decl", "y10", "y50", "y90", "capped"]
     rows = []
     for r in F.itertuples():
+        capped = (1 if r.y30_p50 >= CAP - 1e-9 else 0) if np.isfinite(r.y30_p50) else None
         rows.append([int(r.id), rnd(r.lon, 4), rnd(r.lat, 4), r.fips, rnd(r.acres, 0), r.crop, rnd(r.af_yr, 0),
-                     rnd(r.sat, 0), rnd(r.decl, 2), rnd(r.y30_p10, 0), rnd(r.y30_p50, 0), rnd(r.y30_p90, 0)])
+                     rnd(r.sat, 0), rnd(r.decl, 2), rnd(r.y30_p10, 0), rnd(r.y30_p50, 0), rnd(r.y30_p90, 0), capped])
     write_json(WEB / "fields.json", dict(
         columns=cols, rows=rows, threshold_ft=THR_DEFAULT,
         note=("All WIMAS groundwater irrigation points of diversion that reported use > 0 in 2021-2025 (no subsample). "
               "acres/af_yr = mean reported 2021-2025; crop = most frequent single crop reported 2021-2025, else CDL 250 m "
-              "mode (2020-2024). sat_ft/decl/years from the state model at the point; null sat = outside the mapped aquifer.")),
+              "mode (2020-2024). sat_ft/decl/years from the state model at the point; null sat = outside the mapped aquifer. "
+              "capped = 1 when y50 is at the 100-year cap (100 means 100 or more years).")),
         nd=4)
 
     # grid.json
     Gp = G[G.present & np.isfinite(G.sat)]
     write_json(WEB / "grid.json", dict(
-        cell_deg=0.02, columns=["lon", "lat", "sat_ft", "decl_ft_yr", "years_p50"], threshold_ft=THR_DEFAULT,
-        rows=[[rnd(a, 3), rnd(b, 3), rnd(s, 0), rnd(d, 2), rnd(y, 0)] for a, b, s, d, y in
+        cell_deg=0.02, columns=["lon", "lat", "sat_ft", "decl_ft_yr", "years_p50", "capped"], threshold_ft=THR_DEFAULT,
+        note="years_p50 = 100 means 100 or more years; capped = 1 marks those cells.",
+        rows=[[rnd(a, 3), rnd(b, 3), rnd(s, 0), rnd(d, 2), rnd(y, 0), int(y >= CAP - 1e-9)] for a, b, s, d, y in
               zip(Gp.lon, Gp.lat, Gp.sat, Gp.decl, Gp.y30_p50)]), nd=3)
     log("wrote clocks / fields / grid")
 
@@ -226,7 +278,7 @@ def main():
     log("validation done")
 
     # 6. GRACE ----------------------------------------------------------------------------------------------
-    gr, reg_dh = grace_compare.compare(dh, aq_frac)
+    gr, reg_dh = grace_compare.compare(dh, aq_frac, sy_app=wb_sum["posterior"]["sy_app"])
     json.dump(gr, open(CACHE / "grace_compare_full.json", "w"), default=float, indent=1)
     GR = pd.read_parquet(PROC / "grace_region.parquet").sort_values("month")
     gm = json.load(open(PROC / "grace_maps.json"))
@@ -240,15 +292,21 @@ def main():
     WCreg = WC[(WC.year >= 2016) & (WC.year <= 2025)].groupby("year").irr_af_gw.sum().mean()
     region_area_cm = sum(area.values())  # acres
     pump_cm = WCreg / region_area_cm * 30.48
+    t_app = t_all.get("wells_sy_app", {}).get("slope_cm_yr", float("nan"))
+    grace_ratio = trend_wells["est"] / trend_grace["est"]
     notes_g = (f"Wells: aquifer-area-weighted mean winter water-level change chained from county means, times specific yield "
                f"0.15 (range 0.10-0.20), over the {gr['aquifer_area_fraction']*100:.0f}% of the region underlain by the aquifer. "
                f"Annual correlation with GFZ GRACE/GRACE-FO total water storage r = {gr['correlation']['gfz_tws_cm']['r_annual']:.2f} "
                f"(year-to-year changes r = {gr['correlation']['gfz_tws_cm']['r_first_difference']:.2f}). Both show the same drought "
                f"drawdowns, but the well-based storage loss 2003-2026 ({trend_wells['est']:.1f} cm/yr) is about "
-               f"{trend_wells['est']/trend_grace['est']:.0f}x the GRACE trend ({trend_grace['est']:.1f} cm/yr). Reported gross pumping "
+               f"{grace_ratio:.0f}x the GRACE trend ({trend_grace['est']:.1f} cm/yr). With the water-balance apparent specific "
+               f"yield ({wb_sum['posterior']['sy_app']:.2f}) instead of 0.15 the well-based trend is {t_app:.1f} cm/yr, about "
+               f"{t_app/trend_grace['est']:.0f}x GRACE. Reported gross pumping "
                f"(WIMAS 2016-2025, {WCreg/1e6:.2f} million AF/yr) equals {pump_cm:.1f} cm/yr over the region; net depletion is "
-               f"smaller (return flow, recharge) but the same order as the well-based number. GRACE's ~300 km footprint spreads this concentrated loss over a larger, partly non-irrigated area "
-               f"(signal leakage), so GRACE is used as an independent check of timing and sign, not as a volume constraint. "
+               f"smaller (return flow, recharge) but the same order as the well-based number. A likely (untested) reason for the gap is "
+               f"GRACE's ~300 km footprint, which mixes this concentrated loss with a larger area that includes non-irrigated land "
+               f"(signal leakage) as well as neighbouring areas that are also losing water, so leakage alone may not explain it. "
+               f"GRACE is therefore used as an independent check of timing and sign, not as a volume constraint. "
                f"Since GRACE-FO (2018-2026) the gap narrows: wells {t_fo['wells_sy_mid']['slope_cm_yr']:.1f} vs GRACE "
                f"{t_fo.get('gfz_tws_cm', {}).get('slope_cm_yr', float('nan')):.1f} cm/yr.")
     years = gr["years"]
@@ -266,6 +324,7 @@ def main():
             correlation=gr["correlation"]["gfz_tws_cm"]["r_annual"],
             correlation_detail=gr["correlation"],
             trend_wells_cm_yr=trend_wells, trend_grace_cm_yr=trend_grace, trends=gr["trends"],
+            trend_wells_cm_yr_at_sy_app=dict(est=t_app, sy_app=wb_sum["posterior"]["sy_app"]),
             pumping_reported_cm_yr=pump_cm, notes=notes_g))
     write_json(WEB / "grace.json", grace_out, nd=3)
     log("grace done")
@@ -298,6 +357,8 @@ def main():
              sher_pre=sher["sheridan_af_2008_2012"], sher_dur=sher["sheridan_af_2013_2017"], sher_chg=sher["sheridan_change_pct"],
              thomas_chg=sher["thomas_change_pct"], modis_corn_sorg=modis["corn_minus_sorghum_in"],
              n_cotton_counties=len(cot),
+             sorghum_ers_irr_pct=float(json.load(open(PROC / "costs.json"))["crops"]["sorghum"]["Prairie Gateway"]["latest"]["irrigated_pct_of_acres"]),
+             sorghum_ers_year=json.load(open(PROC / "costs.json"))["crops"]["sorghum"]["Prairie Gateway"]["latest_year"],
              cotton_acres_recent=float(WC[(WC.year >= 2021)].groupby("year").acres_cotton.sum().mean()))
     txt = cards(V)
     strategies = []
@@ -353,8 +414,13 @@ def main():
                "new_decline = decline_ft_yr - decline_from_pumping_ft_yr * saved_af / pumping_af_yr;  "
                "years = sat_avail_ft[T] / decline (100 if decline <= 0, capped at 100);  gain = years(new) - years(old). "
                "net_S0/net_Sk = strategies.per_county[fips][Sk].net_pumping_in_ac (in/acre/yr). "
-               "decline_from_pumping_ft_yr = Q_recent / (A_aquifer * Sy_app) from the water-balance fit. "
-               "sat_avail_ft[T] = years_p50[T] * decline_ft_yr, so X = 0 reproduces the county clock exactly.")
+               "decline_from_pumping_ft_yr = pumping_share * decline_ft_yr, where pumping_share = min(1, "
+               "decline_from_pumping_aquifer_mean_ft_yr / decline_aquifer_mean_ft_yr): the water-balance pumping-attributable "
+               "decline Q_recent / (A_aquifer * Sy_app) as a share of the observed decline averaged over the same aquifer "
+               "area, applied to the irrigated-point decline (one basis for both). ft_per_af_ac is scaled the same way. "
+               "sat_avail_ft[T] = years_p50[T] * decline_ft_yr, so X = 0 reproduces the county clock exactly; where the "
+               "county clock is at the 100-year cap, sat_avail_ft[T] = max(100 * decline, sat_thick_p50 - T). Where "
+               "median_below_threshold[T] is true the median acre is already below T and no gain can show at that T.")
     # verify that the client formula at X = 0 reproduces the baseline clock
     bad = []
     for f, s in scen.items():
@@ -380,32 +446,45 @@ def main():
     cE, cP = sens["corn"]["in_per_in_et0"], sens["corn"]["in_per_in_precip"]
     models = list(cm["models"].keys())
     reg_et0 = float(np.average([et0_base[f] for f in COUNTIES], weights=[byf[f]["irrigated_acres"] or 0 for f in COUNTIES]))
+    # Clock shift is recomputed per field: each field's decline is raised by its county's ft_per_af_ac x extra
+    # applied water, the same Monte Carlo is re-run with the same random draws (so the shift carries no MC noise), and
+    # the shifted p50s are aggregated with the same acre-weighted median as the baseline clock. This keeps fields at
+    # the 100-year cap with thick saturated sections at 100 instead of re-scaling a capped county number.
+    Fm = F[np.isfinite(F.sat)].copy()
+    Fm["w"] = Fm.acres.fillna(Fm.acres.median())
+    ftp = Fm.fips.map({f: (scen[f]["ft_per_af_ac"] or 0.0) for f in COUNTIES}).values
+    decs, dd_tab = {"base": F.decl.values}, {}
+    for ssp in ("ssp245", "ssp585"):
+        for m in models:
+            mm = cm["models"][m][ssp]
+            pct, dp = mm["et0_pm_gs_in_change_pct"], mm["pr_gs_in_change"]
+            dIR = {f: bE * pct / 100 * et0_base[f] + bP * dp for f in COUNTIES}   # in/acre on irrigated acres
+            dd_c = {f: (scen[f]["ft_per_af_ac"] or 0.0) * dIR[f] / 12 for f in COUNTIES}
+            dd_tab[(ssp, m)] = dd_c
+            decs[f"{ssp}|{m}"] = F.decl.values + F.fips.map(dd_c).fillna(0.0).values
+    YC = clock.years_mc(F.sat.values, F.sat_sd.values, decs, F.decl_sd.values, thresholds=[30])
+    okm = np.isfinite(F.sat.values)
+    assert np.allclose(YC["base"][30][okm, 1], F.y30_p50.values[okm]), "climate MC does not reproduce the baseline draws"
+
+    def agg_p50(y):
+        yv = y[okm]
+        out = {f: weighted_quantile(yv[(Fm.fips == f).values], Fm.w.values[(Fm.fips == f).values], .5) for f in COUNTIES}
+        out["region"] = weighted_quantile(yv, Fm.w.values, .5)
+        return out
+    base_agg = agg_p50(YC["base"][30][:, 1])
     clim = {}
     for ssp in ("ssp245", "ssp585"):
         per_model = []
         for m in models:
             mm = cm["models"][m][ssp]
             pct, dp = mm["et0_pm_gs_in_change_pct"], mm["pr_gs_in_change"]
-            cshift, dds = {}, {}
-            for f in COUNTIES:
-                s = scen[f]
-                d_et0 = pct / 100 * et0_base[f]
-                dIR = bE * d_et0 + bP * dp  # in/acre on irrigated acres (all crops)
-                dd = (s["ft_per_af_ac"] or 0) * dIR / 12
-                d0 = s["decline_ft_yr"]["est"]
-                y0 = min(CAP, s["years_p50"]["30"])
-                y1 = CAP if d0 + dd <= 0 else min(CAP, s["sat_avail_ft"]["30"] / (d0 + dd)) if d0 > 0 else y0
-                cshift[f] = y1 - y0
-                dds[f] = dd
-            # region: region sat_eff / (region decline + acre-weighted extra decline)
+            new_agg = agg_p50(YC[f"{ssp}|{m}"][30][:, 1])
+            cshift = {f: new_agg[f] - base_agg[f] for f in COUNTIES}
             wts = np.array([byf[f]["irrigated_acres"] or 0 for f in COUNTIES], float)
-            dd_reg = float(np.average([dds[f] for f in COUNTIES], weights=wts))
-            dreg = region["decline_ft_yr"]["est"]
-            y0r = region["years_left"]["30"]["p50"]
-            y1r = min(CAP, y0r * dreg / (dreg + dd_reg)) if dreg > 0 else y0r
+            dd_reg = float(np.average([dd_tab[(ssp, m)][f] for f in COUNTIES], weights=wts))
             per_model.append(dict(model=m, et0_pct=pct, dp=dp, extra_in_corn=cE * pct / 100 * reg_et0 + cP * dp,
-                                  extra_in_all=bE * pct / 100 * reg_et0 + bP * dp, region_shift=y1r - y0r, county=cshift,
-                                  dd_reg=dd_reg))
+                                  extra_in_all=bE * pct / 100 * reg_et0 + bP * dp,
+                                  region_shift=new_agg["region"] - base_agg["region"], county=cshift, dd_reg=dd_reg))
         ens = lambda k: (float(np.mean([p[k] for p in per_model])), float(min(p[k] for p in per_model)),  # noqa: E731
                          float(max(p[k] for p in per_model)))
         e = ens("et0_pct"); pr = ens("dp"); xc = ens("extra_in_corn"); xa = ens("extra_in_all"); rs = ens("region_shift")
@@ -424,8 +503,10 @@ def main():
                 "ET0; Apr-Sep precipitation change in inches. Irrigation response from a WIMAS county-year panel (1990-2025, "
                 f"county fixed effects + trend): {bE:.2f} in of applied water per in of Apr-Sep ET0 and {bP:.3f} in per in of "
                 f"Apr-Sep rain for all crops (corn: {cE:.2f} and {cP:.3f}). Extra pumping raises the decline by "
-                "ft_per_af_ac x extra AF/acre; the clock is recomputed at 30 ft. Recharge changes are not modelled. Range = "
-                "min-max over the 5 GCMs."),
+                "ft_per_af_ac x extra AF/acre at every irrigated point; the field Monte Carlo is re-run with the same random "
+                "draws and the 30 ft clock re-aggregated (acre-weighted median), so county and region shifts are on the same "
+                "basis as the baseline clock (counties at the 100-year cap stay there unless the extra decline brings them "
+                "below it). Recharge changes are not modelled. Range = min-max over the 5 GCMs."),
         sensitivity=sens), nd=3)
     log("climate done")
 
@@ -443,14 +524,29 @@ def main():
     f14 = val["fold_2014"]
     tc = f14["temporal_holdout"]["change_10yr"]
     sc = f14["spatial_holdout"]["change_10yr"]
+    f04 = val["fold_2004"]
+    tc4 = f04["temporal_holdout"]["change_10yr"]
+    sc4 = f04["spatial_holdout"]["change_10yr"]
+
+    def mrb(d):
+        return f"MAE {d['mae']:.2f} / RMSE {d['rmse']:.2f} / bias {d['bias']:+.2f}"
+    win_mae = tc["model"]["mae"] < tc["baseline_no_change"]["mae"]
+    win_rmse = tc["model"]["rmse"] < tc["baseline_no_change"]["rmse"]
+    verdict14 = ("beats no-change on both MAE and RMSE" if (win_mae and win_rmse) else
+                 "beats no-change on MAE only, marginally, and loses on RMSE" if win_mae else
+                 "beats no-change on RMSE only" if win_rmse else "does not beat no-change")
+    sp_mae = sc["model"]["mae"] < sc["baseline_no_change"]["mae"]
     vout["summary"] = (
-        f"Trained on water levels through 2014, the model predicted each well's 2014-2024 change with MAE "
-        f"{tc['model']['mae']:.1f} ft (no-change baseline {tc['baseline_no_change']['mae']:.1f}, own-trend "
-        f"{tc['baseline_own_trend']['mae']:.1f}, county-trend {tc['baseline_county_trend']['mae']:.1f}); for held-out wells "
-        f"(spatial) MAE {sc['model']['mae']:.1f} vs no-change {sc['baseline_no_change']['mae']:.1f}. 80% intervals covered "
-        f"{tc['model']['cov80']*100:.0f}% (temporal) and {sc['model']['cov80']*100:.0f}% (spatial). Declines slowed after 2014 "
-        f"(model bias {tc['model']['bias']:+.1f} ft over 10 yr), so the 2004 fold, where declines sped up, is shown too: there "
-        f"the model clearly beats no-change. The model does not beat no-change for held-out wells in the 2014 fold.")
+        f"10-yr change (ft), 2014 fold (trained on water levels through 2014, weather climatology through 2013; n = "
+        f"{tc['model']['n']} wells): model {mrb(tc['model'])}; no-change {mrb(tc['baseline_no_change'])}; own-trend "
+        f"{mrb(tc['baseline_own_trend'])}; county-trend {mrb(tc['baseline_county_trend'])}. The model {verdict14}: it "
+        f"forecast a mean change of {tc['model']['bias'] + tc['observed_mean_change_ft']:+.1f} ft against "
+        f"{tc['observed_mean_change_ft']:+.1f} ft observed, because declines slowed after 2014. Held-out wells (spatial, "
+        f"re-fitted without them): model {mrb(sc['model'])} vs no-change {mrb(sc['baseline_no_change'])}"
+        f"{'' if sp_mae else ' (model does not beat no-change)'}. 80% intervals covered {tc['model']['cov80']*100:.0f}% "
+        f"(temporal) and {sc['model']['cov80']*100:.0f}% (spatial). The clear win is the 2004 fold, where declines sped up: "
+        f"temporal model {mrb(tc4['model'])} vs no-change {mrb(tc4['baseline_no_change'])}; spatial model "
+        f"{mrb(sc4['model'])} vs no-change {mrb(sc4['baseline_no_change'])}.")
     vout["saturated_thickness_vs_usgs_2009"] = {k: v for k, v in pub.items() if k != "alternative_wl_route"}
     vout["saturated_thickness_vs_usgs_2009"]["alternative_wl_route_mae_ft"] = pub["alternative_wl_route"]["mae_ft"]
     vout["water_balance"] = dict(
@@ -464,6 +560,7 @@ def main():
                                   correlation_g3p_groundwater=gr["correlation"].get("g3p_gws_cm", {}).get("r_annual"),
                                   correlation_grace_da_percentile=gr["correlation"].get("grace_da_gws_pct", {}).get("r_annual"),
                                   trend_wells_cm_yr=trend_wells, trend_grace_cm_yr=trend_grace,
+                                  trend_wells_cm_yr_at_sy_app=t_app,
                                   trend_wells_2018_2026_cm_yr=t_fo["wells_sy_mid"]["slope_cm_yr"],
                                   trend_grace_2018_2026_cm_yr=t_fo.get("gfz_tws_cm", {}).get("slope_cm_yr"),
                                   notes=notes_g)
@@ -497,8 +594,8 @@ def main():
                  url="https://planetarycomputer.microsoft.com/dataset/hls2-l30"),
             dict(name="NASA NEX-GDDP-CMIP6", nasa=True, role="2045 change in ET0 and rain -> clock shift", status="used",
                  url="https://ds.nccs.nasa.gov/thredds/catalog/AMES/NEX/GDDP-CMIP6/catalog.html"),
-            dict(name="OpenET", nasa=True, role="Field-scale ET", status="blocked", url="https://openetdata.org/",
-                 note="No API key"),
+            dict(name="OpenET (NASA-supported; not a NASA dataset)", nasa=False, role="Field-scale ET", status="blocked",
+                 url="https://openetdata.org/", note="No API key"),
             dict(name="KGS WIZARD water levels", nasa=False, role="Winter water levels 1940-2026 (state model core)",
                  status="used", url="https://geohydro.kgs.ku.edu/geohydro/wizard/index.html"),
             dict(name="USGS Water Data API groundwater levels", nasa=False, role="Additional water levels", status="used",
@@ -536,8 +633,8 @@ def main():
             "thickness, at reduced capacity.",
             "100 means 100 years or more (flat or rising water levels).",
             "County clocks summarise the groundwater-irrigated points of diversion (WIMAS) weighted by reported acres.",
-            "GRACE sees a ~300 km footprint; its storage trend is about a quarter of the well-based trend here, so it is used "
-            "as a timing / sign check, not to scale the clock.",
+            f"GRACE sees a ~300 km footprint; its 2003-2026 storage trend is about 1/{grace_ratio:.0f} of the well-based trend here "
+            "(Sy 0.15; larger gap with the water-balance Sy), so it is used as a timing / sign check, not to scale the clock.",
             "Income uses ERS regional costs that do not separate irrigated from dryland farms and excludes pumping energy; "
             "irrigated yields after 2018 are estimated from earlier NASS ratios.",
             "Wallace County is kept in GMD4 as in the contract list, although 90% of its irrigated acres lie inside the GMD1 "

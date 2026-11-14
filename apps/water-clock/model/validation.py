@@ -1,11 +1,13 @@
 """Out-of-time hindcast of the groundwater state model.
 
 Fold B (headline): train on water years <= 2014 (LLT window 1999-2014, weather coefficients and regime term from
-data <= 2014 only), predict 2015-2026. Fold A (stability check): train <= 2004, predict 2005-2016.
+data <= 2014 only; the POWER weather anomalies are measured against a training-period climatology, growing seasons
+<= 2013, so no test-period weather enters the fit), predict 2015-2026. Fold A (stability check): train <= 2004, predict 2005-2016.
 Two designs per fold:
   temporal holdout - every well with enough training data; predict its own later levels.
-  spatial holdout  - 20% of wells per county (random, seed fixed) are removed; their later levels and 10-yr change
-                     are predicted from the other 80% by kriging.
+  spatial holdout  - 20% of wells per county (random, seed fixed) are removed before anything is fitted: weather
+                     coefficients, Kalman hyperparameters, EB pooling and the decadal-variability term are re-estimated
+                     without them; their later levels and 10-yr change are predicted from the other 80% by kriging.
 Metrics: MAE / RMSE / bias of the predicted 10-yr change (ft) and of the level in each well's latest target year;
 80% interval coverage. Baselines: no change; each well's own OLS trend (temporal only); county-mean trend.
 """
@@ -39,12 +41,19 @@ def regime_sig(d, reg):
     return np.sqrt(reg["floor_ft_yr"] ** 2 + (reg["k_rel"] * np.abs(d)) ** 2)
 
 
-def fold(A, end, L=16, horizon=12, spatial_frac=0.2, seed=7):
-    Atr = A[A.year <= end]
-    coefs = weather_coefs(Atr, end)
+def train(Atr, end, L):
+    """Everything fitted on training data only (water years <= end; climatology growing seasons <= end - 1)."""
+    clim_end = end - 1
+    coefs = weather_coefs(Atr, end, clim_end=clim_end)
     wells, Ct, hyper, coefs, Wadj, cum = run_state(Atr, (end - L + 1, end), coefs=coefs, last_min=end - 4)
     dh = county_dh(Atr, end - 32, end)
     reg = regime_model(dh, coefs, windows=((end - 30, end - 20), (end - 20, end - 10), (end - 10, end)))
+    return wells, hyper, coefs, reg
+
+
+def fold(A, end, L=16, horizon=12, spatial_frac=0.2, seed=7):
+    Atr = A[A.year <= end]
+    wells, hyper, coefs, reg = train(Atr, end, L)
     Wraw, years = to_matrix(Atr, end - L + 1, end)
     Wraw = Wraw.loc[wells.well_id]
     ols_s = ols_slopes(Wraw)
@@ -97,8 +106,14 @@ def fold(A, end, L=16, horizon=12, spatial_frac=0.2, seed=7):
         k = max(1, int(round(spatial_frac * len(g))))
         hold += list(rng.choice(g.index.values, size=k, replace=False))
     hold = set(hold)
-    tr = W[~W.index.isin(hold)]
     te = W[W.index.isin(hold)]
+    # re-fit every shared quantity without the held-out wells
+    Atr_s = Atr[~Atr.well_id.isin(hold)]
+    wells_s, hyper_s, coefs_s, reg = train(Atr_s, end, L)
+    Wraw_s, _ = to_matrix(Atr_s, end - L + 1, end)
+    wells_s = wells_s.merge(ols_slopes(Wraw_s.loc[wells_s.well_id]), left_on="well_id", right_index=True, how="left")
+    tr = wells_s.set_index("well_id")
+    hyper = hyper_s
     xt, yt = to_xy(tr.lon.values, tr.lat.values)
     xe, ye = to_xy(te.lon.values, te.lat.values)
     dk = OKriger(xt, yt, tr.decline.values)
@@ -122,7 +137,9 @@ def fold(A, end, L=16, horizon=12, spatial_frac=0.2, seed=7):
                           baseline_county_trend=metrics(sc.county_fips.map(cty_tr).values * 10, occ),
                           observed_mean_change_ft=float(np.mean(occ)))
     res["spatial_holdout"] = dict(level_latest=spatial_level, change_10yr=spatial_change, n_train_wells=int(len(tr)),
-                                  n_test_wells=int(len(te)), split="20% of wells per county, random (seed 7)")
+                                  n_test_wells=int(len(te)),
+                                  split=("20% of wells per county, random (seed 7); held-out wells removed before fitting "
+                                         "weather coefficients, Kalman hyperparameters, EB pooling and the regime term"))
     # decline-rate skill summary: correlation of predicted vs observed 10-yr change
     res["temporal_holdout"]["change_10yr"]["r_model"] = float(np.corrcoef(dd.b_post.values * 10, oc)[0, 1])
     res["spatial_holdout"]["change_10yr"]["r_model"] = float(np.corrcoef(-sc.dec_k.values * 10, occ)[0, 1])

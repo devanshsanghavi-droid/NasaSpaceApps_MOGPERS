@@ -144,7 +144,7 @@ def fit(A, aq_frac, years=(1991, 2026), recent=(2016, 2025)):
 def regime_model(dh, coefs, windows=((1996, 2006), (2006, 2016), (2016, 2026))):
     """Decadal non-stationarity of weather-adjusted county decline rates: sigma = sqrt(floor^2 + (k*rate)^2)."""
     from wells_state import power_anomalies
-    P = power_anomalies()
+    P = power_anomalies(coefs.get("clim_end"))
     P["eff"] = coefs["g_precip_ft_per_in"] * P.pa + coefs["g_et0_ft_per_in"] * P.ea
     P["year"] = P.year + 1
     D = dh.merge(P[["county_fips", "year", "eff"]], on=["county_fips", "year"], how="left")

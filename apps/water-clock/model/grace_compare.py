@@ -21,10 +21,13 @@ def well_storage_series(dh, aq_frac, y0=2002, y1=2026):
     D["w"] = D.county_fips.map(w)
     reg = D.groupby("year").apply(lambda s: np.average(s.dh, weights=s.w) if s.w.sum() > 0.5 * sum(w.values()) else np.nan)
     reg = reg.reindex(range(y0 + 1, y1 + 1))
-    H = np.concatenate([[0.0], np.cumsum(reg.fillna(0).values)])
+    # a year with too few wells must not count as zero change: interpolate its change from neighbouring years
+    n_interp = int(reg.isna().sum())
+    regf = reg.interpolate(limit_direction="both")
+    H = np.concatenate([[0.0], np.cumsum(regf.values)])
     years = np.arange(y0, y1 + 1)
     frac = sum(w.values()) / sum(area.values())
-    return pd.Series(H, index=years), frac, reg
+    return pd.Series(H, index=years), frac, reg, n_interp
 
 
 def grace_winter(G, col, years):
@@ -38,13 +41,18 @@ def grace_winter(G, col, years):
     return S.reindex(years)
 
 
-def compare(dh, aq_frac):
-    H, frac, reg_dh = well_storage_series(dh, aq_frac)
+def compare(dh, aq_frac, sy_app=None):
+    """sy_app: the water-balance posterior apparent Sy; wells storage is also reported at that value."""
+    H, frac, reg_dh, n_interp = well_storage_series(dh, aq_frac)
     sy = PRIORS["sy"]
     G = pd.read_parquet(PROC / "grace_region.parquet")
     years = H.index.values
-    out = {"years": years.tolist(), "aquifer_area_fraction": frac, "sy": sy}
-    stor = {k: H.values * s * CM_PER_FT * frac for k, s in (("mid", sy["mean"]), ("lo", sy["lo"]), ("hi", sy["hi"]))}
+    out = {"years": years.tolist(), "aquifer_area_fraction": frac, "sy": sy, "sy_app_water_balance": sy_app,
+           "n_years_change_interpolated": n_interp}
+    sys_ = [("mid", sy["mean"]), ("lo", sy["lo"]), ("hi", sy["hi"])]
+    if sy_app is not None:
+        sys_.append(("app", sy_app))
+    stor = {k: H.values * s * CM_PER_FT * frac for k, s in sys_}
     out["well_storage_anom_cm"] = {k: (v - np.nanmean(v)).tolist() for k, v in stor.items()}
     out["well_wl_anom_ft"] = (H.values - H.values.mean()).tolist()
     series = {}
@@ -68,7 +76,7 @@ def compare(dh, aq_frac):
     for (a, b) in ((2003, 2016), (2003, 2026), (2018, 2026)):
         t = {}
         yy = years[(years >= a) & (years <= b)]
-        for k in ("lo", "mid", "hi"):
+        for k in stor:
             o = trend_with_ar1(yy, pd.Series(stor[k], index=years).loc[yy].values)
             t[f"wells_sy_{k}"] = dict(slope_cm_yr=o["slope"], se_cm_yr=o.get("se_ar1", o["se"]))
         for name in ("gfz_tws_cm", "g3p_gws_cm"):

@@ -66,27 +66,35 @@ def regime_sigma(d, regime):
     return np.sqrt(regime["floor_ft_yr"] ** 2 + (regime["k_rel"] * np.abs(d)) ** 2)
 
 
-def years_mc(sat, sat_sd, dec, dec_sd, n=2000, seed=RNG_SEED, chunk=4000):
-    """p10/p50/p90 years-left at each threshold. Rising/flat -> CAP; already below -> 0."""
+MC_DRAWS = 10000
+
+
+def years_mc(sat, sat_sd, dec, dec_sd, n=MC_DRAWS, seed=RNG_SEED, chunk=500, thresholds=THRESHOLDS):
+    """p10/p50/p90 years-left at each threshold. Rising/flat -> CAP; already below -> 0.
+    `dec` may be a dict {name: decline array}; then the same random draws are used for every decline vector
+    (common random numbers) and the result is {name: {t: array}}, so differences between them carry no MC noise."""
+    multi = isinstance(dec, dict)
+    decs = dec if multi else {"_": dec}
     rng = np.random.default_rng(seed)
-    out = {t: np.full((len(sat), 3), np.nan) for t in THRESHOLDS}
+    outs = {k: {t: np.full((len(sat), 3), np.nan) for t in thresholds} for k in decs}
     for s in range(0, len(sat), chunk):
         e = min(s + chunk, len(sat))
         m = e - s
         zs = rng.standard_normal((m, n))
         zd = rng.standard_normal((m, n))
         S = sat[s:e, None] + sat_sd[s:e, None] * zs
-        D = dec[s:e, None] + dec_sd[s:e, None] * zd
-        for t in THRESHOLDS:
-            avail = S - t
-            with np.errstate(divide="ignore", invalid="ignore"):
-                Y = np.where(D > 0, avail / D, CAP)
-            Y = np.where(avail <= 0, 0.0, Y)
-            Y = np.clip(Y, 0, CAP)
-            q = np.percentile(Y, [10, 50, 90], axis=1).T
-            q[~np.isfinite(sat[s:e])] = np.nan
-            out[t][s:e] = q
-    return out
+        for k, dk in decs.items():
+            D = dk[s:e, None] + dec_sd[s:e, None] * zd
+            for t in thresholds:
+                avail = S - t
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    Y = np.where(D > 0, avail / D, CAP)
+                Y = np.where(avail <= 0, 0.0, Y)
+                Y = np.clip(Y, 0, CAP)
+                q = np.percentile(Y, [10, 50, 90], axis=1).T
+                q[~np.isfinite(sat[s:e])] = np.nan
+                outs[k][t][s:e] = q
+    return outs if multi else outs["_"]
 
 
 def grid_cells():
@@ -114,7 +122,11 @@ def build(A, wells, regime, base_sd=PRIORS["base_sd_ft"]["value"]):
     # Saturated thickness is formed at the wells (wl - base at the well) and then kriged with a quadratic drift:
     # this removes the shared eastward slope of water table and base and reproduced the USGS 2009 surface better
     # (see published_check). The nugget (~ base error at wells) is replaced by the base SD at the target.
-    sat_k = UKriger(cur.x.values, cur.y.values, cur.sat_now.values, err_var=cur.wl_var.values)
+    # Only wells with sat_flag 'ok' enter the thickness kriging: at 'thin_or_absent_usgs2009' wells the base under the
+    # well is doubtful (USGS 2009 maps thin/absent aquifer there, yet wl - base ranges -97..+186 ft); their water levels
+    # and declines are still used.
+    cs = cur[cur.sat_flag == "ok"]
+    sat_k = UKriger(cs.x.values, cs.y.values, cs.sat_now.values, err_var=cs.wl_var.values)
     wl_k = UKriger(cur.x.values, cur.y.values, cur.wl_now.values, err_var=cur.wl_var.values)
 
     def evaluate(lon, lat, base, present):
@@ -150,14 +162,15 @@ def build(A, wells, regime, base_sd=PRIORS["base_sd_ft"]["value"]):
         for j, p in enumerate(["p10", "p50", "p90"]):
             Gd[f"y{t}_{p}"] = YG[t][:, j]
     info = dict(decline_variogram=dec_k.vg, wl_variogram=wl_k.vg, sat_variogram=sat_k.vg, wl_trend_beta=wl_k.beta.tolist(),
-                n_wells_decline=int(len(wells)), n_wells_level=int(len(cur)),
+                n_wells_decline=int(len(wells)), n_wells_level=int(len(cur)), n_wells_sat=int(len(cs)),
+                n_wells_sat_excluded_thin_flag=int(len(cur) - len(cs)), mc_draws=MC_DRAWS,
                 level_years=[int(cur.year.min()), int(cur.year.max())])
     return F, Gd, info, dec_k, wl_k, cur
 
 
 def published_check(A, G):
     """Krige 2009 saturated thickness at wells (same method as the clock) and compare with USGS SIR 2012-5177 2009."""
-    R = A[A.year == 2009].copy()
+    R = A[(A.year == 2009) & (A.sat_flag == "ok")].copy()
     R["sat"] = R.wl_elev_ft - R.base_elev_ft
     R = R[np.isfinite(R.sat)]
     x, y = to_xy(R.lon.values, R.lat.values)
@@ -186,8 +199,9 @@ def published_check(A, G):
                       "to 10 ft, so cells with published <=10 ft are excluded.")), sat09
 
 
-def aggregate(F, wells_c, regime, wb=None):
-    """County / GMD / region clocks from field-level results (weights = reported irrigated acres)."""
+def aggregate(F, wells_c, regime, wb=None, gmd_override=None):
+    """County / GMD / region clocks from field-level results (weights = reported irrigated acres).
+    gmd_override: {fips: gmd} to move a county for a sensitivity run."""
     F = F[np.isfinite(F.sat)].copy()
     F["w"] = F.acres.fillna(F.acres.median())
     def summarize(sub, key):
@@ -202,6 +216,7 @@ def aggregate(F, wells_c, regime, wb=None):
         res["field_acres"] = float(sub.w.sum())
         res["median_dist_km"] = float(np.median(sub.dist_km))
         res["share_acres_lt25y"] = float(w[(sub["y30_p50"] < 25).values].sum() / w.sum())
+        res["share_acres_capped"] = float(w[(sub["y30_p50"] >= CAP - 1e-9).values].sum() / w.sum())
         return res
     out = {}
     for f in COUNTIES:
@@ -210,6 +225,7 @@ def aggregate(F, wells_c, regime, wb=None):
             out[f] = summarize(sub, f)
     gm = {}
     gmd_of = {f: g for f, (n, g) in COUNTIES.items()}
+    gmd_of.update(gmd_override or {})
     for g in GMDS:
         sub = F[F.fips.map(gmd_of) == g]
         gm[g] = summarize(sub, g)

@@ -191,19 +191,26 @@ def ols_slopes(W):
 # Weather adjustment. Year-to-year changes in winter levels respond to the previous growing season's
 # weather (dry, hot summers -> more pumping and less recharge). We estimate, with well fixed effects,
 #     dh_t = alpha_i + g_P * Panom_{t-1} + g_E * ET0anom_{t-1} + noise
-# (Panom/ET0anom = Apr-Sep NASA POWER precip / FAO-56 ET0 anomaly in inches vs the county's 1984-2025 mean),
+# (Panom/ET0anom = Apr-Sep NASA POWER precip / FAO-56 ET0 anomaly in inches vs the county's mean over the
+# climatology period: 1984-2025 for the clock; 1984..train_end-1 growing seasons in hindcast folds, so no test-period
+# weather enters the trained slope),
 # then remove the cumulative weather effect before the LLT filter, so the slope is a weather-normalised
 # decline rate and forecasts assume average weather.
 # ---------------------------------------------------------------------------------------------
-def power_anomalies():
+def power_anomalies(clim_end=None):
+    """Apr-Sep precip / ET0 anomalies vs each county's mean over growing seasons <= clim_end (all years if None).
+    A level in water year t responds to growing season t-1, so a fold trained on water years <= E uses clim_end = E-1."""
     P = pd.read_parquet(PROC / "power_county_annual.parquet")
-    P["pa"] = P.precip_gs_in - P.groupby("county_fips").precip_gs_in.transform("mean")
-    P["ea"] = P.et0_gs_in - P.groupby("county_fips").et0_gs_in.transform("mean")
+    base = P if clim_end is None else P[P.year <= clim_end]
+    mp = base.groupby("county_fips").precip_gs_in.mean()
+    me = base.groupby("county_fips").et0_gs_in.mean()
+    P["pa"] = P.precip_gs_in - P.county_fips.map(mp)
+    P["ea"] = P.et0_gs_in - P.county_fips.map(me)
     return P
 
 
-def weather_coefs(A, end_year, start_year=1985):
-    P = power_anomalies()
+def weather_coefs(A, end_year, start_year=1985, clim_end=None):
+    P = power_anomalies(clim_end)
     B = A.sort_values(["well_id", "year"]).copy()
     B["dh"] = B.groupby("well_id").wl_elev_ft.diff()
     B["dy"] = B.groupby("well_id").year.diff()
@@ -219,12 +226,12 @@ def weather_coefs(A, end_year, start_year=1985):
     cov = (res @ res / dof) * np.linalg.inv(Xd.T @ Xd)
     return dict(g_precip_ft_per_in=float(b[0]), g_et0_ft_per_in=float(b[1]),
                 se=[float(math.sqrt(cov[0, 0])), float(math.sqrt(cov[1, 1]))], n_pairs=int(len(D)),
-                years=[int(start_year), int(end_year)])
+                years=[int(start_year), int(end_year)], clim_end=clim_end)
 
 
 def weather_cum(coefs):
     """Cumulative weather effect per (county, water year): sum over water years s<=t of g . anom(s-1)."""
-    P = power_anomalies()
+    P = power_anomalies(coefs.get("clim_end"))
     P["eff"] = coefs["g_precip_ft_per_in"] * P.pa + coefs["g_et0_ft_per_in"] * P.ea
     P["wy"] = P.year + 1
     P = P.sort_values(["county_fips", "wy"])
@@ -252,10 +259,10 @@ def forecast_var(level_var, lb_cov, b_var, H, hyper):
     return out
 
 
-def run_state(A, window, coefs=None, hyper=None, last_min=None, min_obs=5, min_span=8):
+def run_state(A, window, coefs=None, hyper=None, last_min=None, min_obs=5, min_span=8, clim_end=None):
     """Weather-adjusted LLT + EB pooling on a window. Returns (wells df, county table, hyper, coefs, W, cumtable)."""
     if coefs is None:
-        coefs = weather_coefs(A, window[1])
+        coefs = weather_coefs(A, window[1], clim_end=clim_end)
     B, C = adjust_levels(A, coefs)
     df, hyper, W = well_states(B, window, hyper=hyper, min_obs=min_obs, min_span=min_span, last_min=last_min)
     cum_end = C[C.year == window[1]].set_index("county_fips").cum

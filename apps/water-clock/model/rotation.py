@@ -174,7 +174,7 @@ def income_series(Y, P, cost, crop, practice, f, water_frac=1.0):
     """Per-year USD/ac return over operating cost. water_frac<1 interpolates linearly between dryland and irrigated
     yields (limited irrigation; a linear water-yield assumption that is conservative versus the usual concave response)."""
     y = Y[crop]
-    vals = []
+    vals, yrs = [], []
     for yr in INCOME_YEARS:
         base = y["all_filled"][f].get(yr)
         price = P.loc[yr, CROP_PRICE[crop]] if yr in P.index else np.nan
@@ -194,10 +194,22 @@ def income_series(Y, P, cost, crop, practice, f, water_frac=1.0):
             else:
                 yl = base[0] * r(practice)
         vals.append(yl * price - c)
-    return np.array([v for v in vals if np.isfinite(v)])
+        yrs.append(yr)
+    out = pd.Series(vals, index=yrs, dtype=float)
+    return out[np.isfinite(out)]
+
+
+def rotation_mean(*series, fallow=0):
+    """Mean over the rotation's crops, aligned by year (only years where every crop has a value);
+    `fallow` extra zero-income years in the rotation."""
+    if any(len(x) == 0 for x in series):
+        return pd.Series(dtype=float)
+    J = pd.concat(series, axis=1, join="inner")
+    return J.sum(axis=1) / (len(series) + fallow)
 
 
 def summarize(arr):
+    arr = np.asarray(arr, float)
     if len(arr) == 0:
         return dict(est=np.nan, lo=np.nan, hi=np.nan)
     return dict(est=float(np.median(arr)), lo=float(np.percentile(arr, 10)), hi=float(np.percentile(arr, 90)))
@@ -233,13 +245,11 @@ def build(cw, Y, P, cost):
         }
         inc = {
             "S0": income_series(Y, P, cost, "corn", "IRRIGATED", f),
-            "S1": (lambda a, b, c: (a[:n] + b[:n] + c[:n]) / 3 if (n := min(len(a), len(b), len(c))) else np.array([]))(
-                income_series(Y, P, cost, "corn", "LIMITED", f, water_frac=frac_lim),
-                income_series(Y, P, cost, "wheat", "IRRIGATED", f),
-                income_series(Y, P, cost, "sorghum", "IRRIGATED", f)),
-            "S2": (lambda a, b: (a[:n] + b[:n] + 0.0) / 3 if (n := min(len(a), len(b))) else np.array([]))(
-                income_series(Y, P, cost, "wheat", "NON-IRRIGATED-FALLOW", f),
-                income_series(Y, P, cost, "sorghum", "NON-IRRIGATED", f)),
+            "S1": rotation_mean(income_series(Y, P, cost, "corn", "LIMITED", f, water_frac=frac_lim),
+                                income_series(Y, P, cost, "wheat", "IRRIGATED", f),
+                                income_series(Y, P, cost, "sorghum", "IRRIGATED", f)),
+            "S2": rotation_mean(income_series(Y, P, cost, "wheat", "NON-IRRIGATED-FALLOW", f),
+                                income_series(Y, P, cost, "sorghum", "NON-IRRIGATED", f), fallow=1),
             "S3": income_series(Y, P, cost, "sorghum", "IRRIGATED", f),
             "S4": income_series(Y, P, cost, "cotton", "ALL", f),
         }
