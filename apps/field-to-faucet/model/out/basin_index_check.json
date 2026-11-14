@@ -3,22 +3,22 @@
  "index_definition": "per row-crop ha and year: sum_days (bare + eps*(1-bare)) * D * (1 + (m-1)*poorly_drained_share), m = 2.5",
  "pooled_both_basins": {
   "pearson": 0.741,
-  "pearson_p": 0.000186,
-  "spearman": 0.779,
-  "spearman_p": 5.19e-05,
+  "pearson_p": 0.000183,
+  "spearman": 0.777,
+  "spearman_p": 5.49e-05,
   "n": 20
  },
  "within_basin": {
   "raccoon": {
    "pearson": 0.753,
-   "pearson_p": 0.0119,
-   "spearman": 0.758,
-   "spearman_p": 0.0111,
+   "pearson_p": 0.012,
+   "spearman": 0.697,
+   "spearman_p": 0.0251,
    "n": 10
   },
   "desmoines": {
-   "pearson": 0.732,
-   "pearson_p": 0.0161,
+   "pearson": 0.733,
+   "pearson_p": 0.0159,
    "spearman": 0.782,
    "spearman_p": 0.00755,
    "n": 10
@@ -63,7 +63,7 @@
   {
    "basin": "raccoon",
    "year": 2016,
-   "index_per_ha": 630.598,
+   "index_per_ha": 636.951,
    "drain_only_per_ha": 880.494,
    "rain_per_ha": 878.685,
    "load_kg_ha": 46.664,
@@ -72,7 +72,7 @@
   {
    "basin": "raccoon",
    "year": 2017,
-   "index_per_ha": 484.814,
+   "index_per_ha": 491.279,
    "drain_only_per_ha": 565.657,
    "rain_per_ha": 769.143,
    "load_kg_ha": 27.46,
@@ -81,7 +81,7 @@
   {
    "basin": "raccoon",
    "year": 2018,
-   "index_per_ha": 534.704,
+   "index_per_ha": 538.736,
    "drain_only_per_ha": 911.353,
    "rain_per_ha": 1057.411,
    "load_kg_ha": 38.42,
@@ -90,7 +90,7 @@
   {
    "basin": "raccoon",
    "year": 2019,
-   "index_per_ha": 837.561,
+   "index_per_ha": 848.032,
    "drain_only_per_ha": 1353.27,
    "rain_per_ha": 970.106,
    "load_kg_ha": 34.297,
@@ -99,7 +99,7 @@
   {
    "basin": "raccoon",
    "year": 2020,
-   "index_per_ha": 422.589,
+   "index_per_ha": 426.097,
    "drain_only_per_ha": 499.476,
    "rain_per_ha": 581.333,
    "load_kg_ha": 13.379,
@@ -108,7 +108,7 @@
   {
    "basin": "raccoon",
    "year": 2021,
-   "index_per_ha": 126.227,
+   "index_per_ha": 127.216,
    "drain_only_per_ha": 146.132,
    "rain_per_ha": 695.907,
    "load_kg_ha": 1.683,
@@ -117,7 +117,7 @@
   {
    "basin": "raccoon",
    "year": 2022,
-   "index_per_ha": 136.332,
+   "index_per_ha": 137.689,
    "drain_only_per_ha": 166.073,
    "rain_per_ha": 577.502,
    "load_kg_ha": 11.257,
@@ -126,7 +126,7 @@
   {
    "basin": "raccoon",
    "year": 2023,
-   "index_per_ha": 136.764,
+   "index_per_ha": 137.195,
    "drain_only_per_ha": 145.213,
    "rain_per_ha": 657.46,
    "load_kg_ha": 4.054,
@@ -135,7 +135,7 @@
   {
    "basin": "raccoon",
    "year": 2024,
-   "index_per_ha": 270.59,
+   "index_per_ha": 276.952,
    "drain_only_per_ha": 397.195,
    "rain_per_ha": 803.74,
    "load_kg_ha": 19.12,
@@ -144,7 +144,7 @@
   {
    "basin": "raccoon",
    "year": 2025,
-   "index_per_ha": 126.272,
+   "index_per_ha": 127.147,
    "drain_only_per_ha": 352.812,
    "rain_per_ha": 860.866,
    "load_kg_ha": 27.962,
@@ -153,7 +153,7 @@
   {
    "basin": "desmoines",
    "year": 2016,
-   "index_per_ha": 747.622,
+   "index_per_ha": 754.271,
    "drain_only_per_ha": 1165.95,
    "rain_per_ha": 962.503,
    "load_kg_ha": 54.162,
@@ -162,7 +162,7 @@
   {
    "basin": "desmoines",
    "year": 2017,
-   "index_per_ha": 596.411,
+   "index_per_ha": 602.819,
    "drain_only_per_ha": 740.805,
    "rain_per_ha": 780.621,
    "load_kg_ha": 28.746,
@@ -171,7 +171,7 @@
   {
    "basin": "desmoines",
    "year": 2018,
-   "index_per_ha": 807.114,
+   "index_per_ha": 812.726,
    "drain_only_per_ha": 1496.71,
    "rain_per_ha": 1136.66,
    "load_kg_ha": 43.958,
@@ -180,7 +180,7 @@
   {
    "basin": "desmoines",
    "year": 2019,
-   "index_per_ha": 1010.237,
+   "index_per_ha": 1020.569,
    "drain_only_per_ha": 1705.624,
    "rain_per_ha": 1016.142,
    "load_kg_ha": 31.226,
@@ -189,7 +189,7 @@
   {
    "basin": "desmoines",
    "year": 2020,
-   "index_per_ha": 546.504,
+   "index_per_ha": 550.734,
    "drain_only_per_ha": 733.169,
    "rain_per_ha": 633.207,
    "load_kg_ha": 17.27,
@@ -198,7 +198,7 @@
   {
    "basin": "desmoines",
    "year": 2021,
-   "index_per_ha": 128.857,
+   "index_per_ha": 129.462,
    "drain_only_per_ha": 153.73,
    "rain_per_ha": 687.622,
    "load_kg_ha": 1.859,
@@ -207,7 +207,7 @@
   {
    "basin": "desmoines",
    "year": 2022,
-   "index_per_ha": 207.294,
+   "index_per_ha": 208.869,
    "drain_only_per_ha": 243.058,
    "rain_per_ha": 597.149,
    "load_kg_ha": 9.714,
@@ -216,7 +216,7 @@
   {
    "basin": "desmoines",
    "year": 2023,
-   "index_per_ha": 227.184,
+   "index_per_ha": 227.489,
    "drain_only_per_ha": 231.007,
    "rain_per_ha": 661.97,
    "load_kg_ha": 5.952,
@@ -225,7 +225,7 @@
   {
    "basin": "desmoines",
    "year": 2024,
-   "index_per_ha": 482.804,
+   "index_per_ha": 492.086,
    "drain_only_per_ha": 862.685,
    "rain_per_ha": 900.288,
    "load_kg_ha": 34.826,
@@ -234,7 +234,7 @@
   {
    "basin": "desmoines",
    "year": 2025,
-   "index_per_ha": 230.165,
+   "index_per_ha": 231.761,
    "drain_only_per_ha": 590.059,
    "rain_per_ha": 871.872,
    "load_kg_ha": 29.444,
@@ -243,59 +243,59 @@
  ],
  "cover_adds_beyond_drainage": {
   "test": "partial correlation of log(index/drainage-only) [the cover part] with log(load), controlling for log(drainage-only) and basin",
-  "pearson": -0.401,
-  "pearson_p": 0.0798,
+  "pearson": -0.397,
+  "pearson_p": 0.0829,
   "spearman": -0.277,
   "spearman_p": 0.238,
   "n": 20
  },
  "eps_sensitivity_pooled_pearson": {
-  "0.0": 0.712,
+  "0.0": 0.713,
   "0.15": 0.741,
   "0.3": 0.76,
   "0.5": 0.775,
   "1.0": 0.789
  },
  "per_area_ratio_raccoon_over_desmoines": {
-  "index_mean": 0.727,
+  "index_mean": 0.728,
   "measured_mean": 0.881,
-  "index_10yr_total": 0.749,
+  "index_10yr_total": 0.75,
   "measured_10yr_total": 0.875,
   "by_year": {
    "2016": {
-    "index": 0.843,
+    "index": 0.844,
     "measured": 0.862
    },
    "2017": {
-    "index": 0.813,
+    "index": 0.815,
     "measured": 0.955
    },
    "2018": {
-    "index": 0.662,
+    "index": 0.663,
     "measured": 0.874
    },
    "2019": {
-    "index": 0.829,
+    "index": 0.831,
     "measured": 1.098
    },
    "2020": {
-    "index": 0.773,
+    "index": 0.774,
     "measured": 0.775
    },
    "2021": {
-    "index": 0.98,
+    "index": 0.983,
     "measured": 0.905
    },
    "2022": {
-    "index": 0.658,
+    "index": 0.659,
     "measured": 1.159
    },
    "2023": {
-    "index": 0.602,
+    "index": 0.603,
     "measured": 0.681
    },
    "2024": {
-    "index": 0.56,
+    "index": 0.563,
     "measured": 0.549
    },
    "2025": {
@@ -304,8 +304,8 @@
    }
   },
   "year_to_year_corr_of_ratios": {
-   "pearson": 0.33,
-   "pearson_p": 0.351,
+   "pearson": 0.329,
+   "pearson_p": 0.353,
    "spearman": 0.236,
    "spearman_p": 0.511,
    "n": 10
@@ -369,17 +369,17 @@
  },
  "modis_to_hls_bias_by_month_subtracted": {
   "1": 0.04,
-  "2": 0.006,
-  "3": 0.018,
-  "4": 0.112,
-  "5": 0.294,
-  "6": 0.132,
+  "2": 0.001,
+  "3": 0.015,
+  "4": 0.125,
+  "5": 0.341,
+  "6": 0.139,
   "7": 0.0,
   "8": 0.0,
-  "9": 0.048,
-  "10": 0.103,
-  "11": 0.033,
-  "12": 0.021
+  "9": 0.046,
+  "10": 0.118,
+  "11": 0.043,
+  "12": 0.022
  },
  "load_gapfill_cv": {
   "raccoon": {
@@ -878,12 +878,12 @@
    "p10": 7.4,
    "p25": 8.8,
    "p50": 10.5,
-   "p75": 12.6,
+   "p75": 12.5,
    "p90": 14.7,
    "p95": 15.9
   },
   "lbN_ac_yr_central_by_year_focus_mean": {
-   "2016": 32.5,
+   "2016": 32.4,
    "2017": 18.5,
    "2018": 25.3,
    "2019": 23.1,
@@ -895,23 +895,23 @@
    "2025": 11.2
   },
   "hls_fallback_share_mean": 0.041,
-  "poorly_vs_well_p50_ratio": 1.336,
+  "poorly_vs_well_p50_ratio": 1.337,
   "field_mean_vs_huc12_mean_check_max_abs_rel_diff": 0.0,
   "hls_vs_modis_annual_index_focus": {
-   "2020": 1.073,
-   "2021": 1.233,
-   "2022": 1.377,
-   "2023": 1.339,
-   "2024": 1.121,
-   "2025": 1.26
+   "2020": 1.064,
+   "2021": 1.222,
+   "2022": 1.36,
+   "2023": 1.336,
+   "2024": 1.093,
+   "2025": 1.254
   }
  },
- "generated_at": "2026-11-14T22:43:53Z",
+ "generated_at": "2026-11-14T22:46:35Z",
  "input_mtimes": {
   "hls_field_ts.parquet": "2026-11-14 22:43",
   "field_year.parquet": "2026-11-14 22:43",
-  "hls_vs_modis.json": "2026-11-14 22:33",
-  "cover_huc12_8day.parquet": "2026-11-14 22:41",
+  "hls_vs_modis.json": "2026-11-14 22:44",
+  "cover_huc12_8day.parquet": "2026-11-14 22:43",
   "cover_hls_huc12_8day.parquet": "2026-11-14 22:43",
   "nwis_daily.parquet": "2026-11-14 22:21",
   "power_daily_cells.parquet": "2026-11-14 21:32"
