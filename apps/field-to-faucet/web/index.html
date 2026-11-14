@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field to Faucet</title>
+  <meta name="description" content="NASA satellites see when farm fields upstream of Des Moines sit bare and wet and leak nitrate. Field to Faucet shows each farmer when their field leaks and which rotation stops it, and shows the city what that means for the tap water of about 600,000 people.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3c5 7 9 12 9 17a9 9 0 0 1-18 0c0-5 4-10 9-17z' fill='%230b5f66'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/maplibre-gl-4.7.1/maplibre-gl.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="mock-banner" class="mock-banner" role="alert" hidden></div>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#city" aria-label="Field to Faucet, home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c5 7 9 12 9 17a9 9 0 0 1-18 0c0-5 4-10 9-17z"/></svg>
+        <span>Field to Faucet</span>
+      </a>
+      <nav class="tabs" role="tablist" aria-label="Views">
+        <a role="tab" href="#city" data-view="city">Tap water</a>
+        <a role="tab" href="#farmer" data-view="farmer">My field</a>
+        <a role="tab" href="#method" data-view="method">Method</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================= CITY ======================= -->
+    <section id="view-city" class="view" data-view="city" aria-labelledby="city-h">
+      <div class="wrap">
+        <div class="hero">
+          <p class="eyebrow">Des Moines drinking water · <span id="city-year">2025</span> replay</p>
+          <h1 id="city-h">What reaches the faucet</h1>
+          <p class="lede" id="city-lede">Loading the river record…</p>
+        </div>
+        <div class="kpis" id="city-kpis" aria-live="polite"></div>
+      </div>
+
+      <div class="wrap section" id="sec-replay">
+        <div class="section-head">
+          <h2>Replay <span class="js-replay-year">2025</span>: what if upstream fields kept living roots?</h2>
+          <p class="sub">Move the slider. The model re-runs the year with more fields covered by a living crop through the bare, wet months.</p>
+        </div>
+        <div class="replay-grid">
+          <div class="replay-control">
+            <label for="adopt" class="slider-label"><strong class="big-num" id="adopt-val">0%</strong> of upstream fields add living cover</label>
+            <input type="range" id="adopt" min="0" max="50" step="5" value="0" aria-describedby="adopt-help">
+            <div class="slider-ticks" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span></div>
+            <p id="adopt-help" class="fine">Living cover = cereal rye or another crop growing in fall, winter and spring.</p>
+            <p class="freq" id="replay-freq"></p>
+            <div class="deltas" id="replay-deltas"></div>
+          </div>
+          <div class="chart-card">
+            <div class="legend" id="replay-legend"></div>
+            <div class="chart-box tall"><canvas id="replay-chart" aria-label="Replay chart: river nitrate in the replay year, observed and modelled"></canvas></div>
+            <p class="fine" id="replay-note"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap section" id="sec-river">
+        <div class="section-head">
+          <h2>The river record and our model</h2>
+          <p class="sub">Daily nitrate at the city's intake gauges, measured by USGS sensors, against a model driven only by satellite and weather data.</p>
+        </div>
+        <div class="chart-card">
+          <div class="controls">
+            <div class="seg" role="group" aria-label="River gauge" id="river-site"></div>
+            <div class="seg" role="group" aria-label="Time range" id="river-range"></div>
+          </div>
+          <div class="legend" id="river-legend"></div>
+          <div class="chart-box tall"><canvas id="river-chart" aria-label="River nitrate chart: observed and model with uncertainty band"></canvas></div>
+          <p class="fine" id="river-note"></p>
+        </div>
+      </div>
+
+      <div class="wrap section" id="sec-map">
+        <div class="section-head">
+          <h2>Where the nitrate comes from</h2>
+          <p class="sub">Each upstream sub-watershed (HUC-12), shaded by its share of the nitrate leak. Tap or click one for details.</p>
+        </div>
+        <div class="map-grid">
+          <div class="map-card">
+            <div class="controls map-controls">
+              <div class="seg" role="group" aria-label="Map shading" id="map-metric"></div>
+            </div>
+            <div id="city-map" class="map" role="region" aria-label="Map of upstream sub-watersheds"></div>
+            <div class="legend-ramp" id="city-map-legend"></div>
+          </div>
+          <aside class="hotspots">
+            <h3>Top hotspots <span class="muted" id="hotspot-basin"></span></h3>
+            <ol id="hotspot-list"></ol>
+            <p class="fine" id="hotspot-note"></p>
+          </aside>
+        </div>
+      </div>
+
+      <div class="wrap section" id="sec-outlook">
+        <div class="section-head">
+          <h2>Tap-water nitrate outlook: next 14 days</h2>
+          <p class="sub" id="outlook-sub"></p>
+        </div>
+        <div class="outlook-grid">
+          <div class="chart-card">
+            <div class="legend" id="outlook-legend"></div>
+            <div class="chart-box"><canvas id="outlook-chart" aria-label="Fourteen-day nitrate outlook fan chart"></canvas></div>
+            <div class="prob-strip" id="outlook-prob"></div>
+          </div>
+          <div class="outlook-text">
+            <p class="outlook-headline" id="outlook-headline"></p>
+            <ul class="drivers" id="outlook-drivers"></ul>
+            <p class="fine" id="outlook-text"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= FARMER ======================= -->
+    <section id="view-farmer" class="view" data-view="farmer" aria-labelledby="farmer-h" hidden>
+      <div class="wrap">
+        <div class="hero hero-small">
+          <p class="eyebrow">For farmers upstream of Des Moines</p>
+          <h1 id="farmer-h">My field: when it leaks, and what stops it</h1>
+          <p class="lede">Each square is a 40-acre field seen by NASA satellites. Darker squares lose more nitrate. Tap your field, or
+            <button type="button" class="btn btn-accent" id="pick-sample">pick a sample field</button></p>
+          <p class="agro-note" role="note"><strong>Decision support, not a replacement for your agronomist.</strong> Numbers are estimates with ranges; check them against your own records and local advice.</p>
+        </div>
+      </div>
+      <div class="wrap">
+        <div class="map-card">
+          <div id="farm-map" class="map map-farm" role="region" aria-label="Map of fields in the focus area"></div>
+          <div class="legend-ramp" id="farm-map-legend"></div>
+        </div>
+      </div>
+      <div class="wrap section" id="field-panel">
+        <div class="empty-state" id="field-empty">
+          <p>No field selected yet. Tap a square on the map or use <em>pick a sample field</em>.</p>
+        </div>
+        <div id="field-content" hidden>
+          <div class="field-grid">
+            <div class="field-main">
+              <div class="field-head" id="field-head"></div>
+              <h3 class="h3">Leak calendar <span class="muted">· typical year</span></h3>
+              <p class="calendar-explain" id="cal-explain"></p>
+              <div class="calendar" id="calendar" role="table" aria-label="Leak calendar by month"></div>
+              <p class="fine" id="cal-note"></p>
+              <h3 class="h3">Living cover seen from space <span class="muted">· last 12 months (NDVI)</span></h3>
+              <div class="chart-box short"><canvas id="ndvi-chart" aria-label="Recent NDVI of the field"></canvas></div>
+              <p class="fine" id="ndvi-note"></p>
+            </div>
+            <aside class="priorities" aria-labelledby="prio-h">
+              <h3 class="h3" id="prio-h">What matters to you?</h3>
+              <p class="fine">Slide to set how much each goal counts. The cards below re-rank instantly.</p>
+              <div id="prio-sliders"></div>
+              <details class="how">
+                <summary>How we rank</summary>
+                <div id="how-rank"></div>
+              </details>
+            </aside>
+          </div>
+          <div class="section-head cards-head">
+            <h2>Rotation options for this field</h2>
+            <p class="sub" id="cards-sub"></p>
+          </div>
+          <div class="cards" id="strategy-cards"></div>
+          <p class="agro-note" role="note" id="strategy-disclaimer"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= METHOD ======================= -->
+    <section id="view-method" class="view" data-view="method" aria-labelledby="method-h" hidden>
+      <div class="wrap">
+        <div class="hero hero-small">
+          <p class="eyebrow">Method &amp; evidence</p>
+          <h1 id="method-h">How we know</h1>
+          <p class="lede">NASA satellites measure when fields are bare and soils are wet. A model learned from 15-minute USGS river sensors turns that into river nitrate. We test it on years it never saw.</p>
+        </div>
+      </div>
+      <div class="wrap section"><h2>Validation: does the model beat simple guesses?</h2><div id="validation"></div></div>
+      <div class="wrap section"><h2>Data sources</h2><div id="sources"></div></div>
+      <div class="wrap section"><h2>Caveats</h2><ul class="caveats" id="caveats"></ul></div>
+      <div class="wrap section"><h2>Data files in this page</h2><div id="provenance"></div>
+        <p class="fine">Full documentation, code and claims register: <a id="gh-link" href="https://github.com/devanshsanghavi-droid/NasaSpaceApps_MOGPERS/tree/field-to-faucet/apps/field-to-faucet" target="_blank" rel="noopener">GitHub: apps/field-to-faucet</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p>Field to Faucet · NASA Space Apps 2026, “Field Shift: Adapting Farms with NASA Data”. Data: NASA HLS, GPM IMERG, NASA POWER, SMAP, NASADEM, MODIS; USGS NWIS &amp; WBD; USDA CDL &amp; SSURGO.</p>
+      <p class="fine">Decision support, not a replacement for your agronomist. EPA drinking-water limit for nitrate: 10 mg/L as N.</p>
+    </div>
+  </footer>
+
+  <script src="vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
+  <script src="vendor/chart.js-4.4.6/chart.umd.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

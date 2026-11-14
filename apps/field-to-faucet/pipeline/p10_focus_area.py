@@ -33,8 +33,9 @@ REASON = ("North Raccoon River middle reach below Sac City (HUC-10 0710000608: S
           "landscape whose drainage districts (Sac, Calhoun, Buena Vista counties) Des Moines Water Works sued in "
           "2015 over nitrate; the North Raccoon is the high-nitrate branch of the Raccoon. It is the most upstream "
           "contiguous block of the North Raccoon that fits entirely inside one HLS tile (15TUG; the tile's north edge "
-          "is ~42.44 N, just below the Buena Vista headwaters), and its 2021 CDL row-crop share is among the highest "
-          "in the basin (see candidates).")
+          "is ~42.44 N, just below the Buena Vista headwaters). Its 2021 CDL row-crop share ({rc:.0%}) is above the "
+          "average of the other in-tile Raccoon HUC-12s ({rc_o:.0%}); the Hardin/Buttrick Creek block to the east is "
+          "slightly more row-crop (~87%) but is further from the headwaters, so the mainstem block was preferred.")
 
 
 def main():
@@ -71,7 +72,7 @@ def main():
                hls_tile_bounds_utm15n=list(TILE_UTM), bbox_lonlat=bb,
                bbox_5070=[round(float(v), 1) for v in f.total_bounds], area_km2=round(area, 1),
                row_crop_share_2021=round(rc, 3), row_crop_share_2021_other_tile_hucs=round(rc_o, 3),
-               reason=REASON,
+               reason=REASON.format(rc=rc, rc_o=rc_o),
                candidates=[dict(huc12=h, name=n, area_km2=round(float(a), 1), row_crop_2021=round(float(r), 3))
                            for h, n, a, r in zip(show.huc12, show.name, show.area_km2, show.row_crop_2021)],
                source_cdl="USDA NASS CDL 2021 via Planetary Computer usda-cdl (cropland)")

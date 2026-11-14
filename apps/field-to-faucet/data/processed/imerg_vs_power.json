@@ -1,0 +1,181 @@
+{
+ "generated_at": "2026-11-14T21:33:37+00:00",
+ "sources": {
+  "imerg": "Planetary Computer gpm-imerg-hhr (GPM IMERG V06 Final, half-hourly 0.1 deg, precipitationCal) https://planetarycomputer.microsoft.com/dataset/gpm-imerg-hhr",
+  "power": "data/processed/power_daily_basin.parquet (hydro; area-weighted MERRA-2 cells, LST days)"
+ },
+ "design": {
+  "period": "2016-01-01..2021-05-31",
+  "local_day": "06 UTC d to 06 UTC d+1 (= POWER LST day)",
+  "top_season_per_year": 6,
+  "top_winter_per_year": 1,
+  "ranking": "POWER PRECTOTCORR, max of the two basin means",
+  "n_days": 38,
+  "n_rows": 76,
+  "dropped_days": []
+ },
+ "download": {
+  "budget_gb": 8.0,
+  "budget_min": 45.0,
+  "workers": 6,
+  "prior_runs_gb": 8.31,
+  "downloaded_chunks": 0,
+  "downloaded_gb": 0.0,
+  "note": "all chunks cached",
+  "cumulative": {
+   "runs_with_downloads": 2,
+   "downloaded_gb": 8.31,
+   "elapsed_min": 4.7,
+   "cached_chunks": 152
+  }
+ },
+ "caveat": "Days are POWER-selected heavy-rain days: correlations are range-restricted (conditional on POWER being wet) and say nothing about days POWER calls dry. IMERG 0.1 deg half-hour areal rates damp point peaks.",
+ "power_vs_imerg_daily_mm": {
+  "pooled": {
+   "n": 76,
+   "pearson_r": 0.618,
+   "spearman_rho": 0.589,
+   "mean_imerg_mm": 24.43,
+   "mean_power_mm": 24.7,
+   "bias_mm": 0.27,
+   "ratio_power_over_imerg": 1.011,
+   "rmse_mm": 9.55,
+   "mae_mm": 7.28,
+   "ols_power_on_imerg": {
+    "slope": 0.477,
+    "intercept": 13.05
+   }
+  },
+  "desmoines": {
+   "n": 38,
+   "pearson_r": 0.635,
+   "spearman_rho": 0.636,
+   "mean_imerg_mm": 24.87,
+   "mean_power_mm": 25.35,
+   "bias_mm": 0.48,
+   "ratio_power_over_imerg": 1.019,
+   "rmse_mm": 9.92,
+   "mae_mm": 7.52,
+   "ols_power_on_imerg": {
+    "slope": 0.449,
+    "intercept": 14.19
+   }
+  },
+  "raccoon": {
+   "n": 38,
+   "pearson_r": 0.604,
+   "spearman_rho": 0.52,
+   "mean_imerg_mm": 23.99,
+   "mean_power_mm": 24.04,
+   "bias_mm": 0.05,
+   "ratio_power_over_imerg": 1.002,
+   "rmse_mm": 9.15,
+   "mae_mm": 7.05,
+   "ols_power_on_imerg": {
+    "slope": 0.511,
+    "intercept": 11.79
+   }
+  },
+  "class_season": {
+   "n": 64,
+   "pearson_r": 0.566,
+   "spearman_rho": 0.535,
+   "mean_imerg_mm": 25.87,
+   "mean_power_mm": 26.4,
+   "bias_mm": 0.53,
+   "ratio_power_over_imerg": 1.021,
+   "rmse_mm": 10.19,
+   "mae_mm": 7.94,
+   "ols_power_on_imerg": {
+    "slope": 0.409,
+    "intercept": 15.81
+   }
+  },
+  "class_winter": {
+   "n": 12,
+   "pearson_r": 0.714,
+   "spearman_rho": 0.587,
+   "mean_imerg_mm": 16.74,
+   "mean_power_mm": 15.6,
+   "bias_mm": -1.15,
+   "ratio_power_over_imerg": 0.932,
+   "rmse_mm": 4.81,
+   "mae_mm": 3.81,
+   "ols_power_on_imerg": {
+    "slope": 0.546,
+    "intercept": 6.45
+   }
+  }
+ },
+ "heavy_day_agreement_12p7mm": {
+  "both": 63,
+  "power_only": 8,
+  "imerg_only": 2,
+  "neither": 3
+ },
+ "same_wettest_day_per_basin_year": {
+  "n": 12,
+  "share": 0.667
+ },
+ "intensity_relations": {
+  "imerg_max30_mmhr_vs_imerg_mm": {
+   "form": "imerg_max30_mmhr = a * imerg_mm^b",
+   "a": 4.455,
+   "b": 0.463,
+   "r_log": 0.606,
+   "n": 76,
+   "resid_sd_log": 0.377
+  },
+  "imerg_max30_mmhr_vs_power_mm": {
+   "form": "imerg_max30_mmhr = a * power_mm^b",
+   "a": 2.514,
+   "b": 0.634,
+   "r_log": 0.562,
+   "n": 76,
+   "resid_sd_log": 0.391
+  },
+  "imerg_p95_30min_vs_imerg_mm": {
+   "form": "imerg_p95_30min = a * imerg_mm^b",
+   "a": 2.791,
+   "b": 0.539,
+   "r_log": 0.712,
+   "n": 76,
+   "resid_sd_log": 0.329
+  },
+  "imerg_p95_30min_vs_power_mm": {
+   "form": "imerg_p95_30min = a * power_mm^b",
+   "a": 2.064,
+   "b": 0.621,
+   "r_log": 0.556,
+   "n": 76,
+   "resid_sd_log": 0.39
+  },
+  "wet_frac_12p7_vs_imerg_mm": {
+   "form": "wet_frac = a + b * imerg_mm",
+   "a": 0.313,
+   "b": 0.0178,
+   "r": 0.767,
+   "n": 76
+  },
+  "wet_frac_12p7_vs_power_mm": {
+   "form": "wet_frac = a + b * power_mm",
+   "a": 0.386,
+   "b": 0.0146,
+   "r": 0.487,
+   "n": 76
+  }
+ },
+ "by_season_class": {
+  "season": {
+   "n": 64,
+   "mean_max30": 21.6,
+   "mean_imerg_mm": 25.9
+  },
+  "winter": {
+   "n": 12,
+   "mean_max30": 12.6,
+   "mean_imerg_mm": 16.7
+  }
+ },
+ "verdict": "On 76 sampled basin-days POWER PRECTOTCORR vs IMERG basin totals: r=0.618, rho=0.589, bias +0.27 mm/day (POWER/IMERG volume ratio 1.011). POWER captures which days are heavy at basin scale; use it as the continuous rainfall driver for 2022-2026, with storm intensity as a function of daily total (relations above) rather than a separate observed driver."
+}

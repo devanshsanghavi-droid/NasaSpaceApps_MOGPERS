@@ -1,0 +1,226 @@
+{
+ "status": "ok",
+ "method": "MODIS: data/processed/cover_huc12_8day.parquet (modis module; `date` = composite start + 8 d; each 16-day composite covers [date - 8, date + 8)). HLS: data/processed/hls_field_ts.parquet clear observations of the field cells. For every focus HUC-12 and MODIS composite, the HLS living share = share of clear field observations inside the composite window whose cell-median NDVI >= 0.30 (live_px_share >= 0.5); paired when >= 30 HLS field observations and MODIS valid_frac >= 0.5. Also pairs at the whole-focus level, and mean NDVI (HLS cell-mean vs MODIS mean). Expected bias: MODIS composites keep the max-NDVI day of 16 (MVC), and 250 m row-crop pixels include field edges, so MODIS should read greener than HLS, mostly in the shoulder seasons.",
+ "hls_through": "2026-10-29",
+ "modis_through": "2026-10-24",
+ "focus_huc12s": [
+  "071000060505",
+  "071000060604",
+  "071000060605",
+  "071000060702",
+  "071000060801",
+  "071000060802",
+  "071000060803",
+  "071000060804",
+  "071000060805",
+  "071000060806"
+ ],
+ "min_hls_obs": 30,
+ "min_modis_valid_frac": 0.5,
+ "living_share": {
+  "n": 2253,
+  "r": 0.945,
+  "bias_modis_minus_hls": 0.079,
+  "mae": 0.088,
+  "rmse": 0.167,
+  "agree_class_pct": 93.7
+ },
+ "mean_ndvi": {
+  "n": 2253,
+  "r": 0.986,
+  "bias_modis_minus_hls": 0.019,
+  "mae": 0.031,
+  "rmse": 0.047,
+  "agree_class_pct": 97.1
+ },
+ "by_season": {
+  "DJF": {
+   "n": 277,
+   "r": 0.353,
+   "bias_modis_minus_hls": 0.022,
+   "mae": 0.028,
+   "rmse": 0.063,
+   "agree_class_pct": 99.6
+  },
+  "JJA": {
+   "n": 747,
+   "r": 0.726,
+   "bias_modis_minus_hls": 0.048,
+   "mae": 0.05,
+   "rmse": 0.145,
+   "agree_class_pct": 95.7
+  },
+  "MAM": {
+   "n": 661,
+   "r": 0.398,
+   "bias_modis_minus_hls": 0.152,
+   "mae": 0.167,
+   "rmse": 0.242,
+   "agree_class_pct": 88.8
+  },
+  "SON": {
+   "n": 568,
+   "r": 0.973,
+   "bias_modis_minus_hls": 0.062,
+   "mae": 0.075,
+   "rmse": 0.112,
+   "agree_class_pct": 94.0
+  }
+ },
+ "by_huc12": {
+  "071000060505": {
+   "n": 224,
+   "r": 0.951,
+   "bias_modis_minus_hls": 0.065,
+   "mae": 0.076,
+   "rmse": 0.155,
+   "agree_class_pct": 93.8
+  },
+  "071000060604": {
+   "n": 224,
+   "r": 0.944,
+   "bias_modis_minus_hls": 0.073,
+   "mae": 0.082,
+   "rmse": 0.167,
+   "agree_class_pct": 93.8
+  },
+  "071000060605": {
+   "n": 217,
+   "r": 0.931,
+   "bias_modis_minus_hls": 0.101,
+   "mae": 0.112,
+   "rmse": 0.189,
+   "agree_class_pct": 93.1
+  },
+  "071000060702": {
+   "n": 226,
+   "r": 0.95,
+   "bias_modis_minus_hls": 0.074,
+   "mae": 0.081,
+   "rmse": 0.16,
+   "agree_class_pct": 95.6
+  },
+  "071000060801": {
+   "n": 220,
+   "r": 0.949,
+   "bias_modis_minus_hls": 0.077,
+   "mae": 0.087,
+   "rmse": 0.163,
+   "agree_class_pct": 93.2
+  },
+  "071000060802": {
+   "n": 229,
+   "r": 0.948,
+   "bias_modis_minus_hls": 0.079,
+   "mae": 0.087,
+   "rmse": 0.165,
+   "agree_class_pct": 94.3
+  },
+  "071000060803": {
+   "n": 228,
+   "r": 0.953,
+   "bias_modis_minus_hls": 0.064,
+   "mae": 0.075,
+   "rmse": 0.151,
+   "agree_class_pct": 94.3
+  },
+  "071000060804": {
+   "n": 232,
+   "r": 0.948,
+   "bias_modis_minus_hls": 0.077,
+   "mae": 0.088,
+   "rmse": 0.163,
+   "agree_class_pct": 94.0
+  },
+  "071000060805": {
+   "n": 226,
+   "r": 0.939,
+   "bias_modis_minus_hls": 0.087,
+   "mae": 0.096,
+   "rmse": 0.175,
+   "agree_class_pct": 93.4
+  },
+  "071000060806": {
+   "n": 227,
+   "r": 0.941,
+   "bias_modis_minus_hls": 0.09,
+   "mae": 0.096,
+   "rmse": 0.177,
+   "agree_class_pct": 92.1
+  }
+ },
+ "focus_level": {
+  "n": 241,
+  "r": 0.951,
+  "bias_modis_minus_hls": 0.077,
+  "mae": 0.083,
+  "rmse": 0.158,
+  "agree_class_pct": 94.2
+ },
+ "spring_window": {
+  "n": 443,
+  "r": 0.358,
+  "bias_modis_minus_hls": 0.106,
+  "mae": 0.126,
+  "rmse": 0.174,
+  "agree_class_pct": 97.7
+ },
+ "fall_window": {
+  "n": 352,
+  "r": 0.844,
+  "bias_modis_minus_hls": 0.038,
+  "mae": 0.051,
+  "rmse": 0.069,
+  "agree_class_pct": 99.4
+ },
+ "monthly_mean_living_share": {
+  "1": {
+   "hls": 0.013,
+   "modis": 0.053
+  },
+  "2": {
+   "hls": 0.011,
+   "modis": 0.017
+  },
+  "3": {
+   "hls": 0.014,
+   "modis": 0.032
+  },
+  "4": {
+   "hls": 0.037,
+   "modis": 0.149
+  },
+  "5": {
+   "hls": 0.09,
+   "modis": 0.384
+  },
+  "6": {
+   "hls": 0.812,
+   "modis": 0.944
+  },
+  "7": {
+   "hls": 1.0,
+   "modis": 1.0
+  },
+  "8": {
+   "hls": 1.0,
+   "modis": 1.0
+  },
+  "9": {
+   "hls": 0.858,
+   "modis": 0.906
+  },
+  "10": {
+   "hls": 0.239,
+   "modis": 0.342
+  },
+  "11": {
+   "hls": 0.027,
+   "modis": 0.06
+  },
+  "12": {
+   "hls": 0.023,
+   "modis": 0.044
+  }
+ }
+}

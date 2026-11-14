@@ -9,7 +9,7 @@ import time
 import numpy as np
 import planetary_computer
 import rasterio
-from rasterio.windows import from_bounds
+from rasterio.windows import Window, from_bounds
 
 from common import RAW, PROC, STAC_URL  # noqa: F401
 
@@ -27,7 +27,7 @@ GDAL_ENV = dict(
     GDAL_HTTP_MULTIPLEX="YES",
     GDAL_HTTP_TIMEOUT="60",
     GDAL_HTTP_USERAGENT="field-to-faucet-hackathon",
-    GDAL_CACHEMAX="256",
+    GDAL_CACHEMAX=256,
     VSI_CACHE="FALSE",
 )
 
@@ -58,9 +58,10 @@ def unsigned(href):
     return href.split("?")[0]
 
 
-def read_window(href, bounds=None, ov_level=None, retries=6, boundless=False):
-    """Read band 1 of a (PC-hosted) COG inside `bounds` (in the file CRS). Re-signs the URL on every attempt so an
-    expired SAS token (HTTP 403) is refreshed. Returns (array, window_transform, nodata)."""
+def read_window(href, bounds=None, ov_level=None, retries=6):
+    """Read band 1 of a (PC-hosted) COG inside `bounds` (in the file CRS; clipped to the file extent). Re-signs the
+    URL on every attempt so an expired SAS token (HTTP 403) is refreshed. Returns (array, window_transform, nodata);
+    array is None if `bounds` does not intersect the file."""
     last = None
     for a in range(retries):
         try:
@@ -71,7 +72,11 @@ def read_window(href, bounds=None, ov_level=None, retries=6, boundless=False):
                     if bounds is None:
                         return ds.read(1), ds.transform, ds.nodata
                     win = from_bounds(*bounds, transform=ds.transform).round_offsets().round_lengths()
-                    arr = ds.read(1, window=win, boundless=boundless, fill_value=ds.nodata or 0)
+                    try:
+                        win = win.intersection(Window(0, 0, ds.width, ds.height))
+                    except Exception:  # no overlap
+                        return None, None, ds.nodata
+                    arr = ds.read(1, window=win)
                     return arr, ds.window_transform(win), ds.nodata
         except Exception as e:  # transient HTTP error or token expiry
             last = e
@@ -100,10 +105,11 @@ def pc_cdl_mosaic(year, bounds5070):
     out = np.zeros((H, W), np.uint8)
     tr = from_origin(x0, y1, 30, 30)
     for it in items:
-        arr, wtr, _ = read_window(it.assets["cropland"].href, (x0, y0, x1, y1), boundless=True)
-        assert abs(wtr.a - 30) < 1e-6
+        arr, wtr, _ = read_window(it.assets["cropland"].href, (x0, y0, x1, y1))
+        if arr is None:
+            continue
+        assert abs(wtr.a - 30) < 1e-6 and abs(((wtr.c - x0) / 30) - round((wtr.c - x0) / 30)) < 1e-6
         c0 = int(round((wtr.c - x0) / 30)); r0 = int(round((y1 - wtr.f) / 30))
-        # place (boundless read is aligned to the requested window)
         h, w = arr.shape
         rs, cs = max(r0, 0), max(c0, 0)
         re_, ce = min(r0 + h, H), min(c0 + w, W)

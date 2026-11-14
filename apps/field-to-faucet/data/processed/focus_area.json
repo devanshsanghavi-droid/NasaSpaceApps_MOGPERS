@@ -1,0 +1,418 @@
+{
+ "huc12s": [
+  "071000060505",
+  "071000060604",
+  "071000060605",
+  "071000060702",
+  "071000060801",
+  "071000060802",
+  "071000060803",
+  "071000060804",
+  "071000060805",
+  "071000060806"
+ ],
+ "names": {
+  "071000060804": "Elk Run",
+  "071000060805": "Cottonwood Cemetery-North Raccoon River",
+  "071000060505": "Camp Creek",
+  "071000060604": "Drainage Ditch 10-Lake Creek",
+  "071000060605": "Lake Creek",
+  "071000060702": "Purgatory Creek",
+  "071000060801": "Drainage Ditch 73-North Raccoon River",
+  "071000060802": "Drainage Ditch 25-North Raccoon River",
+  "071000060803": "Prairie Creek",
+  "071000060806": "Marrowbone Creek-North Raccoon River"
+ },
+ "hls_tile": "15TUG",
+ "hls_tile_bounds_utm15n": [
+  300000.0,
+  4590240.0,
+  409800.0,
+  4700040.0
+ ],
+ "bbox_lonlat": [
+  -95.04302,
+  42.08275,
+  -94.56441,
+  42.41163
+ ],
+ "bbox_5070": [
+  78305.2,
+  2120938.2,
+  117434.7,
+  2157426.6
+ ],
+ "area_km2": 845.8,
+ "row_crop_share_2021": 0.799,
+ "row_crop_share_2021_other_tile_hucs": 0.724,
+ "reason": "North Raccoon River middle reach below Sac City (HUC-10 0710000608: Sac, Calhoun, Carroll counties) plus the outlets of Camp, Lake and Purgatory creeks. This is the heavily tile-drained Des Moines Lobe headwater landscape whose drainage districts (Sac, Calhoun, Buena Vista counties) Des Moines Water Works sued in 2015 over nitrate; the North Raccoon is the high-nitrate branch of the Raccoon. It is the most upstream contiguous block of the North Raccoon that fits entirely inside one HLS tile (15TUG; the tile's north edge is ~42.44 N, just below the Buena Vista headwaters). Its 2021 CDL row-crop share (80%) is above the average of the other in-tile Raccoon HUC-12s (72%); the Hardin/Buttrick Creek block to the east is slightly more row-crop (~87%) but is further from the headwaters, so the mainstem block was preferred.",
+ "candidates": [
+  {
+   "huc12": "071000060401",
+   "name": "Wall Lake Inlet",
+   "area_km2": 58.8,
+   "row_crop_2021": 0.681
+  },
+  {
+   "huc12": "071000060402",
+   "name": "Drainage Ditch 57",
+   "area_km2": 47.6,
+   "row_crop_2021": 0.853
+  },
+  {
+   "huc12": "071000060505",
+   "name": "Camp Creek",
+   "area_km2": 83.2,
+   "row_crop_2021": 0.836
+  },
+  {
+   "huc12": "071000060604",
+   "name": "Drainage Ditch 10-Lake Creek",
+   "area_km2": 69.0,
+   "row_crop_2021": 0.822
+  },
+  {
+   "huc12": "071000060605",
+   "name": "Lake Creek",
+   "area_km2": 41.0,
+   "row_crop_2021": 0.643
+  },
+  {
+   "huc12": "071000060702",
+   "name": "Purgatory Creek",
+   "area_km2": 111.9,
+   "row_crop_2021": 0.839
+  },
+  {
+   "huc12": "071000060801",
+   "name": "Drainage Ditch 73-North Raccoon River",
+   "area_km2": 43.4,
+   "row_crop_2021": 0.724
+  },
+  {
+   "huc12": "071000060802",
+   "name": "Drainage Ditch 25-North Raccoon River",
+   "area_km2": 132.1,
+   "row_crop_2021": 0.756
+  },
+  {
+   "huc12": "071000060803",
+   "name": "Prairie Creek",
+   "area_km2": 74.1,
+   "row_crop_2021": 0.902
+  },
+  {
+   "huc12": "071000060804",
+   "name": "Elk Run",
+   "area_km2": 93.4,
+   "row_crop_2021": 0.866
+  },
+  {
+   "huc12": "071000060805",
+   "name": "Cottonwood Cemetery-North Raccoon River",
+   "area_km2": 68.1,
+   "row_crop_2021": 0.743
+  },
+  {
+   "huc12": "071000060806",
+   "name": "Marrowbone Creek-North Raccoon River",
+   "area_km2": 129.6,
+   "row_crop_2021": 0.766
+  },
+  {
+   "huc12": "071000060904",
+   "name": "Cedar Creek",
+   "area_km2": 156.8,
+   "row_crop_2021": 0.807
+  },
+  {
+   "huc12": "071000061001",
+   "name": "Headwaters Hardin Creek",
+   "area_km2": 86.3,
+   "row_crop_2021": 0.913
+  },
+  {
+   "huc12": "071000061002",
+   "name": "Happy Run-Hardin Creek",
+   "area_km2": 142.8,
+   "row_crop_2021": 0.884
+  },
+  {
+   "huc12": "071000061003",
+   "name": "East Fork Hardin Creek",
+   "area_km2": 85.8,
+   "row_crop_2021": 0.9
+  },
+  {
+   "huc12": "071000061004",
+   "name": "Village of Farlin-Harrdin Creek",
+   "area_km2": 80.1,
+   "row_crop_2021": 0.833
+  },
+  {
+   "huc12": "071000061005",
+   "name": "Hardin Creek",
+   "area_km2": 47.8,
+   "row_crop_2021": 0.707
+  },
+  {
+   "huc12": "071000061101",
+   "name": "Headwaters East Buttrick Creek",
+   "area_km2": 106.0,
+   "row_crop_2021": 0.873
+  },
+  {
+   "huc12": "071000061102",
+   "name": "East Buttrick Creek",
+   "area_km2": 86.6,
+   "row_crop_2021": 0.843
+  },
+  {
+   "huc12": "071000061201",
+   "name": "Tank Pond Creek",
+   "area_km2": 50.5,
+   "row_crop_2021": 0.863
+  },
+  {
+   "huc12": "071000061202",
+   "name": "Headwaters West Buttrick Creek",
+   "area_km2": 140.6,
+   "row_crop_2021": 0.902
+  },
+  {
+   "huc12": "071000061203",
+   "name": "West Buttrick Creek",
+   "area_km2": 105.7,
+   "row_crop_2021": 0.873
+  },
+  {
+   "huc12": "071000061204",
+   "name": "Buttrick Creek",
+   "area_km2": 55.7,
+   "row_crop_2021": 0.779
+  },
+  {
+   "huc12": "071000061301",
+   "name": "Headwaters Greenbrier Creek",
+   "area_km2": 104.4,
+   "row_crop_2021": 0.892
+  },
+  {
+   "huc12": "071000061302",
+   "name": "Greenbrier Creek",
+   "area_km2": 78.4,
+   "row_crop_2021": 0.765
+  },
+  {
+   "huc12": "071000061401",
+   "name": "Otter Creek",
+   "area_km2": 55.3,
+   "row_crop_2021": 0.825
+  },
+  {
+   "huc12": "071000061402",
+   "name": "Doe Brook-North Raccoon River",
+   "area_km2": 45.4,
+   "row_crop_2021": 0.693
+  },
+  {
+   "huc12": "071000061403",
+   "name": "Short Creek",
+   "area_km2": 43.3,
+   "row_crop_2021": 0.905
+  },
+  {
+   "huc12": "071000061404",
+   "name": "Township of Kendrick-North Raccoon River",
+   "area_km2": 53.1,
+   "row_crop_2021": 0.536
+  },
+  {
+   "huc12": "071000061405",
+   "name": "Drainage Ditch 171-North Raccoon River",
+   "area_km2": 109.8,
+   "row_crop_2021": 0.639
+  },
+  {
+   "huc12": "071000061406",
+   "name": "Community of Cooper-North Raccoon River",
+   "area_km2": 84.8,
+   "row_crop_2021": 0.655
+  },
+  {
+   "huc12": "071000061501",
+   "name": "Fannys Branch-North Raccoon River",
+   "area_km2": 100.7,
+   "row_crop_2021": 0.794
+  },
+  {
+   "huc12": "071000061502",
+   "name": "Swan Lake Branch",
+   "area_km2": 63.8,
+   "row_crop_2021": 0.875
+  },
+  {
+   "huc12": "071000070101",
+   "name": "Upper Willow Creek",
+   "area_km2": 88.9,
+   "row_crop_2021": 0.827
+  },
+  {
+   "huc12": "071000070102",
+   "name": "Drainage Ditch Number 9-13",
+   "area_km2": 45.8,
+   "row_crop_2021": 0.851
+  },
+  {
+   "huc12": "071000070103",
+   "name": "Middle Willow Creek",
+   "area_km2": 105.1,
+   "row_crop_2021": 0.851
+  },
+  {
+   "huc12": "071000070104",
+   "name": "Lower Willow Creek",
+   "area_km2": 76.6,
+   "row_crop_2021": 0.769
+  },
+  {
+   "huc12": "071000070201",
+   "name": "Headwaters Middle Raccoon River",
+   "area_km2": 98.1,
+   "row_crop_2021": 0.88
+  },
+  {
+   "huc12": "071000070202",
+   "name": "Storm Creek",
+   "area_km2": 153.3,
+   "row_crop_2021": 0.881
+  },
+  {
+   "huc12": "071000070203",
+   "name": "City of Carroll-Middle Raccoon River",
+   "area_km2": 102.8,
+   "row_crop_2021": 0.715
+  },
+  {
+   "huc12": "071000070204",
+   "name": "Spring Branch-Middle Raccoon River",
+   "area_km2": 115.9,
+   "row_crop_2021": 0.87
+  },
+  {
+   "huc12": "071000070205",
+   "name": "Willey Branch-Middle Raccoon River",
+   "area_km2": 124.8,
+   "row_crop_2021": 0.649
+  },
+  {
+   "huc12": "071000070206",
+   "name": "Township of Highland-Middle Raccoon River",
+   "area_km2": 50.1,
+   "row_crop_2021": 0.354
+  },
+  {
+   "huc12": "071000070301",
+   "name": "Upper Brushy Creek",
+   "area_km2": 101.4,
+   "row_crop_2021": 0.888
+  },
+  {
+   "huc12": "071000070302",
+   "name": "Middle Brushy Creek",
+   "area_km2": 113.7,
+   "row_crop_2021": 0.78
+  },
+  {
+   "huc12": "071000070303",
+   "name": "Lower Brushy Creek",
+   "area_km2": 153.2,
+   "row_crop_2021": 0.619
+  },
+  {
+   "huc12": "071000070401",
+   "name": "Seely Creek",
+   "area_km2": 56.8,
+   "row_crop_2021": 0.404
+  },
+  {
+   "huc12": "071000070402",
+   "name": "Frost Creek-South Raccoon River",
+   "area_km2": 138.1,
+   "row_crop_2021": 0.554
+  },
+  {
+   "huc12": "071000070403",
+   "name": "Mason Creek",
+   "area_km2": 72.3,
+   "row_crop_2021": 0.217
+  },
+  {
+   "huc12": "071000070404",
+   "name": "City of Guthrie Center-South Raccon River",
+   "area_km2": 47.8,
+   "row_crop_2021": 0.381
+  },
+  {
+   "huc12": "071000070501",
+   "name": "Upper Mosquito Creek",
+   "area_km2": 150.4,
+   "row_crop_2021": 0.878
+  },
+  {
+   "huc12": "071000070502",
+   "name": "Lower Mosquito Creek",
+   "area_km2": 146.3,
+   "row_crop_2021": 0.771
+  },
+  {
+   "huc12": "071000070601",
+   "name": "Lake Panorama-Middle Raccoon River",
+   "area_km2": 138.0,
+   "row_crop_2021": 0.488
+  },
+  {
+   "huc12": "071000070602",
+   "name": "Bay Branch",
+   "area_km2": 59.8,
+   "row_crop_2021": 0.671
+  },
+  {
+   "huc12": "071000070603",
+   "name": "City of Panora-Middle Raccoon River",
+   "area_km2": 102.9,
+   "row_crop_2021": 0.342
+  },
+  {
+   "huc12": "071000070701",
+   "name": "Beaver Creek",
+   "area_km2": 119.3,
+   "row_crop_2021": 0.188
+  },
+  {
+   "huc12": "071000070702",
+   "name": "Town of Monteith-South Raccoon River",
+   "area_km2": 49.5,
+   "row_crop_2021": 0.497
+  },
+  {
+   "huc12": "071000070703",
+   "name": "Deer Creek-South Raccoon River",
+   "area_km2": 55.0,
+   "row_crop_2021": 0.357
+  },
+  {
+   "huc12": "071000070704",
+   "name": "Long Branch-South Raccoon River",
+   "area_km2": 66.4,
+   "row_crop_2021": 0.323
+  },
+  {
+   "huc12": "071000070801",
+   "name": "West Branch Panther Creek",
+   "area_km2": 88.1,
+   "row_crop_2021": 0.884
+  }
+ ],
+ "source_cdl": "USDA NASS CDL 2021 via Planetary Computer usda-cdl (cropland)"
+}

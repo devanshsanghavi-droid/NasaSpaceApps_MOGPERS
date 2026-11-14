@@ -1,0 +1,260 @@
+{
+ "checked_at": "2026-11-14T21:28:54+00:00",
+ "cmr": "https://cmr.earthdata.nasa.gov/search",
+ "bbox_lonlat": "-96.2,41.4,-93.5,44.3",
+ "window": [
+  "2023-01-01T00:00:00Z",
+  "2026-11-14T23:59:59Z"
+ ],
+ "credentials_found": null,
+ "products": [
+  {
+   "short_name": "SPL3SMP_E",
+   "role": "SMAP L3 enhanced 9 km daily surface soil moisture: replaces POWER GWETTOP",
+   "collection": {
+    "concept_id": "C2938664763-NSIDC_CPRD",
+    "version": "006",
+    "provider": "NSIDC_CPRD",
+    "title": "SMAP Enhanced L3 Radiometer Global and Polar Grid Daily 9 km EASE-Grid Soil Moisture V006",
+    "time_start": "2015-03-31T00:00:00.000Z",
+    "time_end": null
+   },
+   "granules_2023_on": 1418,
+   "by_year": {
+    "2023": 365,
+    "2024": 366,
+    "2025": 364,
+    "2026": 323
+   },
+   "first_granule": "2023-01-01T00:00:00.000Z",
+   "last_granule": "2026-11-13T00:00:00.000Z",
+   "sample_granule": "SMAP_L3_SM_P_E_20261113_R19240_001.h5",
+   "sample_data_url": "https://data.nsidc.earthdatacloud.nasa.gov/nsidc-cumulus-prod-protected/SMAP/SPL3SMP_E/006/2026/11/13/SMAP_L3_SM_P_E_20261113_R19240_001.h5",
+   "download_attempt": {
+    "url": "https://data.nsidc.earthdatacloud.nasa.gov/nsidc-cumulus-prod-protected/SMAP/SPL3SMP_E/006/2026/11/13/SMAP_L3_SM_P_E_20261113_R19240_001.h5",
+    "hops": [],
+    "error": "ProxyError: HTTPSConnectionPool(host='data.nsidc.earthdatacloud.nasa.gov', port=443): Max retries exceeded with url: /nsidc-cumulus-prod-protected/SMAP/SPL3SMP_E/006/2026/11/13/SMAP_L3_SM_P_E_20261113_R19240_001.h5 (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "result": "blocked by the container's network proxy (CONNECT 403)"
+   }
+  },
+  {
+   "short_name": "SPL4SMGP",
+   "role": "SMAP L4 3-hourly 9 km surface + ROOT-ZONE soil moisture: replaces POWER GWETROOT (p16)",
+   "collection": {
+    "concept_id": "C3480440870-NSIDC_CPRD",
+    "version": "008",
+    "provider": "NSIDC_CPRD",
+    "title": "SMAP L4 Global 3-hourly 9 km EASE-Grid Surface and Root Zone Soil Moisture Geophysical Data V008",
+    "time_start": "2015-03-31T00:00:00.000Z",
+    "time_end": null
+   },
+   "granules_2023_on": 11298,
+   "by_year": {
+    "2023": 2926,
+    "2024": 2936,
+    "2025": 2925,
+    "2026": 2514
+   },
+   "first_granule": "2022-12-31T21:00:00.000Z",
+   "last_granule": "2026-11-10T21:00:00.000Z",
+   "sample_granule": "SMAP_L4_SM_gph_20261110T223000_Vv8013_001.h5",
+   "sample_data_url": "https://data.nsidc.earthdatacloud.nasa.gov/nsidc-cumulus-prod-protected/SMAP/SPL4SMGP/008/2026/11/10/SMAP_L4_SM_gph_20261110T223000_Vv8013_001.h5"
+  },
+  {
+   "short_name": "GPM_3IMERGDF",
+   "role": "GPM IMERG V07 Final daily 0.1 deg: basin rainfall 2022+ (Final lags ~3.5 months)",
+   "collection": {
+    "concept_id": "C2723754864-GES_DISC",
+    "version": "07",
+    "provider": "GES_DISC",
+    "title": "GPM IMERG Final Precipitation L3 1 day 0.1 degree x 0.1 degree V07 (GPM_3IMERGDF)",
+    "time_start": "1998-01-01T00:00:00.000Z",
+    "time_end": "2025-09-30T23:59:59.999Z"
+   },
+   "granules_2023_on": 1004,
+   "by_year": {
+    "2023": 365,
+    "2024": 366,
+    "2025": 273,
+    "2026": 0
+   },
+   "first_granule": "2023-01-01T00:00:00.000Z",
+   "last_granule": "2025-09-30T00:00:00.000Z",
+   "sample_granule": "3B-DAY.MS.MRG.3IMERG.20250930-S000000-E235959.V07B.nc4",
+   "sample_data_url": "https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2025/09/3B-DAY.MS.MRG.3IMERG.20250930-S000000-E235959.V07B.nc4",
+   "download_attempt": {
+    "url": "https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2025/09/3B-DAY.MS.MRG.3IMERG.20250930-S000000-E235959.V07B.nc4",
+    "hops": [],
+    "error": "ProxyError: HTTPSConnectionPool(host='data.gesdisc.earthdata.nasa.gov', port=443): Max retries exceeded with url: /data/GPM_L3/GPM_3IMERGDF.07/2025/09/3B-DAY.MS.MRG.3IMERG.20250930-S000000-E235959.V07B.nc4 (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "result": "blocked by the container's network proxy (CONNECT 403)"
+   }
+  },
+  {
+   "short_name": "GPM_3IMERGDL",
+   "role": "GPM IMERG V07 Late daily 0.1 deg: near-real-time basin rainfall for the outlook",
+   "collection": {
+    "concept_id": "C2723754859-GES_DISC",
+    "version": "07",
+    "provider": "GES_DISC",
+    "title": "GPM IMERG Late Precipitation L3 1 day 0.1 degree x 0.1 degree V07 (GPM_3IMERGDL)",
+    "time_start": "1998-01-01T00:00:00.000Z",
+    "time_end": null
+   },
+   "granules_2023_on": 1413,
+   "by_year": {
+    "2023": 365,
+    "2024": 366,
+    "2025": 365,
+    "2026": 317
+   },
+   "first_granule": "2023-01-01T00:00:00.000Z",
+   "last_granule": "2026-11-13T00:00:00.000Z",
+   "sample_granule": "3B-DAY-L.MS.MRG.3IMERG.20261113-S000000-E235959.V07C.nc4",
+   "sample_data_url": "https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDL.07/2026/11/3B-DAY-L.MS.MRG.3IMERG.20261113-S000000-E235959.V07C.nc4"
+  },
+  {
+   "short_name": "GPM_3IMERGHH",
+   "role": "GPM IMERG V07 Final half-hourly: storm intensity (max30) 2022+",
+   "collection": {
+    "concept_id": "C2723754847-GES_DISC",
+    "version": "07",
+    "provider": "GES_DISC",
+    "title": "GPM IMERG Final Precipitation L3 Half Hourly 0.1 degree x 0.1 degree V07 (GPM_3IMERGHH)",
+    "time_start": "1998-01-01T00:00:00.000Z",
+    "time_end": "2025-09-30T23:59:59.999Z"
+   },
+   "granules_2023_on": 48192,
+   "by_year": {
+    "2023": 17520,
+    "2024": 17568,
+    "2025": 13104,
+    "2026": 0
+   },
+   "first_granule": "2023-01-01T00:00:00.000Z",
+   "last_granule": "2025-09-30T23:30:00.000Z",
+   "sample_granule": "3B-HHR.MS.MRG.3IMERG.20250930-S233000-E235959.1410.V07B.HDF5",
+   "sample_data_url": "https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGHH.07/2025/273/3B-HHR.MS.MRG.3IMERG.20250930-S233000-E235959.1410.V07B.HDF5"
+  },
+  {
+   "short_name": "ECO_L2T_LSTE",
+   "role": "ECOSTRESS tiled 70 m land-surface temperature: field-scale ET/stress (not used)",
+   "collection": {
+    "concept_id": "C2076090826-LPCLOUD",
+    "version": "002",
+    "provider": "LPCLOUD",
+    "title": "ECOSTRESS Tiled Land Surface Temperature and Emissivity Instantaneous L2 Global 70 m V002",
+    "time_start": "2018-07-09T00:00:00.000Z",
+    "time_end": null
+   },
+   "granules_2023_on": 19126,
+   "by_year": {
+    "2023": 8316,
+    "2024": 3158,
+    "2025": 4196,
+    "2026": 3456
+   },
+   "first_granule": "2023-01-01T12:41:18.790Z",
+   "last_granule": "2026-11-11T07:01:30.595Z",
+   "sample_granule": "ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01",
+   "sample_data_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/ECO_L2T_LSTE.002/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01_water.tif",
+   "download_attempt": {
+    "url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/ECO_L2T_LSTE.002/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01_water.tif",
+    "hops": [],
+    "error": "ProxyError: HTTPSConnectionPool(host='data.lpdaac.earthdatacloud.nasa.gov', port=443): Max retries exceeded with url: /lp-prod-protected/ECO_L2T_LSTE.002/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01_water.tif (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "result": "blocked by the container's network proxy (CONNECT 403)"
+   }
+  },
+  {
+   "short_name": "TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4",
+   "role": "GRACE/GRACE-FO JPL mascon monthly TWS: basin water-storage anomaly (slow groundwater driver)",
+   "collection": {
+    "concept_id": "C3195527175-POCLOUD",
+    "version": "RL06.3Mv04",
+    "provider": "POCLOUD",
+    "title": "JPL GRACE and GRACE-FO Mascon Ocean, Ice, and Hydrology Equivalent Water Height Coastal Resolution Improvement (CRI) Filtered Release 06.3 Version 04",
+    "time_start": "2002-04-04T00:00:00.000Z",
+    "time_end": null
+   },
+   "granules_2023_on": 1,
+   "by_year": {
+    "2023": 1,
+    "2024": 1,
+    "2025": 1,
+    "2026": 1
+   },
+   "first_granule": "2002-04-16T00:00:00.000Z",
+   "last_granule": "2002-04-16T00:00:00.000Z",
+   "sample_granule": "GRCTellus.JPL.200204_202609.GLO.RL06.3M.MSCNv04CRI",
+   "sample_data_url": "https://archive.podaac.earthdata.nasa.gov/podaac-ops-cumulus-protected/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4/GRCTellus.JPL.200204_202609.GLO.RL06.3M.MSCNv04CRI.nc",
+   "download_attempt": {
+    "url": "https://archive.podaac.earthdata.nasa.gov/podaac-ops-cumulus-protected/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4/GRCTellus.JPL.200204_202609.GLO.RL06.3M.MSCNv04CRI.nc",
+    "hops": [],
+    "error": "ProxyError: HTTPSConnectionPool(host='archive.podaac.earthdata.nasa.gov', port=443): Max retries exceeded with url: /podaac-ops-cumulus-protected/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4/GRCTellus.JPL.200204_202609.GLO.RL06.3M.MSCNv04CRI.nc (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "result": "blocked by the container's network proxy (CONNECT 403)"
+   }
+  },
+  {
+   "short_name": "GRACEDADM_CLSM0125US_7D",
+   "role": "GRACE-DA weekly groundwater/root-zone drought indicators (CONUS 0.125 deg)",
+   "collection": {
+    "concept_id": "C1993409520-GES_DISC",
+    "version": "4.0",
+    "provider": "GES_DISC",
+    "title": "Groundwater and Soil Moisture Conditions from GRACE and GRACE-FO Data Assimilation L4 7-days 0.125 x 0.125 degree U.S. V4.0 (GRACEDADM_CLSM0125US_7D)",
+    "time_start": "2002-04-01T00:00:00.000Z",
+    "time_end": null
+   },
+   "granules_2023_on": 193,
+   "by_year": {
+    "2023": 53,
+    "2024": 53,
+    "2025": 53,
+    "2026": 36
+   },
+   "first_granule": "2022-12-26T00:00:00.000Z",
+   "last_granule": "2026-08-31T00:00:00.000Z",
+   "sample_granule": "GRACEDADM_CLSM0125US_7D.A20260831.040.nc4",
+   "sample_data_url": "https://data.gesdisc.earthdata.nasa.gov/data/GRACEDA/GRACEDADM_CLSM0125US_7D.4.0/2026/GRACEDADM_CLSM0125US_7D.A20260831.040.nc4"
+  }
+ ],
+ "urs_probe": {
+  "url": "https://urs.earthdata.nasa.gov/",
+  "hops": [],
+  "error": "ProxyError: HTTPSConnectionPool(host='urs.earthdata.nasa.gov', port=443): Max retries exceeded with url: / (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+  "result": "blocked by the container's network proxy (CONNECT 403)"
+ },
+ "summary": {
+  "all_found_with_granules": true,
+  "blocked": [
+   {
+    "host": "data.nsidc.earthdatacloud.nasa.gov",
+    "product": "SPL3SMP_E",
+    "result": "blocked by the container's network proxy (CONNECT 403)",
+    "error": "ProxyError: HTTPSConnectionPool(host='data.nsidc.earthdatacloud.nasa.gov', port=443): Max retries exceeded with url: /nsidc-cumulus-prod-protected/SMAP/SPL3SMP_E/006/2026/11/13/SMAP_L3_SM_P_E_20261113_R19240_001.h5 (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "hops": []
+   },
+   {
+    "host": "data.gesdisc.earthdata.nasa.gov",
+    "product": "GPM_3IMERGDF",
+    "result": "blocked by the container's network proxy (CONNECT 403)",
+    "error": "ProxyError: HTTPSConnectionPool(host='data.gesdisc.earthdata.nasa.gov', port=443): Max retries exceeded with url: /data/GPM_L3/GPM_3IMERGDF.07/2025/09/3B-DAY.MS.MRG.3IMERG.20250930-S000000-E235959.V07B.nc4 (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "hops": []
+   },
+   {
+    "host": "data.lpdaac.earthdatacloud.nasa.gov",
+    "product": "ECO_L2T_LSTE",
+    "result": "blocked by the container's network proxy (CONNECT 403)",
+    "error": "ProxyError: HTTPSConnectionPool(host='data.lpdaac.earthdatacloud.nasa.gov', port=443): Max retries exceeded with url: /lp-prod-protected/ECO_L2T_LSTE.002/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01/ECOv002_L2T_LSTE_47355_006_15TVG_20261111T070130_0713_01_water.tif (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "hops": []
+   },
+   {
+    "host": "archive.podaac.earthdata.nasa.gov",
+    "product": "TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4",
+    "result": "blocked by the container's network proxy (CONNECT 403)",
+    "error": "ProxyError: HTTPSConnectionPool(host='archive.podaac.earthdata.nasa.gov', port=443): Max retries exceeded with url: /podaac-ops-cumulus-protected/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4/GRCTellus.JPL.200204_202609.GLO.RL06.3M.MSCNv04CRI.nc (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+    "hops": []
+   }
+  ],
+  "unblock": "Free NASA Earthdata Login account (https://urs.earthdata.nasa.gov/users/new), approve the 'NASA GESDISC DATA ARCHIVE' and NSIDC applications, put credentials in ~/.netrc (machine urs.earthdata.nasa.gov login <u> password <p>) or export EARTHDATA_TOKEN; and the data hosts listed above must be added to the container's network allow-list."
+ }
+}

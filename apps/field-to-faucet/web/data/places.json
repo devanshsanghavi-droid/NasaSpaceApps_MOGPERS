@@ -1,0 +1,218 @@
+[
+ {
+  "name": "Des Moines",
+  "lon": -93.61024,
+  "lat": 41.57259,
+  "kind": "city",
+  "basin": null,
+  "geoid": "1921000",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "West Des Moines",
+  "lon": -93.78135,
+  "lat": 41.54994,
+  "kind": "town",
+  "basin": null,
+  "geoid": "1983910",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Fort Dodge",
+  "lon": -94.17567,
+  "lat": 42.50986,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1928515",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Boone",
+  "lon": -93.87253,
+  "lat": 42.04926,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1907480",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Jefferson",
+  "lon": -94.37942,
+  "lat": 42.01774,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1939450",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Carroll",
+  "lon": -94.86428,
+  "lat": 42.07027,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1911080",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Storm Lake",
+  "lon": -95.19646,
+  "lat": 42.64295,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1975630",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Perry",
+  "lon": -94.09325,
+  "lat": 41.83791,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1962355",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Adel",
+  "lon": -94.01266,
+  "lat": 41.60939,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1900505",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Humboldt",
+  "lon": -94.22502,
+  "lat": 42.72293,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1937560",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Algona",
+  "lon": -94.23175,
+  "lat": 43.07635,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1901135",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Webster City",
+  "lon": -93.8182,
+  "lat": 42.46242,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1983145",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Sac City",
+  "lon": -94.99744,
+  "lat": 42.42204,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1969645",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Estherville",
+  "lon": -94.83422,
+  "lat": 43.39973,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1925860",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Emmetsburg",
+  "lon": -94.67958,
+  "lat": 43.1148,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "1925590",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Guthrie Center",
+  "lon": -94.49915,
+  "lat": 41.67793,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1933420",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Panora",
+  "lon": -94.36391,
+  "lat": 41.69113,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1961320",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Lake City",
+  "lon": -94.73105,
+  "lat": 42.26767,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1942465",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Rockwell City",
+  "lon": -94.62887,
+  "lat": 42.39813,
+  "kind": "town",
+  "basin": "raccoon",
+  "geoid": "1968295",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Worthington, MN",
+  "lon": -95.5997,
+  "lat": 43.62873,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "2771734",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Windom, MN",
+  "lon": -95.11914,
+  "lat": 43.87355,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "2770798",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Jackson, MN",
+  "lon": -94.98859,
+  "lat": 43.62568,
+  "kind": "town",
+  "basin": "desmoines",
+  "geoid": "2731562",
+  "source": "US Census 2023 Gazetteer (internal point)"
+ },
+ {
+  "name": "Raccoon River intake gauge (USGS 05484500)",
+  "lon": -93.9497778,
+  "lat": 41.53402778,
+  "kind": "intake",
+  "basin": "raccoon",
+  "site": "05484500",
+  "source": "USGS NWIS site location; gauge used as proxy for the Des Moines Water Works intake on this river"
+ },
+ {
+  "name": "Des Moines River intake gauge (USGS 05482000)",
+  "lon": -93.6197222,
+  "lat": 41.61194444,
+  "kind": "intake",
+  "basin": "desmoines",
+  "site": "05482000",
+  "source": "USGS NWIS site location; gauge used as proxy for the Des Moines Water Works intake on this river"
+ }
+]
