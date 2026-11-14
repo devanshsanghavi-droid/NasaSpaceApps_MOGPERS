@@ -1,3 +1,4 @@
 data/raw/
 __pycache__/
 *.pyc
+data/processed/power_daily_cells.parquet

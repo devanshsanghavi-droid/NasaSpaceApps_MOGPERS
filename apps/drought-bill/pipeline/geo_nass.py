@@ -141,8 +141,6 @@ def build_county(raw):
         for q in ("yield", "planted", "harvested", "production"):
             if f"{q}_{p}" not in w:
                 w[f"{q}_{p}"] = np.nan
-    # also note which rows were published but suppressed in VALUE (e.g. "(D)")
-    supp = c[c.v.isna() & (c.prac == "total") & (c.q == "yield")].groupby(["fips", "year", "crop"]).VALUE.first()
 
     main = w[w.crop.isin(["corn", "soybeans", "sorghum", "wheat"])].copy()
     main["wheat_method"] = np.where(main.crop == "wheat", "published_all_wheat", None)
@@ -175,7 +173,6 @@ def build_county(raw):
         main = pd.concat([main, pd.DataFrame(rows)], ignore_index=True)
 
     main = main.join(meta, on="fips")
-    main["value_flag"] = [supp.get((f, y, cr)) for f, y, cr in main[["fips", "year", "crop"]].values]
     out = main.rename(columns={
         "yield_total": "yield_bu_ac", "planted_total": "planted_ac", "harvested_total": "harvested_ac",
         "production_total": "production_bu",
@@ -186,8 +183,7 @@ def build_county(raw):
     out["county_name"] = out.county_name.str.title()
     cols = ["fips", "year", "crop", "state_abbr", "county_name", "asd_code", "yield_bu_ac", "planted_ac", "harvested_ac",
             "production_bu", "yield_irr_bu_ac", "yield_nonirr_bu_ac", "planted_irr_ac", "planted_nonirr_ac",
-            "harvested_irr_ac", "harvested_nonirr_ac", "production_irr_bu", "production_nonirr_bu", "wheat_method",
-            "value_flag"]
+            "harvested_irr_ac", "harvested_nonirr_ac", "production_irr_bu", "production_nonirr_bu", "wheat_method"]
     out = out[cols].sort_values(["fips", "crop", "year"]).reset_index(drop=True)
     out["year"] = out.year.astype("int16")
     for col in cols[6:18]:
