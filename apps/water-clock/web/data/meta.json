@@ -1,0 +1,170 @@
+{
+ "generated_at": "2026-11-14T23:31:26+00:00",
+ "region": "Western Kansas Groundwater Management Districts 1, 3 and 4 (26 counties, High Plains / Ogallala aquifer)",
+ "data_sources": [
+  {
+   "name": "GRACE-DA groundwater percentiles (NASA GRACE/GRACE-FO data assimilation, UNL NDMC)",
+   "nasa": true,
+   "role": "Regional groundwater drought signal from space; consistency check with wells",
+   "status": "partial",
+   "url": "https://nasagrace.unl.edu/",
+   "note": "2025-10 missing (HTTP 404)"
+  },
+  {
+   "name": "GRACE/GRACE-FO total water storage (GFZ GravIS RL06) and G3P groundwater",
+   "nasa": true,
+   "role": "Volumetric storage trend and correlation with wells",
+   "status": "used",
+   "url": "https://isdc-data.gfz.de/grace/GravIS/"
+  },
+  {
+   "name": "JPL / CSR GRACE mascons",
+   "nasa": true,
+   "role": "Preferred volumetric GRACE product",
+   "status": "blocked",
+   "url": "https://grace.jpl.nasa.gov/",
+   "note": "No Earthdata login; CSR TLS failure"
+  },
+  {
+   "name": "NASA POWER daily (MERRA-2/CERES) + FAO-56 ET0",
+   "nasa": true,
+   "role": "Weather adjustment of decline rates, irrigation-demand sensitivity, climate baseline",
+   "status": "used",
+   "url": "https://power.larc.nasa.gov/"
+  },
+  {
+   "name": "GPM IMERG daily (via NASA POWER)",
+   "nasa": true,
+   "role": "Precipitation cross-check",
+   "status": "partial",
+   "url": "https://power.larc.nasa.gov/",
+   "note": "PC IMERG Zarr infeasible for annual totals"
+  },
+  {
+   "name": "MODIS MOD16A3GF annual ET",
+   "nasa": true,
+   "role": "Relative crop water use check (corn vs sorghum vs wheat)",
+   "status": "used",
+   "url": "https://planetarycomputer.microsoft.com/dataset/modis-16A3GF-061"
+  },
+  {
+   "name": "HLS (Harmonized Landsat Sentinel-2)",
+   "nasa": true,
+   "role": "Irrigated vs dryland detection test in dry spells (Haskell, Finney)",
+   "status": "used",
+   "url": "https://planetarycomputer.microsoft.com/dataset/hls2-l30"
+  },
+  {
+   "name": "NASA NEX-GDDP-CMIP6",
+   "nasa": true,
+   "role": "2045 change in ET0 and rain -> clock shift",
+   "status": "used",
+   "url": "https://ds.nccs.nasa.gov/thredds/catalog/AMES/NEX/GDDP-CMIP6/catalog.html"
+  },
+  {
+   "name": "OpenET",
+   "nasa": true,
+   "role": "Field-scale ET",
+   "status": "blocked",
+   "url": "https://openetdata.org/",
+   "note": "No API key"
+  },
+  {
+   "name": "KGS WIZARD water levels",
+   "nasa": false,
+   "role": "Winter water levels 1940-2026 (state model core)",
+   "status": "used",
+   "url": "https://geohydro.kgs.ku.edu/geohydro/wizard/index.html"
+  },
+  {
+   "name": "USGS Water Data API groundwater levels",
+   "nasa": false,
+   "role": "Additional water levels",
+   "status": "used",
+   "url": "https://api.waterdata.usgs.gov/ogcapi/v0/"
+  },
+  {
+   "name": "USGS OFR 98-393 base of aquifer + KGS depth-to-bedrock picks",
+   "nasa": false,
+   "role": "Aquifer base for saturated thickness",
+   "status": "used",
+   "url": "https://www.sciencebase.gov/catalog/item/631405f5d34e36012efa35b2"
+  },
+  {
+   "name": "USGS SIR 2012-5177 saturated thickness 2009",
+   "nasa": false,
+   "role": "Cross-check of saturated thickness",
+   "status": "used",
+   "url": "https://www.sciencebase.gov/catalog/item/631405d0d34e36012efa33aa"
+  },
+  {
+   "name": "KGS High Plains section database (bedrock per section)",
+   "nasa": false,
+   "role": "Finer aquifer base",
+   "status": "blocked",
+   "url": "http://hercules.kgs.ku.edu/geohydro/section_data/hp_step1.cfm"
+  },
+  {
+   "name": "Kansas WIMAS water rights and water use",
+   "nasa": false,
+   "role": "Reported pumping per point of diversion; fields; crop water use",
+   "status": "partial",
+   "url": "https://geohydro.kgs.ku.edu/geohydro/wimas/",
+   "note": "Sherman 1998 missing"
+  },
+  {
+   "name": "USDA NASS Cropland Data Layer",
+   "nasa": false,
+   "role": "Crop at each point; county acreage",
+   "status": "used",
+   "url": "https://www.nass.usda.gov/Research_and_Science/Cropland/"
+  },
+  {
+   "name": "USDA NASS QuickStats bulk (yields, prices, Census of Agriculture 2022)",
+   "nasa": false,
+   "role": "Yields, prices, irrigated acres",
+   "status": "partial",
+   "url": "https://www.nass.usda.gov/datasets",
+   "note": "County irrigated yields end 2018 (corn), 2009 (sorghum)"
+  },
+  {
+   "name": "USDA ERS Commodity Costs and Returns",
+   "nasa": false,
+   "role": "Operating costs per acre",
+   "status": "used",
+   "url": "https://www.ers.usda.gov/data-products/commodity-costs-and-returns"
+  },
+  {
+   "name": "KSU AgManager irrigated budgets",
+   "nasa": false,
+   "role": "Irrigated vs dryland costs",
+   "status": "blocked",
+   "url": "https://www.agmanager.info/"
+  },
+  {
+   "name": "BEA county earnings",
+   "nasa": false,
+   "role": "Share of economy from irrigated agriculture",
+   "status": "blocked",
+   "url": "https://apps.bea.gov/"
+  },
+  {
+   "name": "US Census population and county boundaries",
+   "nasa": false,
+   "role": "Towns, population, maps",
+   "status": "used",
+   "url": "https://www2.census.gov/"
+  }
+ ],
+ "caveats": [
+  "Years left are a projection of the recent (2011-2026, weather-normalised) decline rate; they are not a forecast of what farmers or water managers will do. The hindcast shows declines can speed up or slow down by decade.",
+  "Saturated thickness at a field is uncertain by roughly +/-20-30 ft because the aquifer base map is coarse (1:1,000,000, 200-ft contours plus KGS bedrock picks).",
+  "0 years means the central estimate is already below the threshold; many wells still pump below 30 ft of saturated thickness, at reduced capacity.",
+  "100 means 100 years or more (flat or rising water levels).",
+  "County clocks summarise the groundwater-irrigated points of diversion (WIMAS) weighted by reported acres.",
+  "GRACE sees a ~300 km footprint; its storage trend is about a quarter of the well-based trend here, so it is used as a timing / sign check, not to scale the clock.",
+  "Income uses ERS regional costs that do not separate irrigated from dryland farms and excludes pumping energy; irrigated yields after 2018 are estimated from earlier NASS ratios.",
+  "Wallace County is kept in GMD4 as in the contract list, although 90% of its irrigated acres lie inside the GMD1 polygon (econ module check).",
+  "This is decision support, not a replacement for your agronomist or for local water-right rules."
+ ]
+}
