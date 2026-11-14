@@ -26,7 +26,8 @@ Each module appends a section: what failed (exact error), what we used instead, 
   Computer `gpm-imerg-hhr` (V06), which ends 2021-05-31; each Zarr chunk is 12 half-hours of the whole globe
   (~51-57 MB), i.e. ~220 MB per local day. Used instead: a POWER-ranked storm-day sample 2016-01..2021-05
   (38 days, 8.3 GB, `pipeline/p14_imerg.py` -> `data/processed/imerg_sample.parquet`, `imerg_vs_power.json`), which
-  shows POWER PRECTOTCORR is an unbiased basin-scale rainfall driver (volume ratio 1.01, r = 0.62 on storm days).
+  shows that on POWER-selected wet days POWER and IMERG volumes agree (ratio 1.01, r = 0.62) but POWER compresses
+  extremes (slope 0.48) and storm intensity cannot be recovered from POWER daily totals.
   POWER PRECTOTCORR is therefore the continuous rain driver for 2016-2026.
 - **CMR search works (no login)** and confirms granules over the basins for 2023-2026 (`p15_earthdata_check.py` ->
   `data/processed/earthdata_check.json`): SPL3SMP_E v006 (1,418 daily, through 2026-11-13), SPL4SMGP v008 (11,298

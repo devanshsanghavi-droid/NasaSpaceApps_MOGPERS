@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T21:33:37+00:00",
+ "generated_at": "2026-11-14T22:27:10+00:00",
  "sources": {
   "imerg": "Planetary Computer gpm-imerg-hhr (GPM IMERG V06 Final, half-hourly 0.1 deg, precipitationCal) https://planetarycomputer.microsoft.com/dataset/gpm-imerg-hhr",
   "power": "data/processed/power_daily_basin.parquet (hydro; area-weighted MERRA-2 cells, LST days)"
@@ -177,5 +177,5 @@
    "mean_imerg_mm": 16.7
   }
  },
- "verdict": "On 76 sampled basin-days POWER PRECTOTCORR vs IMERG basin totals: r=0.618, rho=0.589, bias +0.27 mm/day (POWER/IMERG volume ratio 1.011). POWER captures which days are heavy at basin scale; use it as the continuous rainfall driver for 2022-2026, with storm intensity as a function of daily total (relations above) rather than a separate observed driver."
+ "verdict": "On 76 sampled basin-days POWER PRECTOTCORR vs IMERG basin totals: r=0.618, rho=0.589, bias +0.27 mm/day (POWER/IMERG volume ratio 1.011). POWER captures which days are heavy at basin scale; use it as the continuous rainfall driver for 2016-2026 (sample selected on POWER-wet days, so bias on other days is untested; POWER compresses extremes, slope ~0.48), and note that storm intensity is not recoverable from daily totals."
 }

@@ -44,7 +44,8 @@ Class groups (crop letters as in shared notes/cdl.md; double crops take the firs
 - HUC-12 mean row-crop share: median 0.83; min 0.03 (071000041003 Saylor Creek-Des Moines River, 76% developed),
   then 0.20-0.24 (Raccoon HUC-12s 071000070701 Beaver Creek, 071000070403 Mason Creek), max 0.92.
 - 68.4% of basin pixels are row crop in all 10 years; 77.0% in ≥ 6 years (row-crop pixels).
-- Grass/pasture jumps in 2021+ in the Raccoon (0.09 → 0.12) at the PC→NASS / CDL-version boundary, while
+- Grass/pasture jumps 2020→2021 in the Raccoon (0.091 → 0.115); both years come from Planetary Computer, so this is a CDL
+  classification change in the 2021 release, not the PC→NASS switch, while
   developed drops in 2019; these are partly CDL classification/version changes, not only land-use change.
 
 ### Grid check (PC 2016-2021 vs NASS 2022-2025)

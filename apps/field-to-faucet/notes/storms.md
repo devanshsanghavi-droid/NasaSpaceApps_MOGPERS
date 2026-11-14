@@ -80,10 +80,15 @@ POWER PRECTOTCORR vs IMERG basin totals on the sampled days:
   - `p95_30min = 2.79 · imerg_mm^0.54` (r_log 0.71)
   - `wet_frac = 0.39 + 0.0146 · power_mm` (r 0.49)
 - **Use in the model:**
-  - POWER PRECTOTCORR has no volume bias against IMERG on storm days, and it ranks storm days moderately well.
+  - On POWER-selected wet days, POWER and IMERG volumes agree (ratio 1.01), but POWER compresses extremes (OLS slope
+    0.48; e.g. Des Moines 2016-08-11: IMERG 52 mm vs POWER 24 mm). Bias on days that were not selected (e.g. storms
+    POWER missed) is untested. POWER ranks storm days moderately well (r = 0.62).
     That supports using it as the continuous rainfall driver for 2016-2026. IMERG is not reachable after 2021-05.
-  - Storm intensity adds little independent information beyond the daily total at this scale. If an intensity
-    term is wanted, derive it from the power-law above, with its wide scatter, rather than treating it as observed.
+  - The daily total explains only ~37% of the variance of log max-30-min intensity (r_log = 0.61), so storm
+    intensity is NOT recoverable from POWER daily totals. The river model therefore uses daily rain amounts and
+    antecedent wetness, not intensity; this is a real limitation while IMERG after 2021-05 is unreachable.
+  - Day boundary: IMERG days are 06-06 UTC; on 4 back-to-back test pairs, one (2017-10-07) matched POWER better with a
+    00-00 UTC day, another (2020-05-17) with the 06 UTC day, so day alignment carries some uncertainty.
 
 ## Earthdata availability (`p15_earthdata_check.py` → data/processed/earthdata_check.json)
 NASA CMR search worked without login. Granule search used bbox -96.2, 41.4, -93.5, 44.3 and dates 2023-01-01 to

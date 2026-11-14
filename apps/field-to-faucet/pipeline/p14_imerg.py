@@ -387,8 +387,8 @@ def analysis(df, log, dropped, pw_src):
     out["verdict"] = (f"On {pc['n']} sampled basin-days POWER PRECTOTCORR vs IMERG basin totals: r={pc['pearson_r']}, "
                       f"rho={pc['spearman_rho']}, bias {pc['bias_mm']:+} mm/day (POWER/IMERG volume ratio "
                       f"{pc['ratio_power_over_imerg']}). POWER captures which days are heavy at basin scale; use it "
-                      f"as the continuous rainfall driver for 2022-2026, with storm intensity as a function of daily "
-                      f"total (relations above) rather than a separate observed driver.")
+                      f"as the continuous rainfall driver for 2016-2026 (sample selected on POWER-wet days, so bias on other days is untested; "
+                      f"POWER compresses extremes, slope ~0.48), and note that storm intensity is not recoverable from daily totals.")
     return out
 
 
