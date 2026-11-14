@@ -82,7 +82,7 @@ def doy_climatology(dates: pd.Series, values: pd.Series, years=(2016, 2024), hal
 def cover_asof(cv: pd.DataFrame, c8: pd.DataFrame, basin: str, idx: pd.DatetimeIndex):
     """Causal as-of bare share on each day in idx -> (bare_asof, age_days, src).
 
-    Preferred: the modis module's `bare_share_asof` / `age_days` (and `gapfill_src`) columns in
+    Preferred: the modis module's `bare_share_asof` / `age_days` / `asof_src` columns in
     cover_basin_daily.parquet, when present. Fallback (built here, same rule): the latest
     MODIS 13Q1 composite with valid_frac >= 0.30 and tile_cover_frac >= 0.90 whose 16-day window
     (composite_start .. composite_start+15) ended at least ASOF_LAG days before t.
@@ -93,19 +93,17 @@ def cover_asof(cv: pd.DataFrame, c8: pd.DataFrame, basin: str, idx: pd.DatetimeI
         bare = c["bare_share_asof"].astype(float).reindex(idx)
         age = (c["age_days"].astype(float).reindex(idx) if "age_days" in c.columns
                else pd.Series(np.nan, index=idx))
-        if "gapfill_src" in c.columns:
-            gs = c["gapfill_src"].reindex(idx).astype(object)
-            src = pd.Series(np.where(gs.notna() & (gs.astype(str) != "") & (gs.astype(str) != "None"),
-                                     "asof_" + gs.astype(str), "modis_asof"), index=idx, dtype=object)
+        if "asof_src" in c.columns:  # source of the as-of value ('modis' / 'hls' gap-fill)
+            src = ("asof_" + c["asof_src"].astype(str)).reindex(idx).fillna("asof_none").astype(object)
         else:
-            src = pd.Series("modis_asof", index=idx, dtype=object)
+            src = pd.Series("asof_modis", index=idx, dtype=object)
         # beyond the end of the provided daily file: carry the last value forward, ageing it
         last = bare.dropna().index.max() if bare.notna().any() else None
         if last is not None and last < idx[-1]:
             tail = idx > last
             bare[tail] = bare[last]
             age[tail] = age[last] + (idx[tail] - last).days
-            src[tail] = "modis_asof"
+            src[tail] = "asof_carried"
         return bare, age.fillna(0.0), src
     e = c8[(c8.basin == basin)].copy()
     e = e[(e.valid_frac >= 0.30) & (e.tile_cover_frac >= 0.90) & e.bare_share.notna()]
