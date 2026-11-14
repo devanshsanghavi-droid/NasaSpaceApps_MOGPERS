@@ -23,8 +23,11 @@ Outputs:
   data/processed/cover_hls_8day.parquet    basin x composite (raw and calibrated), same columns as cover_basin_8day
   data/processed/cover_hls_huc12_8day.parquet  huc12 x composite (calibrated) for the gap windows
   data/processed/cover_hls_calibration.json    HLS-vs-MODIS agreement before / after mapping
-p09_modis_cover.py merges the gap windows into cover_basin_8day / daily / huc12 (gapfill_src = 'hls').
-Run: python3 pipeline/p09b_hls_gapfill.py [--fetch-only] [--max-minutes N]
+p09_modis_cover.py merges the gap windows into cover_basin_8day / cover_basin_daily (gapfill_src = 'hls'); this script
+re-runs it at the end unless --no-merge. HUC-12 gap-fill stays in cover_hls_huc12_8day.parquet (kept out of
+cover_huc12_8day so MODIS-vs-HLS comparisons there are not contaminated).
+Needs the p09 MODIS cache (run p09_modis_cover.py once first). ~7 min of reads for 1,526 scenes (6 threads), then ~1 min.
+Run: python3 pipeline/p09b_hls_gapfill.py [--fetch-only] [--max-minutes N] [--no-merge]
 """
 import os
 
@@ -372,7 +375,11 @@ def main():
     if fetch_only:
         return
     build(pts, items, tix, sel, cov, fails, stopped)
-    print(f"done in {time.time() - t0:.0f}s")
+    print(f"p09b done in {time.time() - t0:.0f}s")
+    if "--no-merge" not in sys.argv:
+        print("\n==== re-running p09_modis_cover.py to merge the gap-fill ====", flush=True)
+        import p09_modis_cover
+        p09_modis_cover.main()
 
 
 def build(pts, items, tix, sel, cov, fails, stopped):

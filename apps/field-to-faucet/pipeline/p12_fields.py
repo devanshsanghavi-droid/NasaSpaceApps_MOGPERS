@@ -34,7 +34,8 @@ living when >= 0.5.
 
 Year convention: field_year.year is the CROP YEAR = USGS water year: Oct 1 (year-1) .. Sep 30 (year). The winter of
 Nov 2024-Apr 2025 belongs to crop year 2025, together with the 2025 cash crop (crop = CDL letter of calendar 2025).
-field_month uses calendar year and month.
+field_month uses calendar year and month; field_month.interp_only = no clear observation in the month (n_obs == 0),
+so its status is interpolated only. A crop year is written only when the data reach Sep 1 of that year.
 
 Winter cover (crop year Y): fall window Oct 15-Dec 15 of Y-1 (after harvest of crop Y-1), spring window
 Mar 15-May 10 of Y (before the crop Y canopy). Per window s = 2nd-highest (single value if only one) share of the

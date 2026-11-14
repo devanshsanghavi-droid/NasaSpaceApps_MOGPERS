@@ -369,6 +369,29 @@ def hls_daily(h: pd.DataFrame, fids: list[str], dates: pd.DatetimeIndex):
 
 
 # ----------------------------------------------------------------------------- helpers
+def bilinear_weights(lon, lat, cells: pd.DataFrame, cidx: dict, dlat=0.5, dlon=0.625):
+    W = np.zeros((len(lon), len(cidx)))
+    key = {(round(r.lat, 3), round(r.lon, 3)): r.cell_id for r in cells.itertuples()}
+    for i, (x, y) in enumerate(zip(lon, lat)):
+        la0 = np.floor(y / dlat) * dlat
+        lo0 = -180 + np.floor((x + 180) / dlon) * dlon
+        fy, fx = (y - la0) / dlat, (x - lo0) / dlon
+        corners = [(la0, lo0, (1 - fy) * (1 - fx)), (la0, lo0 + dlon, (1 - fy) * fx),
+                   (la0 + dlat, lo0, fy * (1 - fx)), (la0 + dlat, lo0 + dlon, fy * fx)]
+        tot = 0.0
+        for la, lo, w in corners:
+            c = key.get((round(la, 3), round(lo, 3)))
+            if c is not None and w > 0:
+                W[i, cidx[c]] += w
+                tot += w
+        if tot == 0:   # outside the grid: nearest centre
+            d = (cells["lat"] - y) ** 2 + (cells["lon"] - x) ** 2
+            W[i, cidx[cells.loc[d.idxmin(), "cell_id"]]] = 1.0
+        else:
+            W[i] /= tot
+    return W
+
+
 def corr(x, y):
     x, y = np.asarray(x, float), np.asarray(y, float)
     return {"pearson": round(float(stats.pearsonr(x, y)[0]), 3), "pearson_p": float(f"{stats.pearsonr(x, y)[1]:.3g}"),
@@ -417,8 +440,14 @@ def main():
     # ---------------- share of load from row-crop land, s ~ U[s_lo, s_hi]
     ag = fact_value(facts, "ag_share_river_nitrate_pct")
     s_lo = float(ag["range"]["lo"]) / 100.0 if ag and ag.get("range") else 0.70
-    m_city = re.search(r"cities\s*([\d.]+)\s*-\s*([\d.]+)\s*%", (ag or {}).get("notes", "") or "")
-    point = float(m_city.group(2)) / 100.0 if m_city else 0.0
+    npf = fact_value(facts, "inrs_nonpoint_share_pct")
+    if npf:   # primary: INRS statewide nonpoint share of stream N; point sources = the rest
+        point = 1.0 - float(npf["value"]) / 100.0
+        point_src = f"point sources {point:.0%} = 1 - INRS nonpoint share {npf['value']}% ({npf['url']})"
+    else:     # fallback: Axios 'cities 1.5-2%' quoted in the notes of ag_share_river_nitrate_pct
+        m_city = re.search(r"cities\s*([\d.]+)\s*-\s*([\d.]+)\s*%", (ag or {}).get("notes", "") or "")
+        point = float(m_city.group(2)) / 100.0 if m_city else 0.0
+        point_src = f"point sources {point:.1%} (cities, facts note on ag_share_river_nitrate_pct)"
     s_hi_b = {}
     for b in SITES:
         cb = cdlb[(cdlb["basin"] == b) & cdlb["year"].isin(CAL_YEARS)].mean(numeric_only=True)
@@ -429,7 +458,7 @@ def main():
     s_c = 0.5 * (s_lo + s_hi)
     share_note = (f"s ~ U[{s_lo:.3f}, {s_hi:.3f}]: lower = CISWRA agriculture share lo ({ag['url'] if ag else 'n/a'}); "
                   f"upper = row-crop share of land-based load if non-row-crop land (grass, hay, small grain, forest, other; CDL) "
-                  f"leaks eps={eps:.2f} of row-crop land per ha, minus point sources {point:.1%} (cities, facts note on ag_share_river_nitrate_pct). "
+                  f"leaks eps={eps:.2f} of row-crop land per ha, times (1 - point share); {point_src}. "
                   f"Per-basin upper: {', '.join(f'{k} {v:.3f}' for k, v in s_hi_b.items())}; the smaller one is used for both.")
     log("  row-crop share of river load:", share_note)
 
@@ -446,6 +475,18 @@ def main():
     RH = Wm @ RAIN
     bias_doy, bias_month = modis_bias_by_doy(hvm)
     cov = pd.read_parquet(PROC / "cover_huc12_8day.parquet")
+    n_hls_fill = 0
+    fill_path = PROC / "cover_hls_huc12_8day.parquet"
+    if fill_path.exists():
+        # HLS composites built on the MODIS mask and quantile-mapped to MODIS NDVI (pipeline/p09b_hls_gapfill.py);
+        # used only where MODIS has no composite (the Jul-Nov 2025 Planetary Computer gap).
+        fill = pd.read_parquet(fill_path)
+        have = set(zip(cov["huc12"], pd.to_datetime(cov["date"]).dt.strftime("%Y-%m-%d")))
+        key = list(zip(fill["huc12"], pd.to_datetime(fill["date"]).dt.strftime("%Y-%m-%d")))
+        fill = fill[[k not in have for k in key]]
+        n_hls_fill = len(fill)
+        cov = pd.concat([cov, fill[[c for c in fill.columns if c in cov.columns]]], ignore_index=True)
+    log(f"  MODIS composites + {n_hls_fill} HLS gap-fill rows")
     BH, BHfilled = modis_daily(cov, dates, bias_doy, huc_list, basin_of)
     JH = (BH + eps * (1 - BH)) * DH                # cover x drainage (mm-equivalent), per row-crop ha-day
     yr = dates.year.to_numpy()
@@ -629,8 +670,10 @@ def main():
     BHf = BH[:, fsel][fh]                                   # fallback MODIS (HLS-corrected) of the field's HUC-12
     fallback = np.isnan(BF)
     BF = np.where(fallback, BHf, BF)
-    fc = np.array([cidx[c] for c in fl["power_cell_id"]])
-    DF = DR[:, fsel][fc]
+    # weather at the field: bilinear interpolation between the 4 surrounding POWER cell centres (MERRA-2 grid
+    # 0.5 x 0.625 deg). Nearest-cell lookup put an artificial step at the 42.25 N cell edge through two HUC-12s.
+    WF = bilinear_weights(fl["lon"].to_numpy(float), fl["lat"].to_numpy(float), cells, cidx)
+    DF = WF @ DR[:, fsel]
     JF = (BF + eps * (1 - BF)) * DF                         # [field, day]
     fyr = fdates.year.to_numpy()
     fmo = fdates.month.to_numpy()
@@ -663,8 +706,8 @@ def main():
 
     # monthly calendar (2020-2025 averages)
     cal = {}
-    rf = RAIN[:, fsel][fc]
-    gwf = GW[:, fsel][fc]
+    rf = WF @ RAIN[:, fsel]
+    gwf = WF @ GW[:, fsel]
     for key in ["bare_frac", "rain_mm", "storm_days", "wetness", "leak", "leak_share"]:
         cal[key] = np.zeros((len(fids), 12))
     ny = len(FIELD_YEARS)
@@ -762,6 +805,7 @@ def main():
         "load_gapfill_cv": cv,
         "calibration": calib,
         "hls_spike_scenes_dropped": spikes,
+        "modis_hls_gapfill_rows_used": n_hls_fill,
         "fields": {
             "n": len(fs),
             "lbN_ac_yr_p50_distribution": {k: round(float(v), 1) for k, v in zip(["p5", "p10", "p25", "p50", "p75", "p90", "p95"], np.percentile(fs["leak_lbN_ac_yr_p50"], [5, 10, 25, 50, 75, 90, 95]))},
@@ -773,7 +817,9 @@ def main():
             "hls_vs_modis_annual_index_focus": {int(y): round(float(JFy[:, FIELD_YEARS.index(y)].mean() / JHy[[hidx[x] for x in huc_focus["huc12"]], CAL_YEARS.index(y)].mean()), 3) for y in FIELD_YEARS},
         },
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "inputs_pending_refresh": ["hls_field_ts / field_month / field_year (spike-scene fix)", "hls_vs_modis.json (monthly bias)", "cover_huc12_8day (fall 2025 gap)"],
+        "input_mtimes": {p.name: time.strftime("%Y-%m-%d %H:%M", time.localtime(p.stat().st_mtime)) for p in
+                         [PROC / f for f in ("hls_field_ts.parquet", "field_year.parquet", "hls_vs_modis.json", "cover_huc12_8day.parquet",
+                                             "cover_hls_huc12_8day.parquet", "nwis_daily.parquet", "power_daily_cells.parquet")] if p.exists()},
     })
     (OUT / "basin_index_check.json").write_text(json.dumps(chk, indent=1, default=float))
 

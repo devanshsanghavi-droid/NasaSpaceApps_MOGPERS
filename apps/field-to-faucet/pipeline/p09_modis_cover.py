@@ -9,11 +9,16 @@ data/raw/modis/cache/*.npz so reruns only fetch new composites.
 Per composite, over masked persistent-row-crop pixels:
   valid = reliability 0/1 and NDVI not fill; snow = reliability 2; cloud = reliability 3; fill = no data
   living = valid & NDVI >= 0.30 ; bare = valid & NDVI < 0.30 (sensitivity at 0.25 / 0.35)
+The 2025 MODIS gap (no composites on PC for windows starting 2025-07-04 .. 2025-11-09) is filled with calibrated
+HLS composites from p09b_hls_gapfill.py (data/processed/cover_hls_8day.parquet) when that file exists
+(gapfill_src = 'hls').
 Outputs (data/processed/):
-  cover_basin_8day.parquet   basin, date (composite mid-date) ... see notes/modis.md
-  cover_basin_daily.parquet  basin, date, daily interpolated shares, gap_days, filled (gap > 24 d)
-  cover_huc12_8day.parquet   huc12, date ...
-  modis_basin_year.parquet   per basin-year spring / fall bare summaries and bare & non-snow days
+  cover_basin_8day.parquet   basin, date (composite mid-date) ..., gapfill_src, avail_date; see notes/modis.md
+  cover_basin_daily.parquet  basin, date, daily interpolated shares (NOT causal), gap_days, filled (gap > 24 d),
+                             gapfill_src, and causal as-of columns (*_asof, age_days, asof_stale, asof_src)
+  cover_huc12_8day.parquet   huc12, date ..., tile_cover_frac, composite_start, avail_date
+  modis_basin_year.parquet   per basin-year spring / fall bare summaries and bare & non-snow days (coverage-checked)
+Run order: p08_modis_mask.py -> p09_modis_cover.py -> p09b_hls_gapfill.py (which re-runs p09 at the end to merge)
 Run: python3 pipeline/p09_modis_cover.py
 """
 import os
@@ -331,6 +336,7 @@ def merge_hls(b8):
     f = PROC / "cover_hls_8day.parquet"
     b8 = b8.copy()
     b8["gapfill_src"] = "modis"
+    b8["n_scenes"] = np.nan        # HLS scenes used (HLS rows only)
     if not f.exists():
         print("cover_hls_8day.parquet not found: 2025 gap left unfilled (run p09b_hls_gapfill.py)")
         return b8
@@ -342,7 +348,7 @@ def merge_hls(b8):
     h["n_tiles"] = 0
     h["obs_date_obs"] = h.obs_date
     h["gapfill_src"] = "hls"
-    h = h[[c for c in b8.columns if c in h.columns] + ["n_scenes"]]
+    h = h[[c for c in b8.columns if c in h.columns]]
     out = pd.concat([b8, h], ignore_index=True)
     out["date"] = pd.to_datetime(out.date).dt.date
     out["composite_start"] = pd.to_datetime(out.composite_start).dt.date

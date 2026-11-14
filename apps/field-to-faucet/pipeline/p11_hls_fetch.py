@@ -6,10 +6,14 @@ from data/processed/focus_area.json (15TUG), 2020-01-01..today (PC HLS v2 starts
 For each granule we windowed-read (focus bbox only, native 30 m) Fmask, green (B03), red (B04), NIR (L30 B05 / S30 B8A),
 SWIR1 (L30 B06 / S30 B11) and SWIR2 (L30 B07 / S30 B12). A pixel is clear when Fmask bits 1-4 (cloud, adjacent to
 cloud/shadow, cloud shadow, snow/ice) are all 0, Fmask != 255 (fill) and every reflectance is > 0 and != -9999.
-From Oct 1 to May 31 (granule month 10-12 or 1-5) pixels with Fmask aerosol level bits 6-7 = 11 (high aerosol) are
-also masked: in the dormant season the high-aerosol S30/L30 surface reflectance reads green (e.g. S30 2024-05-03:
-99.8% of clear pixels high-aerosol and 67% of fields "living" between 3% and 2% scenes). Jun-Sep is not masked
-(canopies are far above the 0.30 threshold, and summer haze scenes would otherwise lose most pixels).
+For S30 granules from Oct 1 to May 31 (month 10-12 or 1-5), pixels with Fmask aerosol level bits 6-7 = 11 (high
+aerosol) are also masked: in the dormant season high-aerosol S30 surface reflectance reads green (S30 2024-05-03:
+99.8% of clear pixels high-aerosol and 67% of fields "living", between 3% and 2% scenes; the 33 Oct-May S30 scenes
+with > 90% high-aerosol pixels had a median field living share of 0.32 vs 0.02 for the rest). L30 is NOT masked:
+its high-aerosol flag covers 40-70% of clear pixels in most Dec-Feb scenes (snow-adjacent, bright soil), but those
+pixels are not green-biased (the 12 Oct-May L30 scenes with > 90% high-aerosol pixels: median field NDVI 0.216,
+living share 0.01), and masking them deleted every Dec 2022-Feb 2023 L30 scene (a > 120-day gap in crop year 2023).
+Jun-Sep is never masked (canopies sit far above the 0.30 threshold).
 Reflectance = DN * 0.0001. Pixel indices: NDVI = (NIR-red)/(NIR+red); NDTI = (SWIR1-SWIR2)/(SWIR1+SWIR2);
 GCVI = NIR/green - 1 (clipped to [-1, 20]).
 
@@ -19,7 +23,7 @@ Per granule the cache data/raw/hls/g/<item_id>.npz holds, for cells with >= 1 cl
 mean NDVI/NDTI/GCVI and the pixel share with NDVI >= 0.25/0.30/0.35. Cache version 2 (all Oct-May granules) also
 holds `grid` (uint8, cells x len(T_GRID)): the count of clear pixels with NDVI >= each threshold 0.200..0.450 step
 0.005, so p12 can apply the S30 -> L30 dormant-season NDVI offset before thresholding. Version-1 caches of Oct-May
-granules are re-read automatically. The npz is written last, so the run is resumable.
+granules (or caches made under another aerosol rule) are re-read automatically. The npz is written last, so the run is resumable.
 The cell grid is cached in data/raw/hls/cells.npz (p12 reuses it).
 
 Usage: python3 pipeline/p11_hls_fetch.py [--limit N] [--workers 6] [--offline]
@@ -54,7 +58,8 @@ CELLS = HLS_RAW / "cells.npz"
 START = "2020-01-01"
 INNER = 30.0       # pixel centre must be >= this far inside the cell edge (m)
 MIN_CLEAR_SHARE = 0.005  # skip band reads if < 0.5% of focus pixels are clear
-AER_MONTHS = (10, 11, 12, 1, 2, 3, 4, 5)  # mask high-aerosol pixels (Fmask bits 6-7 == 3) in these months
+AER_MONTHS = (10, 11, 12, 1, 2, 3, 4, 5)  # Oct-May: cache v2 (threshold grid); S30 high-aerosol mask
+AER_SENSORS = ("S30",)  # mask high-aerosol pixels (Fmask bits 6-7 == 3) for these sensors in AER_MONTHS
 T_GRID = np.round(np.arange(0.200, 0.4501, 0.005), 3)  # NDVI thresholds for the per-cell count grid (cache v2)
 CACHE_V = 2
 
@@ -63,14 +68,19 @@ def aer_window(it):
     return int(it["datetime"][5:7]) in AER_MONTHS
 
 
+def aer_masked(it):
+    return aer_window(it) and it["sensor"] in AER_SENSORS
+
+
 def cache_ok(it):
-    """Cached and, for Oct-May granules, at cache version 2 (aerosol mask + threshold grid)."""
+    """Cached and, for Oct-May granules, at cache version 2 (threshold grid) with the current aerosol policy."""
     f = GDIR / f"{it['item_id']}.npz"
     if not f.exists():
         return False
     if not aer_window(it):
         return True
-    return json.loads(str(np.load(f, allow_pickle=False)["meta"])).get("v", 1) >= CACHE_V
+    meta = json.loads(str(np.load(f, allow_pickle=False)["meta"]))
+    return meta.get("v", 1) >= CACHE_V and meta.get("aer_mask") == aer_masked(it)
 
 
 def build_cells():
@@ -177,12 +187,12 @@ def process(it, cells):
     clear = (fm != 255) & ((fm & 0b11110) == 0) & m_in
     aer = (fm >> 6) & 0b11
     hi_aer = clear & (aer == 3)
-    use_aer = aer_window(it)
+    use_aer = aer_masked(it); v2 = aer_window(it)
     meta = dict(item_id=it["item_id"], datetime=it["datetime"], sensor=it["sensor"], platform=it["platform"],
                 cloud_cover=it["cloud_cover"], n_px=int(m_in.sum()), n_fmask_clear=int(clear.sum()),
                 n_snow=int(((fm != 255) & ((fm >> 4) & 1 == 1) & m_in).sum()),
                 n_fill=int(((fm == 255) & m_in).sum()), n_high_aer=int(hi_aer.sum()),
-                n_mod_aer=int((clear & (aer == 2)).sum()), aer_mask=bool(use_aer), v=CACHE_V if use_aer else 1)
+                n_mod_aer=int((clear & (aer == 2)).sum()), aer_mask=bool(use_aer), v=CACHE_V if v2 else 1)
     if use_aer:
         clear &= ~hi_aer
     arrs = {}
@@ -198,7 +208,7 @@ def process(it, cells):
     res = dict(cell=np.zeros(0, np.int32), n_clear=np.zeros(0, np.uint16), ndvi=np.zeros(0, np.float32),
                ndti=np.zeros(0, np.float32), gcvi=np.zeros(0, np.float32), live25=np.zeros(0, np.float32),
                live30=np.zeros(0, np.float32), live35=np.zeros(0, np.float32))
-    if use_aer:
+    if v2:
         res["grid"] = np.zeros((0, len(T_GRID)), np.uint8)
     if ok.any():
         L = lab[ok]
@@ -212,7 +222,7 @@ def process(it, cells):
         res = dict(cell=cell.astype(np.int32), n_clear=n[cell].astype(np.uint16), ndvi=mean(ndvi), ndti=mean(ndti),
                    gcvi=mean(gcvi), live25=mean((ndvi >= 0.25).astype(np.float32)),
                    live30=mean((ndvi >= 0.30).astype(np.float32)), live35=mean((ndvi >= 0.35).astype(np.float32)))
-        if use_aer:  # counts of clear pixels per cell with NDVI >= each grid threshold (inner cells: <= 140 px)
+        if v2:  # counts of clear pixels per cell with NDVI >= each grid threshold (inner cells: <= 140 px)
             k = np.searchsorted(T_GRID, ndvi, side="right")  # ndvi >= T_GRID[j] for j < k
             h = np.zeros((ncell, len(T_GRID) + 1), np.int32)
             np.add.at(h, (L, k), 1)

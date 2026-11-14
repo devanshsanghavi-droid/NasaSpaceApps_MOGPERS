@@ -49,19 +49,27 @@ Each module appends a section: what failed (exact error), what we used instead, 
   replace POWER rain via the same basin-weighting code as `p14_imerg.py` (not written).
 
 ## modis (2026-11-14)
-- **Planetary Computer `modis-13Q1-061` has no MOD13Q1 or MYD13Q1 items for 2025-07-12 .. 2025-11-16 (DOY 193-320)**,
-  anywhere on the globe (STAC search over Iowa returns 0 items for that window; a global search for Aug-Oct 2025 returns
-  0). `modis-09Q1-061`, `modis-09A1-061`, `modis-13A1-061`, `modis-15A2H-061` and `modis-11A2-061` have the same gap.
-  CMR shows the granules exist at LP DAAC (e.g. `MOD13Q1.A2025193.h10v04.061.2025212122128` ...
-  `MOD13Q1.A2025305.h11v04.061.2025322130317`), but downloading needs an Earthdata login and the LP DAAC data host is
-  not on the proxy allow-list. Effect: `cover_basin_daily` interpolates straight across 2025-07-08 .. 2025-12-30
-  (`filled=True`, gap 138-177 days); fall 2025 bare-share summaries are missing; `nov_living_mean` 2025 is NaN.
-  Unblock: Earthdata token + allow `data.lpdaac.earthdatacloud.nasa.gov`, or wait for PC to backfill (p09 rerun only
-  fetches new items), or substitute HLS (PC `hls2-l30/s30`) for fall 2025.
+- **Planetary Computer `modis-13Q1-061` has no MOD13Q1 or MYD13Q1 items after Terra A2025177 (window Jun 26-Jul 11,
+  2025) until Terra A2025321 (Nov 17)**: the first missing composite is Aqua A2025185 (start 2025-07-04), the last Aqua
+  A2025313 (start 2025-11-09), 17 windows, anywhere on the globe (STAC search over Iowa returns 0 items; a global search
+  for Aug-Oct 2025 returns 0). `modis-09A1-061`, `modis-13A1-061`, `modis-43A4-061`, `modis-15A2H-061` and
+  `modis-11A2-061` have the same gap; `modis-09Q1-061` has a single h11v04 item. CMR shows the granules exist at LP DAAC
+  (e.g. `MOD13Q1.A2025193.h10v04.061.2025212122128` ... `MOD13Q1.A2025305.h11v04.061.2025322130317`), but downloading
+  needs an Earthdata login and the LP DAAC data host is not on the proxy allow-list.
+- **Workaround in place: NASA HLS v2 gap-fill** (`pipeline/p09b_hls_gapfill.py`, PC `hls2-l30` + `hls2-s30`, 7 MGRS
+  tiles, 1,526 scenes, 0 read failures, ~7 min). HLS composites built on the MODIS windows and mask, quantile-mapped to
+  MODIS NDVI on 2023/2024/2025 overlap windows (living share bias −0.001, r 0.989, RMSE 0.062; leave-one-year-out RMSE
+  0.086, fall-only 0.132). They fill the 17 windows in `cover_basin_8day` / `cover_basin_daily` with
+  `gapfill_src = 'hls'` (HUC-12 level: `cover_hls_huc12_8day.parquet`). Fall 2025 bare = 0.705 Raccoon / 0.704 Des
+  Moines. These values carry the HLS-vs-MODIS calibration error (notes/modis.md). Unblock for true MODIS: an Earthdata
+  token + allow `data.lpdaac.earthdatacloud.nasa.gov`, or wait for PC to backfill (p09 then fetches the new items and
+  the MODIS composites automatically take precedence over HLS in those windows).
 - The h10v04 tile (west ~57% of the Raccoon mask) is missing on PC for composites MYD13Q1.A2025361 (date 2026-01-04)
   and the two latest ones, MYD13Q1.A2026281 / MOD13Q1.A2026289 (dates 2026-10-16/24). Those rows are kept in
   `cover_basin_8day` with `tile_cover_frac` 0.43 (raccoon) / 0.98 (desmoines) and excluded from the daily series when
-  `tile_cover_frac < 0.9`, so the Raccoon daily series currently ends 2026-10-05 (Des Moines 2026-10-20).
+  `tile_cover_frac < 0.9`, so the Raccoon interpolated series ends 2026-10-05 (Des Moines 2026-10-20) and the Raccoon
+  as-of value on 2026-11-14 is 30 days old (not yet stale). In `cover_huc12_8day` the affected HUC-12 rows have
+  `tile_cover_frac < 0.5` and NaN shares.
 
 ## fields (2026-11-14)
 - Not a failure; partial coverage. Planetary Computer HLS v2 holdings for tile T15TUG are incomplete. In 2023, NASA CMR

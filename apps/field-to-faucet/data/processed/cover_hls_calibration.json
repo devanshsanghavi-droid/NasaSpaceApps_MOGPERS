@@ -1,0 +1,548 @@
+{
+ "pixel_ndvi": {
+  "raw": {
+   "n": 11248639,
+   "r": 0.96,
+   "bias_hls_minus_modis": 0.023,
+   "mae": 0.054,
+   "rmse": 0.083
+  },
+  "quantile_mapped": {
+   "n": 11248639,
+   "r": 0.96,
+   "bias_hls_minus_modis": 0.0,
+   "mae": 0.051,
+   "rmse": 0.08
+  }
+ },
+ "n_pixel_pairs": 11248639,
+ "all": {
+  "n_composites": 76,
+  "living_share_raw": {
+   "n": 76,
+   "r": 0.987,
+   "bias_hls_minus_modis": 0.055,
+   "mae": 0.055,
+   "rmse": 0.1
+  },
+  "living_share_quantile_mapped": {
+   "n": 76,
+   "r": 0.989,
+   "bias_hls_minus_modis": -0.001,
+   "mae": 0.03,
+   "rmse": 0.062
+  },
+  "living_share_leave_one_year_out": {
+   "n": 76,
+   "r": 0.977,
+   "bias_hls_minus_modis": -0.002,
+   "mae": 0.042,
+   "rmse": 0.086
+  },
+  "mean_ndvi_raw": {
+   "n": 76,
+   "r": 0.991,
+   "bias_hls_minus_modis": 0.023,
+   "mae": 0.032,
+   "rmse": 0.046
+  },
+  "mean_ndvi_quantile_mapped": {
+   "n": 76,
+   "r": 0.993,
+   "bias_hls_minus_modis": -0.0,
+   "mae": 0.023,
+   "rmse": 0.034
+  }
+ },
+ "raccoon": {
+  "n_composites": 38,
+  "living_share_raw": {
+   "n": 38,
+   "r": 0.991,
+   "bias_hls_minus_modis": 0.042,
+   "mae": 0.042,
+   "rmse": 0.078
+  },
+  "living_share_quantile_mapped": {
+   "n": 38,
+   "r": 0.989,
+   "bias_hls_minus_modis": -0.01,
+   "mae": 0.028,
+   "rmse": 0.062
+  },
+  "living_share_leave_one_year_out": {
+   "n": 38,
+   "r": 0.978,
+   "bias_hls_minus_modis": -0.012,
+   "mae": 0.041,
+   "rmse": 0.087
+  },
+  "mean_ndvi_raw": {
+   "n": 38,
+   "r": 0.99,
+   "bias_hls_minus_modis": 0.018,
+   "mae": 0.03,
+   "rmse": 0.045
+  },
+  "mean_ndvi_quantile_mapped": {
+   "n": 38,
+   "r": 0.992,
+   "bias_hls_minus_modis": -0.004,
+   "mae": 0.023,
+   "rmse": 0.036
+  }
+ },
+ "desmoines": {
+  "n_composites": 38,
+  "living_share_raw": {
+   "n": 38,
+   "r": 0.987,
+   "bias_hls_minus_modis": 0.068,
+   "mae": 0.069,
+   "rmse": 0.119
+  },
+  "living_share_quantile_mapped": {
+   "n": 38,
+   "r": 0.99,
+   "bias_hls_minus_modis": 0.008,
+   "mae": 0.032,
+   "rmse": 0.061
+  },
+  "living_share_leave_one_year_out": {
+   "n": 38,
+   "r": 0.978,
+   "bias_hls_minus_modis": 0.007,
+   "mae": 0.044,
+   "rmse": 0.085
+  },
+  "mean_ndvi_raw": {
+   "n": 38,
+   "r": 0.992,
+   "bias_hls_minus_modis": 0.027,
+   "mae": 0.034,
+   "rmse": 0.047
+  },
+  "mean_ndvi_quantile_mapped": {
+   "n": 38,
+   "r": 0.993,
+   "bias_hls_minus_modis": 0.003,
+   "mae": 0.024,
+   "rmse": 0.032
+  }
+ },
+ "year_2023": {
+  "n_composites": 36,
+  "living_share_raw": {
+   "n": 36,
+   "r": 0.993,
+   "bias_hls_minus_modis": 0.037,
+   "mae": 0.037,
+   "rmse": 0.069
+  },
+  "living_share_quantile_mapped": {
+   "n": 36,
+   "r": 0.987,
+   "bias_hls_minus_modis": -0.022,
+   "mae": 0.032,
+   "rmse": 0.07
+  },
+  "living_share_leave_one_year_out": {
+   "n": 36,
+   "r": 0.976,
+   "bias_hls_minus_modis": -0.04,
+   "mae": 0.046,
+   "rmse": 0.102
+  },
+  "mean_ndvi_raw": {
+   "n": 36,
+   "r": 0.989,
+   "bias_hls_minus_modis": 0.025,
+   "mae": 0.026,
+   "rmse": 0.048
+  },
+  "mean_ndvi_quantile_mapped": {
+   "n": 36,
+   "r": 0.993,
+   "bias_hls_minus_modis": 0.004,
+   "mae": 0.02,
+   "rmse": 0.033
+  }
+ },
+ "year_2024": {
+  "n_composites": 36,
+  "living_share_raw": {
+   "n": 36,
+   "r": 0.986,
+   "bias_hls_minus_modis": 0.069,
+   "mae": 0.07,
+   "rmse": 0.121
+  },
+  "living_share_quantile_mapped": {
+   "n": 36,
+   "r": 0.995,
+   "bias_hls_minus_modis": 0.018,
+   "mae": 0.029,
+   "rmse": 0.054
+  },
+  "living_share_leave_one_year_out": {
+   "n": 36,
+   "r": 0.994,
+   "bias_hls_minus_modis": 0.034,
+   "mae": 0.041,
+   "rmse": 0.071
+  },
+  "mean_ndvi_raw": {
+   "n": 36,
+   "r": 0.995,
+   "bias_hls_minus_modis": 0.024,
+   "mae": 0.034,
+   "rmse": 0.042
+  },
+  "mean_ndvi_quantile_mapped": {
+   "n": 36,
+   "r": 0.995,
+   "bias_hls_minus_modis": -0.001,
+   "mae": 0.024,
+   "rmse": 0.03
+  }
+ },
+ "year_2025": {
+  "n_composites": 4,
+  "living_share_raw": {
+   "n": 4,
+   "r": 0.988,
+   "bias_hls_minus_modis": 0.085,
+   "mae": 0.085,
+   "rmse": 0.132
+  },
+  "living_share_quantile_mapped": {
+   "n": 4,
+   "r": 0.996,
+   "bias_hls_minus_modis": 0.008,
+   "mae": 0.027,
+   "rmse": 0.039
+  },
+  "living_share_leave_one_year_out": {
+   "n": 4,
+   "r": 0.996,
+   "bias_hls_minus_modis": 0.008,
+   "mae": 0.027,
+   "rmse": 0.039
+  },
+  "mean_ndvi_raw": {
+   "n": 4,
+   "r": 0.997,
+   "bias_hls_minus_modis": -0.014,
+   "mae": 0.053,
+   "rmse": 0.058
+  },
+  "mean_ndvi_quantile_mapped": {
+   "n": 4,
+   "r": 0.997,
+   "bias_hls_minus_modis": -0.039,
+   "mae": 0.05,
+   "rmse": 0.065
+  }
+ },
+ "fall_sep15_nov30": {
+  "n_composites": 32,
+  "living_share_raw": {
+   "n": 32,
+   "r": 0.952,
+   "bias_hls_minus_modis": 0.127,
+   "mae": 0.128,
+   "rmse": 0.154
+  },
+  "living_share_quantile_mapped": {
+   "n": 32,
+   "r": 0.947,
+   "bias_hls_minus_modis": -0.003,
+   "mae": 0.066,
+   "rmse": 0.094
+  },
+  "living_share_leave_one_year_out": {
+   "n": 32,
+   "r": 0.883,
+   "bias_hls_minus_modis": -0.006,
+   "mae": 0.096,
+   "rmse": 0.132
+  }
+ },
+ "status": "ok",
+ "method": "Fill the 2025 MODIS 13Q1 gap (no composites on Planetary Computer for 16-day windows starting 2025-07-04 ..\n2025-11-09) with NASA HLS v2 (Landsat L30 + Sentinel-2 S30) resampled to the MODIS 250 m row-crop mask.\n\nSource: Planetary Computer `hls2-l30` + `hls2-s30` (https://planetarycomputer.microsoft.com/dataset/hls2-l30,\n.../hls2-s30). Bands: red B04, NIR B05 (L30) / B8A (S30), Fmask; scale 0.0001. Each scene is read at COG overview\nlevel 1 (120 m; HLS overviews are NEAREST, i.e. a 30 m point sample every 120 m).\n\nPer scene and masked MODIS pixel (p08 mask, 231.656 m): the 4 sub-points at the pixel centre +- PX/4 are sampled.\nclear sub-point = Fmask bits 1-4 (cloud, adjacent cloud, shadow, snow) all 0 and valid reflectance;\nsnow = bit 4 and bits 1-3 clear; cloud = any of bits 1-3. A pixel is *clear* on a scene when >= 3 sub-points are\nclear and none is cloud; its NDVI is the mean of the clear sub-points.\n\nComposites mimic MOD13Q1/MYD13Q1: the same 16-day windows (Terra starts DOY 1, 17, ...; Aqua DOY 9, 25, ...);\nper pixel the maximum NDVI over clear scenes in the window (maximum-value compositing); valid = >= 1 clear scene;\nsnow = no clear scene but >= 1 snow scene; cloud = observed but neither.\n\nCalibration: pixel-level pairs (HLS MVC NDVI, MODIS NDVI) on the same composite windows, where both are valid, over\nJun 25-Nov 30 of 2023 and 2024 plus the 2025 composites bracketing the gap -> empirical quantile mapping of HLS NDVI to\nthe MODIS NDVI distribution, applied before thresholding (0.25 / 0.30 / 0.35). Leave-one-year-out check reported.",
+ "tiles": [
+  "T15TUG",
+  "T15TUH",
+  "T15TVG",
+  "T15TVH",
+  "T15TUJ",
+  "T14TQP",
+  "T15TVJ"
+ ],
+ "tile_coverage_of_mask": {
+  "raccoon": 1.0,
+  "desmoines": 0.9983882898726798
+ },
+ "scenes_used": 1526,
+ "scene_cloud_max": 75,
+ "fetch_failures": [],
+ "n_fetch_failures": 0,
+ "quantile_map": {
+  "hls_q": [
+   -1.0,
+   0.2269,
+   0.2439,
+   0.2595,
+   0.2787,
+   0.3078,
+   0.3505,
+   0.4121,
+   0.5121,
+   0.6285,
+   0.7208,
+   0.7816,
+   0.8209,
+   0.8477,
+   0.8671,
+   0.8814,
+   0.8924,
+   0.9016,
+   0.9101,
+   0.9193,
+   1.0
+  ],
+  "modis_q": [
+   -0.1185,
+   0.2071,
+   0.2249,
+   0.2387,
+   0.2534,
+   0.2733,
+   0.3061,
+   0.362,
+   0.4472,
+   0.559,
+   0.6786,
+   0.7613,
+   0.809,
+   0.838,
+   0.8582,
+   0.8739,
+   0.887,
+   0.8986,
+   0.91,
+   0.9231,
+   0.9996
+  ]
+ },
+ "gap_composites": {
+  "raccoon": [
+   {
+    "date": "2025-07-12",
+    "valid_frac": 0.9950000047683716,
+    "living_share": 1.0,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-07-20",
+    "valid_frac": 1.0,
+    "living_share": 1.0,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-07-28",
+    "valid_frac": 1.0,
+    "living_share": 1.0,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-08-05",
+    "valid_frac": 0.9909999966621399,
+    "living_share": 1.0,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-08-13",
+    "valid_frac": 0.8809999823570251,
+    "living_share": 1.0,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-08-21",
+    "valid_frac": 0.9850000143051147,
+    "living_share": 1.0,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-08-29",
+    "valid_frac": 0.9480000138282776,
+    "living_share": 1.0,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-09-06",
+    "valid_frac": 0.640999972820282,
+    "living_share": 0.9980000257492065,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-09-14",
+    "valid_frac": 0.9929999709129333,
+    "living_share": 0.996999979019165,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-09-22",
+    "valid_frac": 1.0,
+    "living_share": 0.9419999718666077,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-09-30",
+    "valid_frac": 1.0,
+    "living_share": 0.7350000143051147,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-10-08",
+    "valid_frac": 1.0,
+    "living_share": 0.42899999022483826,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-10-16",
+    "valid_frac": 1.0,
+    "living_share": 0.2770000100135803,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-10-24",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.12800000607967377,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-11-01",
+    "valid_frac": 1.0,
+    "living_share": 0.1080000028014183,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-11-09",
+    "valid_frac": 1.0,
+    "living_share": 0.12300000339746475,
+    "tile_cover_frac": 1.0
+   },
+   {
+    "date": "2025-11-17",
+    "valid_frac": 0.9959999918937683,
+    "living_share": 0.10100000351667404,
+    "tile_cover_frac": 1.0
+   }
+  ],
+  "desmoines": [
+   {
+    "date": "2025-07-12",
+    "valid_frac": 0.9769999980926514,
+    "living_share": 1.0,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-07-20",
+    "valid_frac": 0.9959999918937683,
+    "living_share": 1.0,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-07-28",
+    "valid_frac": 0.972000002861023,
+    "living_share": 1.0,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-08-05",
+    "valid_frac": 0.7979999780654907,
+    "living_share": 1.0,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-08-13",
+    "valid_frac": 0.7580000162124634,
+    "living_share": 1.0,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-08-21",
+    "valid_frac": 0.9769999980926514,
+    "living_share": 1.0,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-08-29",
+    "valid_frac": 0.9229999780654907,
+    "living_share": 1.0,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-09-06",
+    "valid_frac": 0.656000018119812,
+    "living_share": 0.9980000257492065,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-09-14",
+    "valid_frac": 0.9549999833106995,
+    "living_share": 0.9959999918937683,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-09-22",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.9319999814033508,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-09-30",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.7639999985694885,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-10-08",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.4440000057220459,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-10-16",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.2939999997615814,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-10-24",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.12600000202655792,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-11-01",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.11500000208616257,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-11-09",
+    "valid_frac": 0.9980000257492065,
+    "living_share": 0.1459999978542328,
+    "tile_cover_frac": 0.9980000257492065
+   },
+   {
+    "date": "2025-11-17",
+    "valid_frac": 0.9819999933242798,
+    "living_share": 0.15700000524520874,
+    "tile_cover_frac": 0.9980000257492065
+   }
+  ]
+ }
+}

@@ -18,258 +18,258 @@
  "min_hls_obs": 30,
  "min_modis_valid_frac": 0.5,
  "living_share": {
-  "n": 2253,
-  "r": 0.945,
-  "bias_modis_minus_hls": 0.079,
-  "mae": 0.088,
-  "rmse": 0.167,
-  "agree_class_pct": 93.7
+  "n": 2270,
+  "r": 0.942,
+  "bias_modis_minus_hls": 0.085,
+  "mae": 0.092,
+  "rmse": 0.174,
+  "agree_class_pct": 93.8
  },
  "mean_ndvi": {
-  "n": 2253,
+  "n": 2270,
   "r": 0.986,
-  "bias_modis_minus_hls": 0.019,
-  "mae": 0.031,
+  "bias_modis_minus_hls": 0.02,
+  "mae": 0.032,
   "rmse": 0.047,
   "agree_class_pct": 97.1
  },
  "by_season": {
   "DJF": {
-   "n": 277,
-   "r": 0.353,
-   "bias_modis_minus_hls": 0.022,
-   "mae": 0.028,
-   "rmse": 0.063,
-   "agree_class_pct": 99.6
+   "n": 300,
+   "r": 0.238,
+   "bias_modis_minus_hls": 0.02,
+   "mae": 0.031,
+   "rmse": 0.065,
+   "agree_class_pct": 99.7
   },
   "JJA": {
-   "n": 747,
-   "r": 0.726,
-   "bias_modis_minus_hls": 0.048,
-   "mae": 0.05,
-   "rmse": 0.145,
+   "n": 746,
+   "r": 0.702,
+   "bias_modis_minus_hls": 0.05,
+   "mae": 0.052,
+   "rmse": 0.156,
    "agree_class_pct": 95.7
   },
   "MAM": {
-   "n": 661,
-   "r": 0.398,
-   "bias_modis_minus_hls": 0.152,
-   "mae": 0.167,
-   "rmse": 0.242,
-   "agree_class_pct": 88.8
+   "n": 668,
+   "r": 0.492,
+   "bias_modis_minus_hls": 0.166,
+   "mae": 0.17,
+   "rmse": 0.247,
+   "agree_class_pct": 90.3
   },
   "SON": {
-   "n": 568,
-   "r": 0.973,
-   "bias_modis_minus_hls": 0.062,
-   "mae": 0.075,
-   "rmse": 0.112,
-   "agree_class_pct": 94.0
+   "n": 556,
+   "r": 0.967,
+   "bias_modis_minus_hls": 0.069,
+   "mae": 0.083,
+   "rmse": 0.125,
+   "agree_class_pct": 92.3
   }
  },
  "by_huc12": {
   "071000060505": {
-   "n": 224,
-   "r": 0.951,
-   "bias_modis_minus_hls": 0.065,
-   "mae": 0.076,
-   "rmse": 0.155,
-   "agree_class_pct": 93.8
+   "n": 230,
+   "r": 0.949,
+   "bias_modis_minus_hls": 0.071,
+   "mae": 0.078,
+   "rmse": 0.161,
+   "agree_class_pct": 93.5
   },
   "071000060604": {
-   "n": 224,
-   "r": 0.944,
-   "bias_modis_minus_hls": 0.073,
-   "mae": 0.082,
-   "rmse": 0.167,
-   "agree_class_pct": 93.8
+   "n": 220,
+   "r": 0.939,
+   "bias_modis_minus_hls": 0.079,
+   "mae": 0.089,
+   "rmse": 0.177,
+   "agree_class_pct": 93.6
   },
   "071000060605": {
-   "n": 217,
-   "r": 0.931,
-   "bias_modis_minus_hls": 0.101,
-   "mae": 0.112,
-   "rmse": 0.189,
-   "agree_class_pct": 93.1
+   "n": 220,
+   "r": 0.927,
+   "bias_modis_minus_hls": 0.107,
+   "mae": 0.117,
+   "rmse": 0.198,
+   "agree_class_pct": 92.7
   },
   "071000060702": {
    "n": 226,
-   "r": 0.95,
-   "bias_modis_minus_hls": 0.074,
-   "mae": 0.081,
-   "rmse": 0.16,
-   "agree_class_pct": 95.6
+   "r": 0.949,
+   "bias_modis_minus_hls": 0.079,
+   "mae": 0.084,
+   "rmse": 0.164,
+   "agree_class_pct": 94.7
   },
   "071000060801": {
-   "n": 220,
-   "r": 0.949,
-   "bias_modis_minus_hls": 0.077,
-   "mae": 0.087,
-   "rmse": 0.163,
-   "agree_class_pct": 93.2
+   "n": 222,
+   "r": 0.946,
+   "bias_modis_minus_hls": 0.085,
+   "mae": 0.089,
+   "rmse": 0.171,
+   "agree_class_pct": 93.7
   },
   "071000060802": {
-   "n": 229,
-   "r": 0.948,
-   "bias_modis_minus_hls": 0.079,
-   "mae": 0.087,
-   "rmse": 0.165,
-   "agree_class_pct": 94.3
+   "n": 234,
+   "r": 0.94,
+   "bias_modis_minus_hls": 0.089,
+   "mae": 0.092,
+   "rmse": 0.18,
+   "agree_class_pct": 93.6
   },
   "071000060803": {
-   "n": 228,
-   "r": 0.953,
-   "bias_modis_minus_hls": 0.064,
-   "mae": 0.075,
-   "rmse": 0.151,
+   "n": 230,
+   "r": 0.95,
+   "bias_modis_minus_hls": 0.068,
+   "mae": 0.078,
+   "rmse": 0.157,
    "agree_class_pct": 94.3
   },
   "071000060804": {
    "n": 232,
-   "r": 0.948,
-   "bias_modis_minus_hls": 0.077,
-   "mae": 0.088,
-   "rmse": 0.163,
+   "r": 0.945,
+   "bias_modis_minus_hls": 0.084,
+   "mae": 0.093,
+   "rmse": 0.171,
    "agree_class_pct": 94.0
   },
   "071000060805": {
    "n": 226,
-   "r": 0.939,
-   "bias_modis_minus_hls": 0.087,
+   "r": 0.94,
+   "bias_modis_minus_hls": 0.092,
    "mae": 0.096,
-   "rmse": 0.175,
-   "agree_class_pct": 93.4
+   "rmse": 0.178,
+   "agree_class_pct": 94.2
   },
   "071000060806": {
-   "n": 227,
-   "r": 0.941,
-   "bias_modis_minus_hls": 0.09,
-   "mae": 0.096,
-   "rmse": 0.177,
-   "agree_class_pct": 92.1
+   "n": 230,
+   "r": 0.939,
+   "bias_modis_minus_hls": 0.093,
+   "mae": 0.099,
+   "rmse": 0.181,
+   "agree_class_pct": 93.5
   }
  },
  "focus_level": {
-  "n": 241,
-  "r": 0.951,
-  "bias_modis_minus_hls": 0.077,
-  "mae": 0.083,
-  "rmse": 0.158,
-  "agree_class_pct": 94.2
+  "n": 245,
+  "r": 0.946,
+  "bias_modis_minus_hls": 0.083,
+  "mae": 0.088,
+  "rmse": 0.167,
+  "agree_class_pct": 94.3
  },
  "spring_window": {
-  "n": 443,
-  "r": 0.358,
-  "bias_modis_minus_hls": 0.106,
-  "mae": 0.126,
-  "rmse": 0.174,
-  "agree_class_pct": 97.7
+  "n": 439,
+  "r": 0.519,
+  "bias_modis_minus_hls": 0.126,
+  "mae": 0.127,
+  "rmse": 0.171,
+  "agree_class_pct": 99.5
  },
  "fall_window": {
-  "n": 352,
-  "r": 0.844,
-  "bias_modis_minus_hls": 0.038,
-  "mae": 0.051,
-  "rmse": 0.069,
-  "agree_class_pct": 99.4
+  "n": 347,
+  "r": 0.831,
+  "bias_modis_minus_hls": 0.042,
+  "mae": 0.057,
+  "rmse": 0.075,
+  "agree_class_pct": 98.8
  },
  "deseasonalized": {
-  "n": 2253,
+  "n": 2270,
   "r": 0.631,
-  "bias_modis_minus_hls": -0.0,
+  "bias_modis_minus_hls": 0.0,
   "mae": 0.065,
-  "rmse": 0.117
+  "rmse": 0.113
  },
  "mar_may": {
-  "n": 661,
-  "r": 0.398,
-  "bias_modis_minus_hls": 0.152,
-  "mae": 0.167,
-  "rmse": 0.242,
-  "agree_class_pct": 88.8
+  "n": 668,
+  "r": 0.492,
+  "bias_modis_minus_hls": 0.166,
+  "mae": 0.17,
+  "rmse": 0.247,
+  "agree_class_pct": 90.3
  },
  "huc12_ranking_apr_may": {
   "n_huc12": 10,
-  "pearson_r_huc_means": 0.917,
-  "spearman_r_huc_means": 0.939,
+  "pearson_r_huc_means": 0.941,
+  "spearman_r_huc_means": 0.842,
   "n_composites": 46,
-  "per_composite_spearman_median": 0.582,
-  "per_composite_spearman_mean": 0.509,
+  "per_composite_spearman_median": 0.545,
+  "per_composite_spearman_mean": 0.537,
   "huc_means": {
    "071000060505": {
-    "hls": 0.05,
-    "modis": 0.226
+    "hls": 0.017,
+    "modis": 0.223
    },
    "071000060604": {
-    "hls": 0.033,
-    "modis": 0.224
+    "hls": 0.016,
+    "modis": 0.221
    },
    "071000060605": {
-    "hls": 0.089,
-    "modis": 0.372
+    "hls": 0.069,
+    "modis": 0.37
    },
    "071000060702": {
-    "hls": 0.056,
-    "modis": 0.25
+    "hls": 0.033,
+    "modis": 0.246
    },
    "071000060801": {
-    "hls": 0.076,
+    "hls": 0.034,
     "modis": 0.27
    },
    "071000060802": {
-    "hls": 0.069,
-    "modis": 0.28
+    "hls": 0.026,
+    "modis": 0.276
    },
    "071000060803": {
-    "hls": 0.049,
-    "modis": 0.228
+    "hls": 0.028,
+    "modis": 0.226
    },
    "071000060804": {
-    "hls": 0.068,
+    "hls": 0.031,
     "modis": 0.271
    },
    "071000060805": {
-    "hls": 0.097,
-    "modis": 0.346
+    "hls": 0.056,
+    "modis": 0.342
    },
    "071000060806": {
-    "hls": 0.076,
-    "modis": 0.322
+    "hls": 0.04,
+    "modis": 0.31
    }
   },
   "hls_range": [
-   0.033,
-   0.097
+   0.016,
+   0.069
   ],
   "modis_range": [
-   0.224,
-   0.372
+   0.221,
+   0.37
   ]
  },
- "conclusion": "MODIS ranks HUC-12s well in spring (Apr-May HUC-12 means r = 0.917, Spearman 0.939; per-composite Spearman median 0.582) but overstates the spring living share in absolute terms (Apr-May HUC-12 means MODIS 0.22-0.37 vs HLS 0.03-0.10; Mar-May r = 0.398, bias +0.152). The pooled r (0.945) is mostly the shared seasonal cycle; deseasonalized r = 0.631. Use MODIS as a relative (ranking) index across HUC-12s and HLS for the absolute field-level bare share.",
+ "conclusion": "MODIS ranks HUC-12s well in spring (Apr-May HUC-12 means r = 0.941, Spearman 0.842; per-composite Spearman median 0.545) but overstates the spring living share in absolute terms (Apr-May HUC-12 means MODIS 0.22-0.37 vs HLS 0.02-0.07; Mar-May r = 0.492, bias +0.166). The pooled r (0.942) is mostly the shared seasonal cycle; deseasonalized r = 0.631. Use MODIS as a relative (ranking) index across HUC-12s and HLS for the absolute field-level bare share.",
  "monthly_mean_living_share": {
   "1": {
    "hls": 0.013,
    "modis": 0.053
   },
   "2": {
-   "hls": 0.011,
+   "hls": 0.016,
    "modis": 0.017
   },
   "3": {
-   "hls": 0.014,
-   "modis": 0.032
+   "hls": 0.016,
+   "modis": 0.031
   },
   "4": {
-   "hls": 0.037,
-   "modis": 0.149
+   "hls": 0.023,
+   "modis": 0.148
   },
   "5": {
-   "hls": 0.09,
-   "modis": 0.384
+   "hls": 0.045,
+   "modis": 0.386
   },
   "6": {
-   "hls": 0.812,
+   "hls": 0.805,
    "modis": 0.944
   },
   "7": {
@@ -281,20 +281,20 @@
    "modis": 1.0
   },
   "9": {
-   "hls": 0.858,
+   "hls": 0.86,
    "modis": 0.906
   },
   "10": {
-   "hls": 0.239,
-   "modis": 0.342
+   "hls": 0.226,
+   "modis": 0.344
   },
   "11": {
-   "hls": 0.027,
-   "modis": 0.06
+   "hls": 0.018,
+   "modis": 0.061
   },
   "12": {
    "hls": 0.023,
-   "modis": 0.044
+   "modis": 0.045
   }
  }
 }
