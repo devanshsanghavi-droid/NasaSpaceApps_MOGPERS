@@ -21,7 +21,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent))
 from common import CROPS, OUT, PRINCIPAL, PROC, PROVISIONAL_YEARS, save_json  # noqa: E402
 from hazard_features import (base_stats, cell_season, county_cells, fit_wetness_emulator, load_daily,  # noqa: E402
-                             standardise)
+                             multiseason_cell_year, standardise)
 
 SUMS = ["insured_acres", "liability_usd", "premium_usd", "subsidy_usd", "indem_total_usd", "indem_drought_usd",
         "indem_heat_usd", "indem_excess_moist_usd", "det_acres_drought"]
@@ -34,6 +34,8 @@ def hazard():
     cyz = standardise(cy, bs)
     cc = county_cells()
     feat = cc.merge(cyz, on="cell_id", how="left")
+    ms = multiseason_cell_year()  # v2 multi-season features (post-hoc), extra columns only
+    feat = feat.merge(ms, on=["cell_id", "year"], how="left")
     # check reproduction of the hazard module's columns
     hz = pd.read_parquet(PROC / "hazard_county_year.parquet")
     chk = feat.merge(hz, on=["fips", "year"], suffixes=("", "_hz"))

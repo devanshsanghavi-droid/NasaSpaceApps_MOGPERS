@@ -1,0 +1,46 @@
+ACCESS-CM2 ssp245 full 283.9
+ACCESS-CM2 ssp245 heat_only (temperature/VPD; so 258.9
+ACCESS-CM2 ssp245 heat_only_no_emulator (tempera 129.4
+ACCESS-CM2 ssp245 precip_only (soil wetness resp 11.9
+ACCESS-CM2 ssp245 full_no_emulator (soil wetness 145.5
+ACCESS-CM2 ssp585 full 145.6
+ACCESS-CM2 ssp585 heat_only (temperature/VPD; so 158.9
+ACCESS-CM2 ssp585 heat_only_no_emulator (tempera 78.6
+ACCESS-CM2 ssp585 precip_only (soil wetness resp -6.2
+ACCESS-CM2 ssp585 full_no_emulator (soil wetness 74.6
+GFDL-ESM4 ssp245 full 78.3
+GFDL-ESM4 ssp245 heat_only (temperature/VPD; so 98.3
+GFDL-ESM4 ssp245 heat_only_no_emulator (tempera 41.3
+GFDL-ESM4 ssp245 precip_only (soil wetness resp -15.1
+GFDL-ESM4 ssp245 full_no_emulator (soil wetness 24.5
+GFDL-ESM4 ssp585 full 110.2
+GFDL-ESM4 ssp585 heat_only (temperature/VPD; so 111.1
+GFDL-ESM4 ssp585 heat_only_no_emulator (tempera 46.1
+GFDL-ESM4 ssp585 precip_only (soil wetness resp -2.8
+GFDL-ESM4 ssp585 full_no_emulator (soil wetness 36.2
+MPI-ESM1-2-HR ssp245 full 26.0
+MPI-ESM1-2-HR ssp245 heat_only (temperature/VPD; so 34.8
+MPI-ESM1-2-HR ssp245 heat_only_no_emulator (tempera 19.9
+MPI-ESM1-2-HR ssp245 precip_only (soil wetness resp -7.7
+MPI-ESM1-2-HR ssp245 full_no_emulator (soil wetness 17.8
+MPI-ESM1-2-HR ssp585 full 111.0
+MPI-ESM1-2-HR ssp585 heat_only (temperature/VPD; so 98.6
+MPI-ESM1-2-HR ssp585 heat_only_no_emulator (tempera 41.2
+MPI-ESM1-2-HR ssp585 precip_only (soil wetness resp 7.7
+MPI-ESM1-2-HR ssp585 full_no_emulator (soil wetness 42.3
+{
+ "ssp245": {
+  "full": 78.3,
+  "full_no_emulator (soil wetness held at observed)": 24.5,
+  "heat_only (temperature/VPD; soil wetness responds to temperature)": 98.3,
+  "heat_only_no_emulator (temperature/VPD; soil wetness unchanged)": 41.3,
+  "precip_only (soil wetness responds to precipitation)": -7.7
+ },
+ "ssp585": {
+  "full": 111.0,
+  "full_no_emulator (soil wetness held at observed)": 42.3,
+  "heat_only (temperature/VPD; soil wetness responds to temperature)": 111.1,
+  "heat_only_no_emulator (temperature/VPD; soil wetness unchanged)": 46.1,
+  "precip_only (soil wetness responds to precipitation)": -2.8
+ }
+}

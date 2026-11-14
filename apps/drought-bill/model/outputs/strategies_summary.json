@@ -1,0 +1,2577 @@
+{
+ "generated_at": "2026-11-14T23:19:40+00:00",
+ "interval_mode": "bootstrap",
+ "draws": 101,
+ "file_size_bytes": 1415700,
+ "counties": 615,
+ "counties_in_sim": 640,
+ "eligible_rule": "corn sim with >= 5 insured years 2001-2024 and a soybean sim row (sim_county_crop)",
+ "sorghum_states": [
+  "KS",
+  "MO",
+  "NE",
+  "SD"
+ ],
+ "dt_choice": {
+  "dt_sorghum": 346,
+  "dt_wheat": 269
+ },
+ "crop_source_counts": {
+  "corn": {
+   "county": 615
+  },
+  "soybeans": {
+   "county": 601,
+   "thin": 14
+  },
+  "wheat": {
+   "county": 401,
+   "thin": 127,
+   "pooled_us": 75,
+   "pooled": 12
+  },
+  "sorghum": {
+   "county": 187,
+   "thin": 118,
+   "pooled": 41
+  }
+ },
+ "synthesised_county_crops": 128,
+ "ers_costs": {
+  "status": "ok",
+  "page": "https://www.ers.usda.gov/data-products/commodity-costs-and-returns",
+  "files": {
+   "corn": "https://www.ers.usda.gov/media/4962/corn.csv",
+   "soybeans": "https://www.ers.usda.gov/media/4976/soybeans.csv",
+   "wheat": "https://www.ers.usda.gov/media/4978/wheat.csv",
+   "sorghum": "https://www.ers.usda.gov/media/4972/sorghum.csv"
+  },
+  "regions_used": {
+   "IA": "Heartland",
+   "IL": "Heartland",
+   "MN": "Heartland",
+   "MO": "Heartland",
+   "KS": "Prairie Gateway",
+   "NE": "Prairie Gateway",
+   "SD": "Northern Great Plains"
+  },
+  "sorghum_region_note": "sorghum operating costs 2019-2023 only published for Prairie Gateway (and Fruitful Rim); Prairie Gateway used for every state",
+  "operating_cost_2019_2023_mean": {
+   "U.S. total|corn": 402.2,
+   "Heartland|corn": 414.06,
+   "Northern Crescent|corn": 420.75,
+   "Northern Great Plains|corn": 361.18,
+   "Eastern Uplands|corn": 409.31,
+   "Southern Seaboard|corn": 464.78,
+   "Prairie Gateway|corn": 367.34,
+   "U.S. total|soybeans": 219.31,
+   "Heartland|soybeans": 217.28,
+   "Northern Great Plains|soybeans": 169.06,
+   "Northern Crescent|soybeans": 220.52,
+   "Prairie Gateway|soybeans": 212.35,
+   "Eastern Uplands|soybeans": 262.31,
+   "Southern Seaboard|soybeans": 257.53,
+   "Mississippi Portal|soybeans": 286.74,
+   "U.S. total|wheat": 150.43,
+   "Heartland|wheat": 220.65,
+   "Northern Crescent|wheat": 233.41,
+   "Northern Great Plains|wheat": 146.32,
+   "Prairie Gateway|wheat": 127.97,
+   "Fruitful Rim|wheat": 206.48,
+   "Basin and Range|wheat": 185.32,
+   "U.S. total|sorghum": 162.84,
+   "Prairie Gateway|sorghum": 163.18,
+   "Fruitful Rim|sorghum": 161.14
+  }
+ },
+ "scenario_r": {
+  "est": 0.14,
+  "lo": 0.0,
+  "hi": 0.9
+ },
+ "by_state_median": [
+  {
+   "state": "IA",
+   "rotation": "3+ crop",
+   "strategy": "cover_crop",
+   "expected_bill_est": 6.93,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -17.4
+  },
+  {
+   "state": "IA",
+   "rotation": "3+ crop",
+   "strategy": "current",
+   "expected_bill_est": 6.93,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IA",
+   "rotation": "3+ crop",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 4.45,
+   "delta_bill_est": -2.5,
+   "delta_income_per_ac_est": -80.8
+  },
+  {
+   "state": "IA",
+   "rotation": "continuous corn",
+   "strategy": "cc_to_cs",
+   "expected_bill_est": 9.7,
+   "delta_bill_est": -4.25,
+   "delta_income_per_ac_est": 27.8
+  },
+  {
+   "state": "IA",
+   "rotation": "continuous corn",
+   "strategy": "cover_crop",
+   "expected_bill_est": 14.0,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -35.4
+  },
+  {
+   "state": "IA",
+   "rotation": "continuous corn",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 6.93,
+   "delta_bill_est": -6.98,
+   "delta_income_per_ac_est": -78.0
+  },
+  {
+   "state": "IA",
+   "rotation": "continuous corn",
+   "strategy": "current",
+   "expected_bill_est": 14.0,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IA",
+   "rotation": "continuous corn",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 4.45,
+   "delta_bill_est": -9.46,
+   "delta_income_per_ac_est": -159.0
+  },
+  {
+   "state": "IA",
+   "rotation": "corn-soy",
+   "strategy": "cover_crop",
+   "expected_bill_est": 10.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -26.1
+  },
+  {
+   "state": "IA",
+   "rotation": "corn-soy",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 6.93,
+   "delta_bill_est": -3.68,
+   "delta_income_per_ac_est": -105.0
+  },
+  {
+   "state": "IA",
+   "rotation": "corn-soy",
+   "strategy": "current",
+   "expected_bill_est": 10.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IA",
+   "rotation": "corn-soy",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 4.45,
+   "delta_bill_est": -6.18,
+   "delta_income_per_ac_est": -187.0
+  },
+  {
+   "state": "IA",
+   "rotation": "with perennial",
+   "strategy": "cover_crop",
+   "expected_bill_est": 9.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -26.1
+  },
+  {
+   "state": "IA",
+   "rotation": "with perennial",
+   "strategy": "current",
+   "expected_bill_est": 9.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IA",
+   "rotation": "with perennial",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 4.45,
+   "delta_bill_est": -5.22,
+   "delta_income_per_ac_est": -187.0
+  },
+  {
+   "state": "IL",
+   "rotation": "3+ crop",
+   "strategy": "cover_crop",
+   "expected_bill_est": 8.54,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -17.3
+  },
+  {
+   "state": "IL",
+   "rotation": "3+ crop",
+   "strategy": "current",
+   "expected_bill_est": 8.54,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IL",
+   "rotation": "3+ crop",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 8.32,
+   "delta_bill_est": -6.03,
+   "delta_income_per_ac_est": -116.0
+  },
+  {
+   "state": "IL",
+   "rotation": "3+ crop",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 3.92,
+   "delta_bill_est": -3.66,
+   "delta_income_per_ac_est": -59.85
+  },
+  {
+   "state": "IL",
+   "rotation": "continuous corn",
+   "strategy": "cc_to_cs",
+   "expected_bill_est": 11.4,
+   "delta_bill_est": -7.49,
+   "delta_income_per_ac_est": 54.1
+  },
+  {
+   "state": "IL",
+   "rotation": "continuous corn",
+   "strategy": "cover_crop",
+   "expected_bill_est": 18.9,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -35.1
+  },
+  {
+   "state": "IL",
+   "rotation": "continuous corn",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 8.54,
+   "delta_bill_est": -10.4,
+   "delta_income_per_ac_est": -35.5
+  },
+  {
+   "state": "IL",
+   "rotation": "continuous corn",
+   "strategy": "current",
+   "expected_bill_est": 18.9,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IL",
+   "rotation": "continuous corn",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 11.4,
+   "delta_bill_est": -21.7,
+   "delta_income_per_ac_est": -112.0
+  },
+  {
+   "state": "IL",
+   "rotation": "continuous corn",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 3.92,
+   "delta_bill_est": -13.75,
+   "delta_income_per_ac_est": -98.1
+  },
+  {
+   "state": "IL",
+   "rotation": "corn-soy",
+   "strategy": "cover_crop",
+   "expected_bill_est": 12.6,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -25.9
+  },
+  {
+   "state": "IL",
+   "rotation": "corn-soy",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 8.54,
+   "delta_bill_est": -4.52,
+   "delta_income_per_ac_est": -88.9
+  },
+  {
+   "state": "IL",
+   "rotation": "corn-soy",
+   "strategy": "current",
+   "expected_bill_est": 12.6,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IL",
+   "rotation": "corn-soy",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 11.4,
+   "delta_bill_est": -11.4,
+   "delta_income_per_ac_est": -173.0
+  },
+  {
+   "state": "IL",
+   "rotation": "corn-soy",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 3.92,
+   "delta_bill_est": -8.14,
+   "delta_income_per_ac_est": -150.5
+  },
+  {
+   "state": "IL",
+   "rotation": "with perennial",
+   "strategy": "cover_crop",
+   "expected_bill_est": 11.4,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -25.9
+  },
+  {
+   "state": "IL",
+   "rotation": "with perennial",
+   "strategy": "current",
+   "expected_bill_est": 11.4,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "IL",
+   "rotation": "with perennial",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 11.4,
+   "delta_bill_est": -9.04,
+   "delta_income_per_ac_est": -173.0
+  },
+  {
+   "state": "IL",
+   "rotation": "with perennial",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 3.92,
+   "delta_bill_est": -6.86,
+   "delta_income_per_ac_est": -150.5
+  },
+  {
+   "state": "KS",
+   "rotation": "3+ crop",
+   "strategy": "cover_crop",
+   "expected_bill_est": 18.2,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -14.7
+  },
+  {
+   "state": "KS",
+   "rotation": "3+ crop",
+   "strategy": "current",
+   "expected_bill_est": 18.2,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "KS",
+   "rotation": "3+ crop",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 17.6,
+   "delta_bill_est": -1.33,
+   "delta_income_per_ac_est": -22.4
+  },
+  {
+   "state": "KS",
+   "rotation": "continuous corn",
+   "strategy": "cc_to_cs",
+   "expected_bill_est": 25.0,
+   "delta_bill_est": -8.37,
+   "delta_income_per_ac_est": 43.3
+  },
+  {
+   "state": "KS",
+   "rotation": "continuous corn",
+   "strategy": "cover_crop",
+   "expected_bill_est": 33.1,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -26.8
+  },
+  {
+   "state": "KS",
+   "rotation": "continuous corn",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 18.2,
+   "delta_bill_est": -14.7,
+   "delta_income_per_ac_est": 14.7
+  },
+  {
+   "state": "KS",
+   "rotation": "continuous corn",
+   "strategy": "current",
+   "expected_bill_est": 33.1,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "KS",
+   "rotation": "continuous corn",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 21.8,
+   "delta_bill_est": -10.9,
+   "delta_income_per_ac_est": 7.11
+  },
+  {
+   "state": "KS",
+   "rotation": "corn-soy",
+   "strategy": "cover_crop",
+   "expected_bill_est": 27.4,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -22.1
+  },
+  {
+   "state": "KS",
+   "rotation": "corn-soy",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 18.2,
+   "delta_bill_est": -8.61,
+   "delta_income_per_ac_est": -23.6
+  },
+  {
+   "state": "KS",
+   "rotation": "corn-soy",
+   "strategy": "current",
+   "expected_bill_est": 27.4,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "KS",
+   "rotation": "corn-soy",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 21.8,
+   "delta_bill_est": -4.32,
+   "delta_income_per_ac_est": -33.6
+  },
+  {
+   "state": "KS",
+   "rotation": "with perennial",
+   "strategy": "cover_crop",
+   "expected_bill_est": 25.0,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -22.1
+  },
+  {
+   "state": "KS",
+   "rotation": "with perennial",
+   "strategy": "current",
+   "expected_bill_est": 25.0,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "KS",
+   "rotation": "with perennial",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 21.8,
+   "delta_bill_est": -2.0,
+   "delta_income_per_ac_est": -33.6
+  },
+  {
+   "state": "MN",
+   "rotation": "3+ crop",
+   "strategy": "cover_crop",
+   "expected_bill_est": 6.44,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -16.55
+  },
+  {
+   "state": "MN",
+   "rotation": "3+ crop",
+   "strategy": "current",
+   "expected_bill_est": 6.44,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MN",
+   "rotation": "3+ crop",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 5.17,
+   "delta_bill_est": -1.32,
+   "delta_income_per_ac_est": -71.8
+  },
+  {
+   "state": "MN",
+   "rotation": "continuous corn",
+   "strategy": "cc_to_cs",
+   "expected_bill_est": 7.74,
+   "delta_bill_est": -2.64,
+   "delta_income_per_ac_est": 27.65
+  },
+  {
+   "state": "MN",
+   "rotation": "continuous corn",
+   "strategy": "cover_crop",
+   "expected_bill_est": 10.55,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -32.65
+  },
+  {
+   "state": "MN",
+   "rotation": "continuous corn",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 6.44,
+   "delta_bill_est": -4.01,
+   "delta_income_per_ac_est": -63.65
+  },
+  {
+   "state": "MN",
+   "rotation": "continuous corn",
+   "strategy": "current",
+   "expected_bill_est": 10.55,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MN",
+   "rotation": "continuous corn",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 5.17,
+   "delta_bill_est": -5.32,
+   "delta_income_per_ac_est": -135.5
+  },
+  {
+   "state": "MN",
+   "rotation": "corn-soy",
+   "strategy": "cover_crop",
+   "expected_bill_est": 8.48,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -24.75
+  },
+  {
+   "state": "MN",
+   "rotation": "corn-soy",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 6.44,
+   "delta_bill_est": -2.33,
+   "delta_income_per_ac_est": -84.15
+  },
+  {
+   "state": "MN",
+   "rotation": "corn-soy",
+   "strategy": "current",
+   "expected_bill_est": 8.48,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MN",
+   "rotation": "corn-soy",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 5.17,
+   "delta_bill_est": -3.48,
+   "delta_income_per_ac_est": -154.5
+  },
+  {
+   "state": "MN",
+   "rotation": "with perennial",
+   "strategy": "cover_crop",
+   "expected_bill_est": 7.74,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -24.75
+  },
+  {
+   "state": "MN",
+   "rotation": "with perennial",
+   "strategy": "current",
+   "expected_bill_est": 7.74,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MN",
+   "rotation": "with perennial",
+   "strategy": "dt_wheat",
+   "expected_bill_est": 5.17,
+   "delta_bill_est": -2.74,
+   "delta_income_per_ac_est": -154.5
+  },
+  {
+   "state": "MO",
+   "rotation": "3+ crop",
+   "strategy": "cover_crop",
+   "expected_bill_est": 16.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -15.9
+  },
+  {
+   "state": "MO",
+   "rotation": "3+ crop",
+   "strategy": "current",
+   "expected_bill_est": 16.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MO",
+   "rotation": "3+ crop",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 10.4,
+   "delta_bill_est": -4.88,
+   "delta_income_per_ac_est": -80.6
+  },
+  {
+   "state": "MO",
+   "rotation": "continuous corn",
+   "strategy": "cc_to_cs",
+   "expected_bill_est": 23.3,
+   "delta_bill_est": -10.8,
+   "delta_income_per_ac_est": 63.2
+  },
+  {
+   "state": "MO",
+   "rotation": "continuous corn",
+   "strategy": "cover_crop",
+   "expected_bill_est": 35.1,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -30.7
+  },
+  {
+   "state": "MO",
+   "rotation": "continuous corn",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 16.3,
+   "delta_bill_est": -17.9,
+   "delta_income_per_ac_est": 4.17
+  },
+  {
+   "state": "MO",
+   "rotation": "continuous corn",
+   "strategy": "current",
+   "expected_bill_est": 35.1,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MO",
+   "rotation": "continuous corn",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 14.0,
+   "delta_bill_est": -20.0,
+   "delta_income_per_ac_est": -55.2
+  },
+  {
+   "state": "MO",
+   "rotation": "corn-soy",
+   "strategy": "cover_crop",
+   "expected_bill_est": 25.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -23.9
+  },
+  {
+   "state": "MO",
+   "rotation": "corn-soy",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 16.3,
+   "delta_bill_est": -9.32,
+   "delta_income_per_ac_est": -60.9
+  },
+  {
+   "state": "MO",
+   "rotation": "corn-soy",
+   "strategy": "current",
+   "expected_bill_est": 25.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MO",
+   "rotation": "corn-soy",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 14.0,
+   "delta_bill_est": -9.86,
+   "delta_income_per_ac_est": -121.0
+  },
+  {
+   "state": "MO",
+   "rotation": "with perennial",
+   "strategy": "cover_crop",
+   "expected_bill_est": 23.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -23.9
+  },
+  {
+   "state": "MO",
+   "rotation": "with perennial",
+   "strategy": "current",
+   "expected_bill_est": 23.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "MO",
+   "rotation": "with perennial",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 14.0,
+   "delta_bill_est": -7.32,
+   "delta_income_per_ac_est": -121.0
+  },
+  {
+   "state": "NE",
+   "rotation": "3+ crop",
+   "strategy": "cover_crop",
+   "expected_bill_est": 9.58,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -16.8
+  },
+  {
+   "state": "NE",
+   "rotation": "3+ crop",
+   "strategy": "current",
+   "expected_bill_est": 9.58,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "NE",
+   "rotation": "3+ crop",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 9.66,
+   "delta_bill_est": 0.67,
+   "delta_income_per_ac_est": -107.0
+  },
+  {
+   "state": "NE",
+   "rotation": "continuous corn",
+   "strategy": "cc_to_cs",
+   "expected_bill_est": 10.7,
+   "delta_bill_est": -4.08,
+   "delta_income_per_ac_est": 23.8
+  },
+  {
+   "state": "NE",
+   "rotation": "continuous corn",
+   "strategy": "cover_crop",
+   "expected_bill_est": 14.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -33.4
+  },
+  {
+   "state": "NE",
+   "rotation": "continuous corn",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 9.58,
+   "delta_bill_est": -5.03,
+   "delta_income_per_ac_est": -92.3
+  },
+  {
+   "state": "NE",
+   "rotation": "continuous corn",
+   "strategy": "current",
+   "expected_bill_est": 14.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "NE",
+   "rotation": "continuous corn",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 11.7,
+   "delta_bill_est": -4.43,
+   "delta_income_per_ac_est": -138.0
+  },
+  {
+   "state": "NE",
+   "rotation": "corn-soy",
+   "strategy": "cover_crop",
+   "expected_bill_est": 11.6,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -25.2
+  },
+  {
+   "state": "NE",
+   "rotation": "corn-soy",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 9.58,
+   "delta_bill_est": -2.32,
+   "delta_income_per_ac_est": -117.0
+  },
+  {
+   "state": "NE",
+   "rotation": "corn-soy",
+   "strategy": "current",
+   "expected_bill_est": 11.6,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "NE",
+   "rotation": "corn-soy",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 11.7,
+   "delta_bill_est": -0.08,
+   "delta_income_per_ac_est": -160.0
+  },
+  {
+   "state": "NE",
+   "rotation": "with perennial",
+   "strategy": "cover_crop",
+   "expected_bill_est": 10.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -25.2
+  },
+  {
+   "state": "NE",
+   "rotation": "with perennial",
+   "strategy": "current",
+   "expected_bill_est": 10.7,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "NE",
+   "rotation": "with perennial",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 11.7,
+   "delta_bill_est": 1.0,
+   "delta_income_per_ac_est": -160.0
+  },
+  {
+   "state": "SD",
+   "rotation": "3+ crop",
+   "strategy": "cover_crop",
+   "expected_bill_est": 21.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -15.05
+  },
+  {
+   "state": "SD",
+   "rotation": "3+ crop",
+   "strategy": "current",
+   "expected_bill_est": 21.3,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "SD",
+   "rotation": "3+ crop",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 16.2,
+   "delta_bill_est": -4.89,
+   "delta_income_per_ac_est": -31.55
+  },
+  {
+   "state": "SD",
+   "rotation": "continuous corn",
+   "strategy": "cc_to_cs",
+   "expected_bill_est": 25.35,
+   "delta_bill_est": -12.65,
+   "delta_income_per_ac_est": 72.1
+  },
+  {
+   "state": "SD",
+   "rotation": "continuous corn",
+   "strategy": "cover_crop",
+   "expected_bill_est": 36.5,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -27.9
+  },
+  {
+   "state": "SD",
+   "rotation": "continuous corn",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 21.3,
+   "delta_bill_est": -16.35,
+   "delta_income_per_ac_est": 28.9
+  },
+  {
+   "state": "SD",
+   "rotation": "continuous corn",
+   "strategy": "current",
+   "expected_bill_est": 36.5,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "SD",
+   "rotation": "continuous corn",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 17.25,
+   "delta_bill_est": -20.25,
+   "delta_income_per_ac_est": 30.05
+  },
+  {
+   "state": "SD",
+   "rotation": "corn-soy",
+   "strategy": "cover_crop",
+   "expected_bill_est": 28.05,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -22.55
+  },
+  {
+   "state": "SD",
+   "rotation": "corn-soy",
+   "strategy": "cs_small_grain",
+   "expected_bill_est": 21.3,
+   "delta_bill_est": -5.63,
+   "delta_income_per_ac_est": -44.55
+  },
+  {
+   "state": "SD",
+   "rotation": "corn-soy",
+   "strategy": "current",
+   "expected_bill_est": 28.05,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "SD",
+   "rotation": "corn-soy",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 17.25,
+   "delta_bill_est": -9.8,
+   "delta_income_per_ac_est": -47.35
+  },
+  {
+   "state": "SD",
+   "rotation": "with perennial",
+   "strategy": "cover_crop",
+   "expected_bill_est": 25.35,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": -22.55
+  },
+  {
+   "state": "SD",
+   "rotation": "with perennial",
+   "strategy": "current",
+   "expected_bill_est": 25.35,
+   "delta_bill_est": NaN,
+   "delta_income_per_ac_est": NaN
+  },
+  {
+   "state": "SD",
+   "rotation": "with perennial",
+   "strategy": "dt_sorghum",
+   "expected_bill_est": 17.25,
+   "delta_bill_est": -7.34,
+   "delta_income_per_ac_est": -47.35
+  }
+ ],
+ "examples": {
+  "19149": {
+   "n": "Plymouth",
+   "st": "IA",
+   "ctx": {
+    "irr": 1,
+    "prcp": 302,
+    "edd": 30,
+    "aws": 305,
+    "c45": 130,
+    "s3p": 3
+   },
+   "f": [
+    "c45"
+   ],
+   "rot": {
+    "corn-soy": [
+     {
+      "s": "current",
+      "v": [
+       16.8,
+       10.7,
+       21.0,
+       17.6,
+       9.06,
+       22.7,
+       40.9,
+       15.7,
+       56.1,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "f": [
+       "y_state_soybeans"
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       11.5,
+       3.83,
+       15.7,
+       12.4,
+       3.47,
+       17.6,
+       27.6,
+       7.19,
+       44.2,
+       -5.34,
+       -14.5,
+       -2.34,
+       -13.2,
+       -36.9,
+       -3.75,
+       -94.9,
+       -162,
+       -26.4
+      ],
+      "f": [
+       "wheat_thin",
+       "y_region_wheat",
+       "p_us_wheat"
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       16.8,
+       10.7,
+       21.0,
+       17.6,
+       9.06,
+       22.7,
+       40.9,
+       15.7,
+       56.1,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -25.7,
+       -59.1,
+       -10.4
+      ]
+     },
+     {
+      "s": "dt_wheat",
+      "v": [
+       6.74,
+       4.85,
+       8.42,
+       9.86,
+       4.7,
+       12.4,
+       16.6,
+       9.23,
+       24.5,
+       -10.1,
+       -12.8,
+       -5.22,
+       -24.3,
+       -31.9,
+       -6.12,
+       -169,
+       -260,
+       -92.8
+      ],
+      "f": [
+       "wheat_thin",
+       "y_region_wheat",
+       "p_us_wheat"
+      ]
+     }
+    ],
+    "continuous corn": [
+     {
+      "s": "current",
+      "v": [
+       24.4,
+       14.1,
+       30.8,
+       18.7,
+       11.5,
+       28.1,
+       57.9,
+       17.8,
+       80.8,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cc_to_cs",
+      "v": [
+       15.1,
+       4.0,
+       21.0,
+       16.3,
+       3.48,
+       22.7,
+       36.6,
+       8.32,
+       56.1,
+       -9.27,
+       -23.6,
+       -3.09,
+       -21.3,
+       -59.9,
+       0.08,
+       30.8,
+       -62.9,
+       153
+      ],
+      "f": [
+       "y_state_soybeans"
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       11.5,
+       3.83,
+       15.7,
+       12.4,
+       3.47,
+       17.6,
+       27.6,
+       7.19,
+       44.2,
+       -12.9,
+       -24.3,
+       -5.59,
+       -30.2,
+       -60.7,
+       -4.49,
+       -64.1,
+       -135,
+       51.7
+      ],
+      "f": [
+       "y_state_soybeans",
+       "wheat_thin",
+       "y_region_wheat",
+       "p_us_wheat"
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       24.4,
+       14.1,
+       30.8,
+       18.7,
+       11.5,
+       28.1,
+       57.9,
+       17.8,
+       80.8,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -34.6,
+       -65.3,
+       -12.2
+      ]
+     },
+     {
+      "s": "dt_wheat",
+      "v": [
+       6.74,
+       4.85,
+       8.42,
+       9.86,
+       4.7,
+       12.4,
+       16.6,
+       9.23,
+       24.5,
+       -17.6,
+       -22.6,
+       -8.39,
+       -41.2,
+       -54.9,
+       -6.22,
+       -138,
+       -232,
+       -12.2
+      ],
+      "f": [
+       "y_state_soybeans",
+       "wheat_thin",
+       "y_region_wheat",
+       "p_us_wheat"
+      ]
+     }
+    ],
+    "3+ crop": [
+     {
+      "s": "current",
+      "v": [
+       11.5,
+       3.83,
+       15.7,
+       12.4,
+       3.47,
+       17.6,
+       27.6,
+       7.19,
+       44.2,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "f": [
+       "y_state_soybeans",
+       "wheat_thin",
+       "y_region_wheat",
+       "p_us_wheat"
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       11.5,
+       3.83,
+       15.7,
+       12.4,
+       3.47,
+       17.6,
+       27.6,
+       7.19,
+       44.2,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -17.1,
+       -38.8,
+       -6.95
+      ]
+     },
+     {
+      "s": "dt_wheat",
+      "v": [
+       6.74,
+       4.85,
+       8.42,
+       9.86,
+       4.7,
+       12.4,
+       16.6,
+       9.23,
+       24.5,
+       -4.74,
+       -7.54,
+       1.92,
+       -11.0,
+       -19.4,
+       6.0,
+       -73.9,
+       -97.5,
+       -41.9
+      ]
+     }
+    ],
+    "with perennial": [
+     {
+      "s": "current",
+      "v": [
+       15.1,
+       4.0,
+       21.0,
+       16.3,
+       3.48,
+       22.7,
+       36.6,
+       8.32,
+       56.1,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "f": [
+       "y_state_soybeans"
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       15.1,
+       4.0,
+       21.0,
+       16.3,
+       3.48,
+       22.7,
+       36.6,
+       8.32,
+       56.1,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -25.7,
+       -58.2,
+       -10.4
+      ]
+     },
+     {
+      "s": "dt_wheat",
+      "v": [
+       6.74,
+       4.85,
+       8.42,
+       9.86,
+       4.7,
+       12.4,
+       16.6,
+       9.23,
+       24.5,
+       -8.38,
+       -12.8,
+       1.62,
+       -19.9,
+       -31.9,
+       6.5,
+       -169,
+       -240,
+       -112
+      ],
+      "f": [
+       "wheat_thin",
+       "y_region_wheat",
+       "p_us_wheat"
+      ]
+     }
+    ]
+   },
+   "src": {
+    "corn": "county",
+    "soybeans": "county",
+    "wheat": "thin"
+   },
+   "lpa": {
+    "corn": 904,
+    "soybeans": 618,
+    "wheat": 307
+   }
+  },
+  "20169": {
+   "n": "Saline",
+   "st": "KS",
+   "ctx": {
+    "irr": 13,
+    "prcp": 324,
+    "edd": 88,
+    "aws": 227,
+    "c45": 83,
+    "s3p": 48
+   },
+   "f": [
+    "irr_some",
+    "hot",
+    "c45",
+    "ww_drought"
+   ],
+   "rot": {
+    "corn-soy": [
+     {
+      "s": "current",
+      "v": [
+       33.5,
+       25.8,
+       38.1,
+       67.0,
+       47.9,
+       83.6,
+       91.5,
+       70.0,
+       104,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       22.7,
+       9.7,
+       27.7,
+       45.7,
+       17.0,
+       59.2,
+       59.9,
+       23.7,
+       73.1,
+       -10.8,
+       -23.3,
+       -6.36,
+       -31.6,
+       -69.9,
+       -19.7,
+       -15.2,
+       -70.8,
+       58.5
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       33.5,
+       25.8,
+       38.1,
+       67.0,
+       47.9,
+       83.6,
+       91.5,
+       70.0,
+       104,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -21.9,
+       -42.2,
+       -10.8
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       28.4,
+       21.6,
+       33.1,
+       58.1,
+       38.8,
+       69.5,
+       80.4,
+       57.2,
+       89.4,
+       -5.16,
+       -6.67,
+       -1.33,
+       -11.1,
+       -19.6,
+       -4.71,
+       -32.1,
+       -109,
+       -3.33
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ],
+    "continuous corn": [
+     {
+      "s": "current",
+      "v": [
+       39.1,
+       29.8,
+       44.4,
+       79.5,
+       52.8,
+       99.4,
+       109,
+       84.9,
+       128,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cc_to_cs",
+      "v": [
+       30.8,
+       11.9,
+       38.1,
+       61.9,
+       20.9,
+       83.6,
+       84.8,
+       31.4,
+       104,
+       -8.37,
+       -28.2,
+       -1.35,
+       -24.0,
+       -81.7,
+       -2.03,
+       24.1,
+       -105,
+       92.3
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       22.7,
+       9.7,
+       27.7,
+       45.7,
+       17.0,
+       59.2,
+       59.9,
+       23.7,
+       73.1,
+       -16.4,
+       -31.3,
+       -8.5,
+       -48.9,
+       -93.2,
+       -23.3,
+       8.92,
+       -46.7,
+       65.2
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       39.1,
+       29.8,
+       44.4,
+       79.5,
+       52.8,
+       99.4,
+       109,
+       84.9,
+       128,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -26.3,
+       -44.6,
+       -12.2
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       28.4,
+       21.6,
+       33.1,
+       58.1,
+       38.8,
+       69.5,
+       80.4,
+       57.2,
+       89.4,
+       -10.8,
+       -15.6,
+       -3.01,
+       -28.4,
+       -46.7,
+       -8.54,
+       -8.04,
+       -117,
+       73.5
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ],
+    "3+ crop": [
+     {
+      "s": "current",
+      "v": [
+       22.7,
+       9.7,
+       27.7,
+       45.7,
+       17.0,
+       59.2,
+       59.9,
+       23.7,
+       73.1,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       22.7,
+       9.7,
+       27.7,
+       45.7,
+       17.0,
+       59.2,
+       59.9,
+       23.7,
+       73.1,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -14.6,
+       -27.8,
+       -7.22
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       21.1,
+       16.2,
+       24.8,
+       43.3,
+       28.1,
+       50.2,
+       57.0,
+       40.3,
+       64.5,
+       -1.62,
+       -4.44,
+       9.64,
+       -2.91,
+       -13.6,
+       27.5,
+       -21.4,
+       -64.5,
+       -8.53
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ],
+    "with perennial": [
+     {
+      "s": "current",
+      "v": [
+       30.8,
+       11.9,
+       38.1,
+       61.9,
+       20.9,
+       83.6,
+       84.8,
+       31.4,
+       104,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       30.8,
+       11.9,
+       38.1,
+       61.9,
+       20.9,
+       83.6,
+       84.8,
+       31.4,
+       104,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -21.9,
+       -41.7,
+       -10.8
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       28.4,
+       21.6,
+       33.1,
+       58.1,
+       38.8,
+       69.5,
+       80.4,
+       57.2,
+       89.4,
+       -2.42,
+       -6.67,
+       14.5,
+       -4.37,
+       -19.6,
+       40.8,
+       -32.1,
+       -96.8,
+       -12.8
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ]
+   },
+   "src": {
+    "corn": "county",
+    "soybeans": "county",
+    "wheat": "county",
+    "sorghum": "county"
+   },
+   "lpa": {
+    "corn": 352,
+    "soybeans": 294,
+    "wheat": 225,
+    "sorghum": 277
+   }
+  },
+  "20157": {
+   "n": "Republic",
+   "st": "KS",
+   "ctx": {
+    "irr": 28,
+    "prcp": 325,
+    "edd": 54,
+    "aws": 268,
+    "c45": 118,
+    "s3p": 35
+   },
+   "f": [
+    "irr_high",
+    "hot",
+    "c45",
+    "ww_drought"
+   ],
+   "rot": {
+    "corn-soy": [
+     {
+      "s": "current",
+      "v": [
+       20.4,
+       12.0,
+       27.2,
+       27.0,
+       16.4,
+       35.5,
+       90.2,
+       46.8,
+       120,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       14.3,
+       4.71,
+       20.7,
+       19.7,
+       7.29,
+       28.3,
+       58.9,
+       15.4,
+       89.3,
+       -6.09,
+       -16.4,
+       -2.97,
+       -31.3,
+       -79.8,
+       -13.3,
+       -57.6,
+       -116,
+       27.0
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       20.4,
+       12.0,
+       27.2,
+       27.0,
+       16.4,
+       35.5,
+       90.2,
+       46.8,
+       120,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -23.6,
+       -54.5,
+       -10.6
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       16.4,
+       10.6,
+       21.6,
+       25.0,
+       14.2,
+       29.6,
+       67.1,
+       38.2,
+       93.2,
+       -4.02,
+       -5.71,
+       -1.71,
+       -23.1,
+       -30.0,
+       -6.53,
+       -65.3,
+       -159,
+       9.28
+      ]
+     }
+    ],
+    "continuous corn": [
+     {
+      "s": "current",
+      "v": [
+       25.1,
+       14.3,
+       33.2,
+       30.0,
+       17.9,
+       41.8,
+       119,
+       56.8,
+       152,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cc_to_cs",
+      "v": [
+       18.6,
+       5.45,
+       27.2,
+       25.3,
+       8.43,
+       35.5,
+       81.7,
+       20.2,
+       120,
+       -6.45,
+       -20.8,
+       -2.27,
+       -37.6,
+       -101,
+       -5.85,
+       27.4,
+       -119,
+       101
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       14.3,
+       4.71,
+       20.7,
+       19.7,
+       7.29,
+       28.3,
+       58.9,
+       15.4,
+       89.3,
+       -10.8,
+       -22.6,
+       -5.41,
+       -60.4,
+       -110,
+       -23.6,
+       -30.2,
+       -109,
+       73.7
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       25.1,
+       14.3,
+       33.2,
+       30.0,
+       17.9,
+       41.8,
+       119,
+       56.8,
+       152,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -30.0,
+       -62.2,
+       -12.2
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       16.4,
+       10.6,
+       21.6,
+       25.0,
+       14.2,
+       29.6,
+       67.1,
+       38.2,
+       93.2,
+       -8.71,
+       -11.4,
+       -4.0,
+       -52.2,
+       -62.6,
+       -15.2,
+       -37.9,
+       -144,
+       94.8
+      ]
+     }
+    ],
+    "3+ crop": [
+     {
+      "s": "current",
+      "v": [
+       14.3,
+       4.71,
+       20.7,
+       19.7,
+       7.29,
+       28.3,
+       58.9,
+       15.4,
+       89.3,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       14.3,
+       4.71,
+       20.7,
+       19.7,
+       7.29,
+       28.3,
+       58.9,
+       15.4,
+       89.3,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -15.7,
+       -35.7,
+       -7.04
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       12.8,
+       8.13,
+       16.8,
+       19.5,
+       11.6,
+       24.3,
+       49.2,
+       27.7,
+       69.5,
+       -1.51,
+       -3.81,
+       6.34,
+       -9.73,
+       -20.6,
+       28.5,
+       -43.5,
+       -95.3,
+       -0.13
+      ]
+     }
+    ],
+    "with perennial": [
+     {
+      "s": "current",
+      "v": [
+       18.6,
+       5.45,
+       27.2,
+       25.3,
+       8.43,
+       35.5,
+       81.7,
+       20.2,
+       120,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       18.6,
+       5.45,
+       27.2,
+       25.3,
+       8.43,
+       35.5,
+       81.7,
+       20.2,
+       120,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -23.6,
+       -53.6,
+       -10.6
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       16.4,
+       10.6,
+       21.6,
+       25.0,
+       14.2,
+       29.6,
+       67.1,
+       38.2,
+       93.2,
+       -2.27,
+       -5.71,
+       9.52,
+       -14.6,
+       -30.0,
+       43.1,
+       -65.3,
+       -143,
+       -0.19
+      ]
+     }
+    ]
+   },
+   "src": {
+    "corn": "county",
+    "soybeans": "county",
+    "wheat": "county",
+    "sorghum": "county"
+   },
+   "lpa": {
+    "corn": 575,
+    "soybeans": 455,
+    "wheat": 231,
+    "sorghum": 333
+   }
+  },
+  "31019": {
+   "n": "Buffalo",
+   "st": "NE",
+   "ctx": {
+    "irr": 84,
+    "prcp": 270,
+    "edd": 45,
+    "aws": 277,
+    "c45": 167,
+    "s3p": 8
+   },
+   "f": [
+    "irr_high",
+    "c45"
+   ],
+   "rot": {
+    "corn-soy": [
+     {
+      "s": "current",
+      "v": [
+       8.91,
+       6.13,
+       10.4,
+       15.7,
+       9.59,
+       18.2,
+       28.7,
+       14.0,
+       31.5,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       7.66,
+       3.92,
+       9.46,
+       13.2,
+       5.89,
+       17.0,
+       21.8,
+       8.97,
+       28.3,
+       -1.25,
+       -4.4,
+       0.53,
+       -6.84,
+       -14.3,
+       3.23,
+       -113,
+       -180,
+       -4.33
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       8.91,
+       6.13,
+       10.4,
+       15.7,
+       9.59,
+       18.2,
+       28.7,
+       14.0,
+       31.5,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -25.6,
+       -58.3,
+       -10.5
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       15.0,
+       7.48,
+       19.7,
+       21.8,
+       11.4,
+       30.7,
+       42.4,
+       16.8,
+       57.5,
+       6.09,
+       0.98,
+       10.8,
+       13.7,
+       0.79,
+       31.0,
+       -185,
+       -261,
+       -101
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ],
+    "continuous corn": [
+     {
+      "s": "current",
+      "v": [
+       9.76,
+       6.8,
+       10.9,
+       15.9,
+       9.84,
+       18.1,
+       30.2,
+       15.4,
+       32.0,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cc_to_cs",
+      "v": [
+       8.22,
+       3.14,
+       10.4,
+       14.6,
+       4.83,
+       18.2,
+       26.6,
+       7.39,
+       31.5,
+       -1.54,
+       -5.68,
+       0.09,
+       -3.66,
+       -17.2,
+       3.39,
+       16.1,
+       -84.9,
+       97.4
+      ]
+     },
+     {
+      "s": "cs_small_grain",
+      "v": [
+       7.66,
+       3.92,
+       9.46,
+       13.2,
+       5.89,
+       17.0,
+       21.8,
+       8.97,
+       28.3,
+       -2.1,
+       -5.13,
+       0.42,
+       -8.38,
+       -16.7,
+       3.56,
+       -97.4,
+       -196,
+       26.4
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       9.76,
+       6.8,
+       10.9,
+       15.9,
+       9.84,
+       18.1,
+       30.2,
+       15.4,
+       32.0,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -34.4,
+       -65.0,
+       -12.2
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       15.0,
+       7.48,
+       19.7,
+       21.8,
+       11.4,
+       30.7,
+       42.4,
+       16.8,
+       57.5,
+       5.23,
+       0.14,
+       10.2,
+       12.2,
+       -1.9,
+       33.0,
+       -169,
+       -248,
+       -68.0
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ],
+    "3+ crop": [
+     {
+      "s": "current",
+      "v": [
+       7.66,
+       3.92,
+       9.46,
+       13.2,
+       5.89,
+       17.0,
+       21.8,
+       8.97,
+       28.3,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       7.66,
+       3.92,
+       9.46,
+       13.2,
+       5.89,
+       17.0,
+       21.8,
+       8.97,
+       28.3,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -17.1,
+       -38.2,
+       -6.98
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       12.2,
+       7.29,
+       15.8,
+       17.7,
+       10.1,
+       25.3,
+       31.3,
+       16.5,
+       45.6,
+       4.52,
+       0.65,
+       9.52,
+       9.5,
+       0.82,
+       26.9,
+       -123,
+       -161,
+       -76.4
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ],
+    "with perennial": [
+     {
+      "s": "current",
+      "v": [
+       8.22,
+       3.14,
+       10.4,
+       14.6,
+       4.83,
+       18.2,
+       26.6,
+       7.39,
+       31.5,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "s": "cover_crop",
+      "v": [
+       8.22,
+       3.14,
+       10.4,
+       14.6,
+       4.83,
+       18.2,
+       26.6,
+       7.39,
+       31.5,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       -25.6,
+       -57.4,
+       -10.5
+      ]
+     },
+     {
+      "s": "dt_sorghum",
+      "v": [
+       15.0,
+       7.48,
+       19.7,
+       21.8,
+       11.4,
+       30.7,
+       42.4,
+       16.8,
+       57.5,
+       6.77,
+       0.98,
+       14.3,
+       15.8,
+       0.79,
+       41.2,
+       -185,
+       -242,
+       -115
+      ],
+      "f": [
+       "y_state_sorghum"
+      ]
+     }
+    ]
+   },
+   "src": {
+    "corn": "county",
+    "soybeans": "county",
+    "wheat": "county",
+    "sorghum": "county"
+   },
+   "lpa": {
+    "corn": 846,
+    "soybeans": 618,
+    "wheat": 261,
+    "sorghum": 396
+   }
+  }
+ },
+ "flag_counts": {
+  "c45": 615,
+  "ww_drought": 164,
+  "hot": 135,
+  "irr_high": 124,
+  "low_aws": 95,
+  "dry_summer": 84,
+  "irr_some": 66
+ },
+ "runtime_s": 57.1
+}

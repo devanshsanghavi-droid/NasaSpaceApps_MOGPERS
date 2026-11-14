@@ -11,7 +11,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
 from common import CROPS, MIN_ACRES_CROP, N_THREADS, OUT, PRINCIPAL  # noqa: E402
-from hazard_features import CLIM_FEATURES, HAZARD_FEATURES  # noqa: E402
+from hazard_features import CLIM_FEATURES, HAZARD_FEATURES, MS_FEATURES, WW_FEATURES  # noqa: E402
 
 STATIC_FEATURES = ["aws0_150_mm", "aws0_100_mm", "nccpi", "irrigated_share", "irrigated_insured_share"]
 CROP_CODE = {c: i for i, c in enumerate(CROPS)}
@@ -71,6 +71,12 @@ def feature_list(cfg):
         f += HAZARD_FEATURES
     elif cfg["hazard"] == "small":
         f += HAZ_SMALL
+    if cfg.get("ms"):  # v2 multi-season features (post-hoc)
+        f += [x for x in MS_FEATURES if not (cfg.get("ms_no_fall") and "son_prior" in x)]
+    if cfg.get("ww") == "all":
+        f += WW_FEATURES
+    elif cfg.get("ww") == "wheat":  # winter-wheat window only on wheat rows (NaN elsewhere)
+        f += ["wwm_" + x for x in WW_FEATURES]
     if cfg.get("usdm"):
         f += ["dsci_jja_mean", "dsci_mjjas_mean"]
     if cfg.get("modis"):
@@ -87,6 +93,17 @@ def feature_list(cfg):
     return f
 
 
+def X_of(df, feats):
+    """Feature matrix; builds wheat-only masked winter-wheat columns (wwm_*) on the fly."""
+    need = [f for f in feats if f.startswith("wwm_") and f not in df.columns]
+    if need:
+        df = df.copy()
+        isw = (df["crop_code"] == CROP_CODE["wheat"]).to_numpy()
+        for f in need:
+            df[f] = np.where(isw, df[f[4:]].to_numpy(float), np.nan)
+    return df[feats]
+
+
 def fit(cfg, train, seed=0):
     kind = cfg["kind"]
     tr = train[train.train_ok]
@@ -99,7 +116,7 @@ def fit(cfg, train, seed=0):
                       subsample_freq=1, colsample_bytree=0.8, reg_lambda=1.0, n_estimators=cfg.get("n", 400),
                       num_threads=N_THREADS, verbose=-1, random_state=seed)
         m = lgb.LGBMRegressor(**params)
-        m.fit(tr[feats], tr["lcr"], sample_weight=tr["w"], categorical_feature=["crop_code"])
+        m.fit(X_of(tr, feats), tr["lcr"], sample_weight=tr["w"], categorical_feature=["crop_code"])
         return {"kind": "lgb", "model": m, "feats": feats}
     if kind == "glm":
         return fit_glm(cfg, tr)
@@ -113,7 +130,7 @@ def predict(cfg, fitted, df, train=None):
     if kind == "mean":
         return county_encoding(fitted["train"], df, k=cfg.get("k", 5.0))
     if kind == "lgb":
-        return np.clip(fitted["model"].predict(df[fitted["feats"]]), 0, None)
+        return np.clip(fitted["model"].predict(X_of(df, fitted["feats"])), 0, None)
     if kind == "glm":
         return predict_glm(fitted, df)
     if kind == "ratio":

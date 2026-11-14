@@ -46,6 +46,12 @@ def main():
     div = json.load(open(OUT / "diversity_effect.json"))
     eff = div["app_effect"]
     val = json.load(open(OUT / "validation.json"))
+    mc = json.load(open(OUT / "model_config.json"))
+    app = mc.get("app", {}).get("version", "v1")
+    from fit_v2 import apply_conformal
+    cf = json.load(open(OUT / "conformal_params.json"))["cf20"][app]
+    cf["q"] = {int(k): v for k, v in cf["q"].items()}
+    cf["edges"] = [(-np.inf if i == 0 else np.inf) if e is None else e for i, e in enumerate(cf["edges"])]
     cdl = pd.read_parquet(PROC / "cdl_county_year.parquet")
     now = cdl[cdl.year == NOW_WINDOW_END].set_index("fips")
     # acre-weighted regional p90 of share_3plus (insured principal acres 2020-2024)
@@ -63,6 +69,14 @@ def main():
                                                                  f"window {NOW_WINDOW_END - 4}-{NOW_WINDOW_END})",
                                 "range": [0, 1], "p90_region": round(p90, 3)},
            "slider_effect": {"source": eff["source"], "label": eff["label"], "form": eff["form"]},
+           "model_version": app,
+           "interval_types": {
+               "expected_bill, bill_1in5, bill_1in10, taxpayer_expected_bill, bill_2045, corn.*":
+                   "parameter-uncertainty range (5th-95th pct over block-bootstrap refits of the loss model; 2045 also "
+                   "spans GCMs). It is the uncertainty of a long-run average, not a range for any single year.",
+               "hindcast.*.lo/hi, slider.lo/hi":
+                   "calibrated 90% prediction interval for a single year (split-conformal from leave-one-year-out "
+                   "residuals, 2001-2020); slider bands also span the diversity scenario range"},
            "counties": {}}
     hc22 = hc[hc.year.isin([2022, 2023])].set_index(["fips", "year"])
     sav = {"est": {}, "lo": {}, "hi": {}}
@@ -105,6 +119,10 @@ def main():
                                 "shannon_now": round(float(now.div_shannon_5y[f]), 3)}
             b22, b22lo, b22hi = c.principal_y2022, c.principal_y2022_lo, c.principal_y2022_hi
             ms = {k: [multiplier(s, s_now, eff, k) for s in SLIDER_GRID] for k in ("est", "lo", "hi")}
+            # one-year bill under the 2022 hazard is a prediction -> calibrated 90% prediction interval, widened by
+            # the diversity-scenario range
+            pl, ph = apply_conformal(cf, np.array([b22]))
+            b22lo, b22hi = float(pl[0]), float(ph[0])
             rec["slider"] = {
                 "div_values": SLIDER_GRID, "metric": "share_3plus", "hazard_year": 2022,
                 "bill_2022_style": [r3(b22 * m) for m in ms["est"]],
@@ -170,7 +188,10 @@ def main():
                                         "hi": r3(savs["hi"][fs].sum())}
         if fut is not None:
             fm = fut[fut.state.isin(states)]
-            g = fm.groupby(["scenario", "gcm", "boot"])[["fut_usd", "hist_usd"]].sum().reset_index()
+            keys = ["scenario", "gcm", "soil", "boot"] if "soil" in fm.columns else ["scenario", "gcm", "boot"]
+            g = fm.groupby(keys)[["fut_usd", "hist_usd"]].sum().reset_index()
+            if "soil" not in g.columns:
+                g["soil"] = "emulator"
             g["chg"] = 100 * (g.fut_usd / g.hist_usd - 1)
             blk["bill_2045_usd"], blk["change_2045_pct"], blk["change_2045_pct_by_gcm"] = {}, {}, {}
             for s, gs in g.groupby("scenario"):
@@ -180,7 +201,10 @@ def main():
                 blk["change_2045_pct"][s] = {"est": round(float(b0.chg.median()), 1),
                                              "lo": round(float(gs.chg.quantile(0.05)), 1),
                                              "hi": round(float(gs.chg.quantile(0.95)), 1)}
-                blk["change_2045_pct_by_gcm"][s] = {k: round(float(v), 1) for k, v in zip(b0.gcm, b0.chg)}
+                blk["change_2045_pct_by_gcm"][s] = {f"{k} ({so})": round(float(v), 1)
+                                                    for k, so, v in zip(b0.gcm, b0.soil, b0.chg)}
+                blk.setdefault("change_2045_pct_by_soil_assumption", {})[s] = {
+                    so: round(float(x.chg.median()), 1) for so, x in b0.groupby("soil")}
         else:
             blk["bill_2045_usd"] = None
             blk["change_2045_pct"] = None
@@ -198,7 +222,9 @@ def main():
                       "bill interval by the same fraction.",
                       "actual_2022_usd / actual_2023_usd: RMA drought indemnity for the principal crops (nominal).",
                       "change_2045_pct: NEX-GDDP-CMIP6 2035-2054 vs 1995-2014 deltas applied to NASA POWER weather; "
-                      "est = median over GCMs, lo/hi = 5th-95th percentile over GCM x bootstrap draws.",
+                      "est = median over GCMs x two soil-moisture assumptions (root-zone wetness shifted by the "
+                      "NASA POWER emulator, or held at observed); lo/hi = 5th-95th percentile over GCM x soil "
+                      "assumption x bootstrap draws.",
                       "diversity_savings_usd: expected annual bill reduction if every county's share of cropland in 3+ "
                       "crop rotations rose to at least the regional insured-acre-weighted 90th percentile; "
                       + eff["label"]]}
@@ -246,8 +272,15 @@ def main():
             "the drought bill is a lower bound of weather-driven losses.",
             "RMA 2025 data are provisional and are not used for training, testing or the bill.",
             "NASA POWER weather is on a ~50 km MERRA-2 grid; counties in the same cell share weather.",
-            "Out-of-time test: trained 2001-2020, tested 2021-2024. Intervals are bootstrap parameter intervals, not "
-            "full predictive intervals (see hindcast.json for their coverage).",
+            "Out-of-time tests: trained 2001-2020, tested 2021-2024 (the model ranks counties well but under-predicted "
+            "the 2022 and 2023 regional totals by about half); trained 2001-2011, tested 2012.",
+            "The app uses the pre-registered model (v1). A post-hoc v2 with multi-season NASA POWER features (idea came "
+            "after seeing the 2022-23 shortfall) does better on 2021-2024 but not in training-period CV or on the 2012 "
+            "holdout, so it is reported in hindcast.json but not used." if app == "v1" else
+            "The app uses v2, a post-hoc model with multi-season NASA POWER features (idea came after seeing the "
+            "2022-23 shortfall); it beat v1 in training-period CV and on the 2012 holdout.",
+            "Ranges on expected bills are parameter uncertainty of a long-run average; single-year ranges (hindcast, "
+            "slider) are calibrated 90% prediction intervals (county coverage on 2021-2024 tests: see hindcast.json).",
             "Taxpayer share is an actuarial approximation (subsidy share x expected losses); it excludes delivery "
             "(A&O) reimbursements and underwriting gains.",
             "Rotation diversity: county insurance data show no robust drought-protection effect of rotation "
@@ -256,14 +289,20 @@ def main():
             "Rotation diversity effect is an observational estimate; see notes/model.md for diagnostics.",
             (f"2045: NEX-GDDP-CMIP6 deltas from {len(gcms)} GCM(s) ({', '.join(gcms)}; 10 sampled years per 20-year "
              "period) applied to observed 1981-2024 NASA POWER weather (delta method; root-zone wetness shifted with an "
-             "emulator fitted to NASA POWER; year-to-year variability held at today's). The rise is driven mostly by "
-             "more extreme heat (EDD > 30 C); the loss model learned heat effects from years when heat came with "
-             "drought, so the size of the rise is uncertain and the GCM spread is wide. No adaptation is assumed.")
+             "emulator fitted to NASA POWER, or held at observed - both shown as structural uncertainty; year-to-year "
+             "variability held at today's). The rise is driven by more extreme heat (EDD > 30 C) and by how much "
+             "the soils dry with it; the emulator's drying is likely overstated (dry soils also cause hot summers), "
+             "so the low end matters. The GCM spread is wide. No adaptation is assumed.")
             if has_cmip else "2045 projections not available in this build.",
             "Precipitation is NASA POWER (MERRA-2), not GPM IMERG: the IMERG host was not reachable from the build "
             "environment.",
         ],
-        "validation": {k: val["metrics"][k] for k in val["metrics"]},
+        "validation": {"v1_preregistered_2021_2024": val["v1"]["metrics"],
+                       "v2_posthoc_2021_2024": {k: {m: v[m] for m in ("mae", "rmse", "r2", "spearman", "total_bias_pct")}
+                                                for k, v in val["v2_and_holdout"]["2021_2024"]["models"].items()},
+                       "holdout_2012": {k: {m: v[m] for m in ("mae", "rmse", "r2", "spearman", "total_bias_pct")}
+                                        for k, v in val["v2_and_holdout"]["2012_holdout"]["models"].items()},
+                       "app_model": app},
     }
     save_json(meta, WEB / "meta.json", 1)
     print("meta.json written")

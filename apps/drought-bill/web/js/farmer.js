@@ -22,6 +22,42 @@ export function initFarmer(D, state, onSelect) {
   const counties = D.bill?.counties || {};
   const S = D.strategies || {};
   const stratMeta = new Map((S.strategies || []).map((s) => [s.id, s]));
+  // strategies.json "compact-v1": numbers per county/rotation, shared card text per strategy, flag templates.
+  const compact = S.schema === 'compact-v1';
+  const fillTpl = (t, ctx) => String(t).replace(/\{(\w+)\}/g, (m, k) => (ctx && ctx[k] != null ? String(ctx[k]) : m));
+  const flagText = (code, sid, ctx, cardLevel) => {
+    const fl = S.flags?.[code];
+    if (!fl) return null;
+    const text = typeof fl === 'string' ? fl : fl.text;
+    if (!cardLevel && fl.cards && !fl.cards.includes(sid)) return null;
+    return fillTpl(text, ctx);
+  };
+  function decodeCard(c, cty) {
+    const m = stratMeta.get(c.s) || {};
+    const r = { strategy_id: c.s, evidence: m.evidence, why: m.why, benefits: m.benefits, gaps: m.gaps, risks: m.risks };
+    (S.fields || []).forEach((k, i) => {
+      const [est, lo, hi] = [c.v?.[3 * i], c.v?.[3 * i + 1], c.v?.[3 * i + 2]];
+      r[k] = est == null && lo == null && hi == null ? null : { est, lo, hi };
+    });
+    r.local = [
+      ...(cty.f || []).map((code) => flagText(code, c.s, cty.ctx, false)),
+      ...(c.f || []).map((code) => flagText(code, c.s, cty.ctx, true)),
+    ].filter(Boolean);
+    return r;
+  }
+  const rowsFor = (fips, rot) => {
+    const cty = S.counties?.[fips];
+    if (!cty) return null;
+    if (!compact) return cty[rot] || null;
+    const cards = cty.rot?.[rot];
+    return cards ? cards.map((c) => decodeCard(c, cty)) : null;
+  };
+  const rotsFor = (fips) => {
+    const cty = S.counties?.[fips];
+    return cty ? Object.keys(compact ? cty.rot || {} : cty) : [];
+  };
+  const scen = S.scenario?.r;
+  const pctTxt = (x) => (isNum(x) ? `${Math.round(x * 100)}%` : NA);
   const F = D.fields;
   let fieldsMap = null;
   let stratDraw = null;
@@ -109,7 +145,7 @@ export function initFarmer(D, state, onSelect) {
   function renderResults() {
     const el = document.getElementById('farm-results');
     const c = counties[state.fips];
-    const rows = S.counties?.[state.fips]?.[state.rotation];
+    const rows = rowsFor(state.fips, state.rotation);
     const rotLabel = ROTATIONS.find((r) => r.id === state.rotation)?.label || state.rotation;
     if (cmap) cmap.select(state.fips);
     const where = c ? countyLabel(c, state.fips) : (cmap?.byFips.get(state.fips)?.properties?.name || 'your county');
@@ -136,8 +172,14 @@ export function initFarmer(D, state, onSelect) {
         <h3 class="cards-h">Compare ${rows.length} strategies</h3>
         <div id="strat-chart" class="strat-chart"></div>
         <div class="cards">${rows.map((r) => card(r, cur)).join('')}</div>`
-      : `<p class="empty">Strategy comparisons are not available for ${esc(where)} with a ${esc(rotLabel.toLowerCase())} rotation yet.${S.counties?.[state.fips] ? ` Available here: ${Object.keys(S.counties[state.fips]).map(esc).join(', ')}.` : ' Try Plymouth County, IA.'}</p>`}`;
+      : `<p class="empty">Strategy comparisons are not available for ${esc(where)} with a ${esc(rotLabel.toLowerCase())} rotation yet.${rotsFor(state.fips).length ? ` Available here: ${rotsFor(state.fips).map(esc).join(', ')}.` : ' Try Plymouth County, IA.'}</p>`}`;
     if (rows && rows.length) stratChart(document.getElementById('strat-chart'), rows);
+  }
+
+  function srcLink(s) {
+    const label = typeof s === 'string' ? s.replace(/^https?:\/\//, '').slice(0, 40) : s?.label || '';
+    const url = typeof s === 'string' ? (/^https?:/.test(s) ? s : null) : s?.url;
+    return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>` : esc(label);
   }
 
   function delta(v, { good = 'neg', unit = '/ac' } = {}) {
@@ -150,6 +192,10 @@ export function initFarmer(D, state, onSelect) {
   function card(r, cur) {
     const m = stratMeta.get(r.strategy_id) || {};
     const isCur = r.strategy_id === 'current';
+    const mix = S.rotations?.[state.rotation]?.mix;
+    const nq = (v) => (v == null && m.not_quantified ? `<span class="muted">not quantified</span>` : delta(val(v)));
+    const scenNote = (m.scenario || (isCur && /scenario/.test(mix || ''))) && scen
+      ? `<p class="small"><span class="src-badge">Scenario</span> Corn drought benefit of the rotation is a trial-based assumption (${pctTxt(scen.est)} less loss, range ${pctTxt(scen.lo)}–${pctTxt(scen.hi)}; Bowles et al. 2020), not an estimate from county data.</p>` : '';
     const g = GRADE[r.evidence?.grade] || ['○○○', r.evidence?.grade ? `${r.evidence.grade} evidence` : 'Evidence n/a'];
     const tail = r.delta_bill_1in10 ? val(r.delta_bill_1in10)
       : (isNum(val(r.bill_1in10).est) && isNum(val(cur?.bill_1in10).est) ? { est: val(r.bill_1in10).est - val(cur.bill_1in10).est, lo: null, hi: null } : val(null));
@@ -163,17 +209,24 @@ export function initFarmer(D, state, onSelect) {
           <span class="grade grade-${esc(r.evidence?.grade || 'na')}" title="${esc(g[1])}"><span aria-hidden="true">${g[0]}</span> ${esc(g[1])}</span>
         </header>
         <div class="card-bill"><span class="red">${usd(val(r.expected_bill).est)}</span><small>/acre/yr expected drought bill</small>${rangeTxt(val(r.expected_bill)) ? `<span class="muted small">range ${rangeTxt(val(r.expected_bill))}</span>` : ''}</div>
-        ${isCur ? '<p class="small muted">The baseline the other options are compared with.</p>' : `
+        ${isCur ? `<p class="small muted">The baseline the other options are compared with.${mix ? ` Crop mix assumed: ${esc(mix)}.` : ''}</p>
         <table class="kv small">
-          <tr><th>Expected bill</th><td>${delta(val(r.delta_bill))}</td></tr>
-          <tr><th>1-in-10 bad year</th><td>${delta(tail)}</td></tr>
-          <tr><th>Average income</th><td>${delta(val(r.delta_income_per_ac), { good: 'pos' })}</td></tr>
-        </table>`}
+          <tr><th>1-in-5 bad year</th><td>${usd(val(r.bill_1in5).est)}${rangeTxt(val(r.bill_1in5)) ? ` <span class="muted">(${rangeTxt(val(r.bill_1in5))})</span>` : ''}</td></tr>
+          <tr><th>1-in-10 bad year</th><td>${usd(val(r.bill_1in10).est)}${rangeTxt(val(r.bill_1in10)) ? ` <span class="muted">(${rangeTxt(val(r.bill_1in10))})</span>` : ''}</td></tr>
+        </table>` : `
+        <table class="kv small">
+          <tr><th>Expected bill</th><td>${nq(r.delta_bill)}</td></tr>
+          <tr><th>1-in-10 bad year</th><td>${r.delta_bill == null && m.not_quantified ? nq(null) : delta(tail)}</td></tr>
+          <tr><th>Net return${m.income_note ? '*' : ''}</th><td>${delta(val(r.delta_income_per_ac), { good: 'pos' })}</td></tr>
+        </table>
+        ${m.not_quantified ? `<p class="small muted">${esc(m.not_quantified)} Bill shown unchanged.</p>` : ''}
+        ${m.income_note ? `<p class="small muted">*Change in revenue minus operating costs per acre per year vs your current rotation: ${esc(m.income_note)}</p>` : ''}`}
+        ${scenNote}
         ${r.why || m.description ? `<p class="why"><b>Why:</b> ${esc(r.why || m.description)}</p>` : ''}
         <details open><summary>Benefits</summary>${list(r.benefits)}</details>
         <details><summary>Information gaps</summary>${list(r.gaps)}</details>
-        <details><summary>Risks needing local review</summary>${list(r.risks)}</details>
-        ${srcs.length ? `<p class="small muted src">Evidence: ${srcs.map((s) => (/^https?:/.test(s) ? `<a href="${esc(s)}" target="_blank" rel="noopener">${esc(s.replace(/^https?:\/\//, '').slice(0, 40))}</a>` : esc(s))).join('; ')}</p>` : ''}
+        <details${r.local?.length ? ' open' : ''}><summary>Risks needing local review</summary>${r.local?.length ? `<p class="small"><b>In this county:</b></p>${list(r.local)}<p class="small"><b>In general:</b></p>` : ''}${list(r.risks)}</details>
+        ${srcs.length ? `<p class="small muted src">Evidence: ${srcs.map(srcLink).join('; ')}</p>` : ''}
       </article>`;
   }
 

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T23:00:05+00:00",
+ "generated_at": "2026-11-14T23:13:56+00:00",
  "mock": false,
  "region": {
   "states": [
@@ -74,36 +74,101 @@
   "Drought = RMA cause-of-loss code 11 only; heat, hot wind and area-plan (SCO/ECO) payouts are excluded, so the drought bill is a lower bound of weather-driven losses.",
   "RMA 2025 data are provisional and are not used for training, testing or the bill.",
   "NASA POWER weather is on a ~50 km MERRA-2 grid; counties in the same cell share weather.",
-  "Out-of-time test: trained 2001-2020, tested 2021-2024. Intervals are bootstrap parameter intervals, not full predictive intervals (see hindcast.json for their coverage).",
+  "Out-of-time tests: trained 2001-2020, tested 2021-2024 (the model ranks counties well but under-predicted the 2022 and 2023 regional totals by about half); trained 2001-2011, tested 2012.",
+  "The app uses the pre-registered model (v1). A post-hoc v2 with multi-season NASA POWER features (idea came after seeing the 2022-23 shortfall) does better on 2021-2024 but not in training-period CV or on the 2012 holdout, so it is reported in hindcast.json but not used.",
+  "Ranges on expected bills are parameter uncertainty of a long-run average; single-year ranges (hindcast, slider) are calibrated 90% prediction intervals (county coverage on 2021-2024 tests: see hindcast.json).",
   "Taxpayer share is an actuarial approximation (subsidy share x expected losses); it excludes delivery (A&O) reimbursements and underwriting gains.",
   "Rotation diversity: county insurance data show no robust drought-protection effect of rotation diversity; the slider uses the field-trial range (Bowles et al. 2020) as a labelled scenario.",
   "2045: NEX-GDDP-CMIP6 deltas from 3 GCM(s) (ACCESS-CM2, GFDL-ESM4, MPI-ESM1-2-HR; 10 sampled years per 20-year period) applied to observed 1981-2024 NASA POWER weather (delta method; root-zone wetness shifted with an emulator fitted to NASA POWER; year-to-year variability held at today's). The rise is driven mostly by more extreme heat (EDD > 30 C); the loss model learned heat effects from years when heat came with drought, so the size of the rise is uncertain and the GCM spread is wide. No adaptation is assumed.",
   "Precipitation is NASA POWER (MERRA-2), not GPM IMERG: the IMERG host was not reachable from the build environment."
  ],
  "validation": {
-  "model": {
-   "n": 2525,
-   "mae": 15.178107834108445,
-   "rmse": 31.238608391257287,
-   "r2": 0.35605524936470745,
-   "spearman": 0.7833220293969625,
-   "total_bias_pct": -32.59947930746335
+  "v1_preregistered_2021_2024": {
+   "model": {
+    "n": 2525,
+    "mae": 15.178107834108445,
+    "rmse": 31.238608391257287,
+    "r2": 0.35605524936470745,
+    "spearman": 0.7833220293969625,
+    "total_bias_pct": -32.59947930746335
+   },
+   "baseline_mean": {
+    "n": 2525,
+    "mae": 22.11148078118178,
+    "rmse": 36.382204549696304,
+    "r2": 0.12653949561110978,
+    "spearman": 0.40173173722935696,
+    "total_bias_pct": -17.89913619095699
+   },
+   "baseline_hazard_only": {
+    "n": 2525,
+    "mae": 17.280972070703463,
+    "rmse": 35.44211989646038,
+    "r2": 0.17109524601540327,
+    "spearman": 0.7051372286432236,
+    "total_bias_pct": -42.780429151046256
+   }
   },
-  "baseline_mean": {
-   "n": 2525,
-   "mae": 22.11148078118178,
-   "rmse": 36.382204549696304,
-   "r2": 0.12653949561110978,
-   "spearman": 0.40173173722935696,
-   "total_bias_pct": -17.89913619095699
+  "v2_posthoc_2021_2024": {
+   "v1": {
+    "mae": 15.178107834108445,
+    "rmse": 31.238608391257287,
+    "r2": 0.35605524936470745,
+    "spearman": 0.7833220293969625,
+    "total_bias_pct": -32.59947930746335
+   },
+   "v2": {
+    "mae": 14.192928153191982,
+    "rmse": 28.500200140499228,
+    "r2": 0.46400459169308217,
+    "spearman": 0.7917590525912347,
+    "total_bias_pct": -21.10604302596334
+   },
+   "baseline_mean": {
+    "mae": 22.11148078118178,
+    "rmse": 36.382204549696304,
+    "r2": 0.12653949561110978,
+    "spearman": 0.40173173722935696,
+    "total_bias_pct": -17.89913619095699
+   },
+   "baseline_hazard_only": {
+    "mae": 17.28097207070348,
+    "rmse": 35.44211989645904,
+    "r2": 0.171095246015466,
+    "spearman": 0.7051372286432236,
+    "total_bias_pct": -42.78042915103334
+   }
   },
-  "baseline_hazard_only": {
-   "n": 2525,
-   "mae": 17.280972070703463,
-   "rmse": 35.44211989646038,
-   "r2": 0.17109524601540327,
-   "spearman": 0.7051372286432236,
-   "total_bias_pct": -42.780429151046256
-  }
+  "holdout_2012": {
+   "v1": {
+    "mae": 44.1907383622053,
+    "rmse": 64.48415932065332,
+    "r2": 0.43460125201557886,
+    "spearman": 0.771817676473471,
+    "total_bias_pct": -10.63229579300518
+   },
+   "v2": {
+    "mae": 45.123928988046586,
+    "rmse": 67.80293010361657,
+    "r2": 0.3749054931872672,
+    "spearman": 0.7680282210068646,
+    "total_bias_pct": -21.050574941684758
+   },
+   "baseline_mean": {
+    "mae": 80.55040902203984,
+    "rmse": 115.43179547963094,
+    "r2": -0.8117557973889171,
+    "spearman": 0.06488863496218902,
+    "total_bias_pct": -82.75520212021134
+   },
+   "baseline_hazard_only": {
+    "mae": 55.42382042153956,
+    "rmse": 79.18403662682958,
+    "r2": 0.14744180652287253,
+    "spearman": 0.5565987287310077,
+    "total_bias_pct": 0.8057972548170589
+   }
+  },
+  "app_model": "v1"
  }
 }

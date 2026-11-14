@@ -30,8 +30,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 from common import CROPS, LAST_COMPLETE_YEAR, MIN_ACRES_CROP, OUT, PROC, RECENT, SIM_YEARS, save_json  # noqa: E402
 from hazard_features import (cell_season, county_cells, daily_jja_arrays, load_daily,  # noqa: E402
                              perturb_county_season, standardise)
+from hazard_features import MS_FEATURES, WW_FEATURES  # noqa: E402
 from lossmodel import add_encodings, county_encoding, fit, load_crop_panel, needs_enc, predict  # noqa: E402
 
+MS_ALL = set(MS_FEATURES + WW_FEATURES + ["gwetroot_son_prior", "prcp_ondjfm_mm", "prcp_ww_mm", "gwetroot_ww",
+                                           "edd30_ww"])
 MIN_YEARS_CROP = 5  # years with >= 1,000 insured acres (2001-2024) for a crop to get its own simulated distribution
 
 
@@ -203,27 +206,34 @@ def future(B_future=30):
         cs_obs["clim_prcp_jja_mm"] = bs.loc[cs_obs.cell_id, "prcp_jja_mm_mu"].to_numpy()
         dj = daily_jja_arrays(daily)
         sub = models[:1] + models[1:B_future + 1]
-        hcols = [c for c in feat.columns if c not in ("fips", "year", "cell_id")]
+        # only the features the delta method recomputes are replaced; out-of-season (v2) features have no CMIP6
+        # delta in this build and are held at their observed values
+        hcols = [c for c in feat.columns if c not in ("fips", "year", "cell_id") and c not in MS_ALL]
         base = sf.drop(columns=[c for c in hcols if c in sf.columns])
         feat_shift = []
+        # Two soil-moisture assumptions are treated as structural uncertainty (see notes 4.1, decomposition):
+        # "emulator" shifts root-zone wetness with the POWER-fitted emulator (its temperature slope is likely inflated
+        # by land-atmosphere feedback: dry soils make hot summers), "no_emulator" holds root-zone wetness at observed.
+        emu0 = {k: {**v, "beta": [0.0] * len(v["beta"])} for k, v in emu.items()}
         for (gcm, scen), dg in deltas.groupby(["gcm", "scenario"]):
             dd = dg.set_index("fips")
-            fs = perturb_county_season(cs_obs, dd, emu, daily_jja=dj)
-            fz = standardise(fs, bs)
-            fz = fz[fz.fips.isin(dd.index)]
-            ff = fz.rename(columns={"year": "hazard_year"})
-            sff = base.merge(ff[["fips", "hazard_year"] + [c for c in hcols if c in ff.columns]],
-                             on=["fips", "hazard_year"], how="inner")
-            fsum = ff.groupby("fips")[["hazard_z", "edd30_jja", "spi_jja", "gwetroot_jja", "vpd_jja_kpa"]].mean()
-            feat_shift.append(fsum.assign(gcm=gcm, scenario=scen).reset_index())
-            for bi, (m, stt) in enumerate(sub):
-                lf = predict_rows(cfg, m, stt, sff)
-                pr_ac, corn = summarise(sff, lf, acres_pr)
-                fut_rows.append(pd.DataFrame({"fips": pr_ac.index, "gcm": gcm, "scenario": scen, "boot": bi,
-                                              "principal_mean": pr_ac.mean(axis=1).to_numpy(),
-                                              "principal_p90": np.percentile(pr_ac.to_numpy(), 90, axis=1),
-                                              "corn_mean": corn.mean(axis=1).reindex(pr_ac.index).to_numpy()}))
-            print(f"  {gcm} {scen} done {time.time() - t0:.0f}s", flush=True)
+            for soil, e in (("emulator", emu), ("no_emulator", emu0)):
+                fs = perturb_county_season(cs_obs, dd, e, daily_jja=dj)
+                fz = standardise(fs, bs)
+                fz = fz[fz.fips.isin(dd.index)]
+                ff = fz.rename(columns={"year": "hazard_year"})
+                sff = base.merge(ff[["fips", "hazard_year"] + [c for c in hcols if c in ff.columns]],
+                                 on=["fips", "hazard_year"], how="inner")
+                fsum = ff.groupby("fips")[["hazard_z", "edd30_jja", "spi_jja", "gwetroot_jja", "vpd_jja_kpa"]].mean()
+                feat_shift.append(fsum.assign(gcm=gcm, scenario=scen, soil=soil).reset_index())
+                for bi, (m, stt) in enumerate(sub):
+                    lf = predict_rows(cfg, m, stt, sff)
+                    pr_ac, corn = summarise(sff, lf, acres_pr)
+                    fut_rows.append(pd.DataFrame({"fips": pr_ac.index, "gcm": gcm, "scenario": scen, "soil": soil,
+                                                  "boot": bi, "principal_mean": pr_ac.mean(axis=1).to_numpy(),
+                                                  "principal_p90": np.percentile(pr_ac.to_numpy(), 90, axis=1),
+                                                  "corn_mean": corn.mean(axis=1).reindex(pr_ac.index).to_numpy()}))
+                print(f"  {gcm} {scen} {soil} done {time.time() - t0:.0f}s", flush=True)
         pd.concat(feat_shift).to_parquet(OUT / "sim_future_features.parquet", index=False)
         fut = pd.concat(fut_rows, ignore_index=True)
         hist = []
@@ -245,10 +255,68 @@ def future(B_future=30):
                 f"corn_2045_{scen}": c0, f"corn_2045_{scen}_lo": callv.quantile(0.05),
                 f"corn_2045_{scen}_hi": callv.quantile(0.95)}).reset_index(), on="fips", how="left")
         county["n_gcms"] = deltas.gcm.nunique()
+        county["gcms_2045"] = ",".join(sorted(deltas.gcm.unique()))
     else:
         print("[warn] cmip6_deltas.parquet missing: 2045 fields will be null")
     county.to_parquet(OUT / "county_sim.parquet", index=False)
     print(f"future done {time.time() - t0:.0f}s")
+
+
+def decompose():
+    """Decompose the 2045 change (point model, region total) into heat, precipitation and soil-moisture-emulator
+    parts by re-running the delta method with parts of the CMIP6 deltas switched off."""
+    with gzip.open(OUT / "sim_state.pkl.gz", "rb") as fh:
+        st_ = pickle.load(fh)
+    cfg, models, sf, acres_pr, hist_means = st_["cfg"], st_["models"], st_["sf"], st_["acres_pr"], st_["hist_means"]
+    m0, stt = models[0]
+    feat = pd.read_parquet(OUT / "hazard_features.parquet")
+    deltas = pd.read_parquet(PROC / "cmip6_deltas.parquet")
+    bsd = pickle.load(open(OUT / "power_base_stats.pkl", "rb"))
+    bs, emu = bsd["base_stats"], bsd["emulator"]
+    emu0 = {k: {**v, "beta": [0.0] * len(v["beta"])} for k, v in emu.items()}
+    daily = load_daily()
+    cy = cell_season(daily)
+    cs_obs = county_cells().merge(cy, on="cell_id")
+    cs_obs = cs_obs[cs_obs.year.isin(SIM_YEARS)].reset_index(drop=True)
+    cs_obs["clim_prcp_mj_mm"] = bs.loc[cs_obs.cell_id, "prcp_mj_mm_mu"].to_numpy()
+    cs_obs["clim_prcp_jja_mm"] = bs.loc[cs_obs.cell_id, "prcp_jja_mm_mu"].to_numpy()
+    dj = daily_jja_arrays(daily)
+    hcols = [c for c in feat.columns if c not in ("fips", "year", "cell_id") and c not in MS_ALL]
+    base = sf.drop(columns=[c for c in hcols if c in sf.columns])
+    hist_total = float((hist_means[0][0] * acres_pr.reindex(hist_means[0][0].index)).sum())
+    pcols = [c for c in deltas.columns if c.startswith("d_prcp")]
+    tcols = [c for c in deltas.columns if c.startswith(("d_tmax", "d_tmin", "d_edd", "d_vpd"))]
+    variants = {
+        "full": (lambda d: d, emu),
+        "heat_only (temperature/VPD; soil wetness responds to temperature)": (lambda d: d.assign(**{c: 0.0 for c in pcols}), emu),
+        "heat_only_no_emulator (temperature/VPD; soil wetness unchanged)": (lambda d: d.assign(**{c: 0.0 for c in pcols}), emu0),
+        "precip_only (soil wetness responds to precipitation)": (lambda d: d.assign(**{c: 0.0 for c in tcols}), emu),
+        "full_no_emulator (soil wetness held at observed)": (lambda d: d, emu0),
+    }
+    rows = []
+    for (gcm, scen), dg in deltas.groupby(["gcm", "scenario"]):
+        for vn, (fn, e) in variants.items():
+            dd = fn(dg.set_index("fips").copy())
+            fz = standardise(perturb_county_season(cs_obs, dd, e, daily_jja=dj), bs)
+            ff = fz[fz.fips.isin(dd.index)].rename(columns={"year": "hazard_year"})
+            sff = base.merge(ff[["fips", "hazard_year"] + [c for c in hcols if c in ff.columns]],
+                             on=["fips", "hazard_year"], how="inner")
+            lf = predict_rows(cfg, m0, stt, sff)
+            pr_ac, _ = summarise(sff, lf, acres_pr)
+            tot = float((pr_ac.mean(axis=1) * acres_pr.reindex(pr_ac.index)).sum())
+            rows.append({"gcm": gcm, "scenario": scen, "variant": vn, "total_usd": tot,
+                         "change_pct": 100 * (tot / hist_total - 1),
+                         "mean_d_hazard_z": float(ff.groupby("fips").hazard_z.mean().mean()
+                                                  - feat[feat.year.isin(SIM_YEARS)].groupby("fips").hazard_z.mean().mean())})
+            print(gcm, scen, vn[:30], round(rows[-1]["change_pct"], 1), flush=True)
+    df = pd.DataFrame(rows)
+    df.to_parquet(OUT / "future_decomposition.parquet", index=False)
+    summ = {"hist_total_usd": hist_total, "gcms": sorted(deltas.gcm.unique().tolist()),
+            "by_gcm": {f"{r.gcm}|{r.scenario}|{r.variant}": round(r.change_pct, 1) for r in df.itertuples()},
+            "median_over_gcms": {s: g.groupby("variant").change_pct.median().round(1).to_dict()
+                                 for s, g in df.groupby("scenario")}}
+    save_json(summ, OUT / "future_decomposition.json", 1)
+    print(json.dumps(summ["median_over_gcms"], indent=1))
 
 
 if __name__ == "__main__":
@@ -256,5 +324,11 @@ if __name__ == "__main__":
     ap.add_argument("--B", type=int, default=100)
     ap.add_argument("--B_future", type=int, default=30)
     ap.add_argument("--future-only", action="store_true")
+    ap.add_argument("--decompose", action="store_true")
     a = ap.parse_args()
-    future(a.B_future) if a.future_only else main(a.B, a.B_future)
+    if a.decompose:
+        decompose()
+    elif a.future_only:
+        future(a.B_future)
+    else:
+        main(a.B, a.B_future)

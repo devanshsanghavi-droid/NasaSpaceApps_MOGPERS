@@ -317,3 +317,65 @@ def observed_county_features(return_parts=False):
     if return_parts:
         return feat, cy, bs, daily
     return feat
+
+
+# ------------------------------------------------------------------ v2: multi-season NASA POWER features
+# Added in model v2 (POST-HOC: the idea came after seeing the v1 2022-23 shortfall). Physical motivation:
+#  - root-zone wetness at planting (Apr-May): soil water stored before the season buffers summer deficits;
+#  - prior Oct-Mar precipitation: winter recharge of the soil profile;
+#  - prior-fall (Sep-Nov) root-zone wetness: carry-over from the previous season (back-to-back droughts);
+#  - winter-wheat season (prior Oct through Jun): the growing season of hard red winter wheat (KS, NE, SD), which a
+#    May-Aug window misses.
+MS_FEATURES = ["gwetroot_am", "gwetroot_am_pct", "gwetroot_am_anom", "prcp_ondjfm_anom_pct",
+               "gwetroot_son_prior_anom", "gwetroot_son_prior_pct"]
+WW_FEATURES = ["prcp_ww_anom_pct", "gwetroot_ww_anom", "gwetroot_ww_pct", "edd30_ww_anom"]
+
+
+def multiseason_cell_year():
+    """Per cell x year t: Apr-May(t) GWETROOT, Oct(t-1)-Mar(t) precipitation, Sep-Nov(t-1) GWETROOT and the winter-wheat
+    window Oct(t-1)-Jun(t) (precipitation, GWETROOT, EDD30). Standardised against the cell's 1991-2020 values (for
+    windows starting in t-1, the base is target years 1991-2020). Year 1981 has no prior-year data -> NaN."""
+    d = pd.read_parquet(PROC / "power_daily_cells.parquet",
+                        columns=["cell_id", "date", "T2M_MAX", "T2M_MIN", "PRECTOTCORR", "GWETROOT"])
+    d["year"] = d.date.dt.year.astype(int)
+    d["month"] = d.date.dt.month.astype(int)
+    d["edd30"] = sine_dd_above(d.T2M_MIN.to_numpy(float), d.T2M_MAX.to_numpy(float), 30.0)
+    # target year: Sep-Dec belong to the next year's prior-season windows
+    d["ty"] = np.where(d.month >= 9, d.year + 1, d.year)
+    m = d.month
+    g = lambda mask, col, fn: (d[mask].groupby(["cell_id", "ty"])[col].sum() if fn == "sum"  # noqa: E731
+                               else d[mask].groupby(["cell_id", "ty"])[col].mean())
+    am = d[m.isin([4, 5])].groupby(["cell_id", "year"]).GWETROOT.mean()
+    am.index = am.index.set_names(["cell_id", "ty"])
+    out = pd.DataFrame({
+        "gwetroot_am": am,
+        "prcp_ondjfm_mm": g(m.isin([10, 11, 12, 1, 2, 3]), "PRECTOTCORR", "sum"),
+        "gwetroot_son_prior": g(m.isin([9, 10, 11]), "GWETROOT", "mean"),
+        "prcp_ww_mm": g(m.isin([10, 11, 12, 1, 2, 3, 4, 5, 6]), "PRECTOTCORR", "sum"),
+        "gwetroot_ww": g(m.isin([10, 11, 12, 1, 2, 3, 4, 5, 6]), "GWETROOT", "mean"),
+        "edd30_ww": g(m.isin([10, 11, 12, 1, 2, 3, 4, 5, 6]), "edd30", "sum"),
+    }).reset_index().rename(columns={"ty": "year"})
+    out = out[out.year.between(1981, 2025)].copy()
+    first = out.year == 1981  # prior-season windows incomplete in 1981 (POWER starts 1981-01-01)
+    for c in ["prcp_ondjfm_mm", "gwetroot_son_prior", "prcp_ww_mm", "gwetroot_ww", "edd30_ww"]:
+        out.loc[first, c] = np.nan
+    parts = []
+    for cid, gg in out.groupby("cell_id"):
+        gg = gg.sort_values("year").copy()
+        b = gg[gg.year.between(BASE0, BASE1)]
+        gg["gwetroot_am_anom"] = gg.gwetroot_am - b.gwetroot_am.mean()
+        bs_am = np.sort(b.gwetroot_am.to_numpy(float))
+        gg["gwetroot_am_pct"] = _emp_pct(gg.gwetroot_am.to_numpy(float), bs_am)
+        gg["prcp_ondjfm_anom_pct"] = 100 * (gg.prcp_ondjfm_mm / b.prcp_ondjfm_mm.mean() - 1)
+        gg["gwetroot_son_prior_anom"] = gg.gwetroot_son_prior - b.gwetroot_son_prior.mean()
+        bs = np.sort(b.gwetroot_son_prior.to_numpy(float))
+        gg["gwetroot_son_prior_pct"] = np.where(gg.gwetroot_son_prior.notna(),
+                                                _emp_pct(gg.gwetroot_son_prior.fillna(0).to_numpy(float), bs), np.nan)
+        gg["prcp_ww_anom_pct"] = 100 * (gg.prcp_ww_mm / b.prcp_ww_mm.mean() - 1)
+        gg["gwetroot_ww_anom"] = gg.gwetroot_ww - b.gwetroot_ww.mean()
+        bw = np.sort(b.gwetroot_ww.to_numpy(float))
+        gg["gwetroot_ww_pct"] = np.where(gg.gwetroot_ww.notna(), _emp_pct(gg.gwetroot_ww.fillna(0).to_numpy(float), bw),
+                                         np.nan)
+        gg["edd30_ww_anom"] = gg.edd30_ww - b.edd30_ww.mean()
+        parts.append(gg)
+    return pd.concat(parts, ignore_index=True)

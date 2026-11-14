@@ -86,7 +86,7 @@ export function diversityChart(host, s, { now, sel, p90, fmt }) {
     g.append('g').selectAll('line').data(y.ticks(3)).join('line').attr('x1', 0).attr('x2', iw).attr('y1', y).attr('y2', y).attr('stroke', C.grid);
     g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(3).tickFormat(fmt).tickSize(0).tickPadding(8)).call((a) => a.select('.domain').remove());
     g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5).tickSize(0).tickPadding(6)).call((a) => a.select('.domain').attr('stroke', C.axis));
-    g.append('text').attr('x', iw).attr('y', ih + 28).attr('text-anchor', 'end').attr('class', 'chart-label').text('rotation diversity (Shannon index) →');
+    g.append('text').attr('x', iw).attr('y', ih + 28).attr('text-anchor', 'end').attr('class', 'chart-label').text('share of cropland in 3+ crop rotations →');
     const band = pts.filter((p) => isNum(p.lo) && isNum(p.hi));
     if (band.length > 1) g.append('path').attr('d', d3.area().x((p) => x(p.d)).y0((p) => y(p.lo)).y1((p) => y(p.hi))(band)).attr('fill', 'rgba(193,18,31,.13)');
     g.append('path').attr('d', d3.line().x((p) => x(p.d)).y((p) => y(p.b))(pts)).attr('fill', 'none').attr('stroke', C.actual).attr('stroke-width', 2);

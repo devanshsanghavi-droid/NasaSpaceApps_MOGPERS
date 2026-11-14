@@ -429,5 +429,394 @@
   "Totals are principal crops (corn, soybeans, wheat, sorghum) drought indemnity, nominal USD, 7 states.",
   "lo/hi are 5th/95th percentiles over 100 block-bootstrap refits (training years resampled with replacement): parameter/sampling uncertainty of the fitted loss function, not a full predictive interval; county-level 90% coverage is reported to show the gap."
  ],
- "mock": false
+ "mock": false,
+ "v1_label": "pre-registered headline (features fixed before any test year was seen)",
+ "v2": {
+  "label": "post-hoc (feature idea came after seeing the 2022-23 shortfall)",
+  "metrics": {
+   "v1": {
+    "n": 2525,
+    "mae": 15.178107834108445,
+    "rmse": 31.238608391257287,
+    "r2": 0.35605524936470745,
+    "spearman": 0.7833220293969625,
+    "total_bias_pct": -32.59947930746335
+   },
+   "v2": {
+    "n": 2525,
+    "mae": 14.192928153191982,
+    "rmse": 28.500200140499228,
+    "r2": 0.46400459169308217,
+    "spearman": 0.7917590525912347,
+    "total_bias_pct": -21.10604302596334
+   },
+   "baseline_mean": {
+    "n": 2525,
+    "mae": 22.11148078118178,
+    "rmse": 36.382204549696304,
+    "r2": 0.12653949561110978,
+    "spearman": 0.40173173722935696,
+    "total_bias_pct": -17.89913619095699
+   },
+   "baseline_hazard_only": {
+    "n": 2525,
+    "mae": 17.28097207070348,
+    "rmse": 35.44211989645904,
+    "r2": 0.171095246015466,
+    "spearman": 0.7051372286432236,
+    "total_bias_pct": -42.78042915103334
+   }
+  },
+  "by_year": {
+   "2021": {
+    "pred_total_usd": 1341898723.4725547,
+    "actual_total_usd": 1294371083.69,
+    "pi90_lo": 584298561.0684744,
+    "pi90_hi": 3180303918.6728187
+   },
+   "2022": {
+    "pred_total_usd": 2707527356.7995863,
+    "actual_total_usd": 3736831475.96,
+    "pi90_lo": 1178929758.974381,
+    "pi90_hi": 6416847793.446534
+   },
+   "2023": {
+    "pred_total_usd": 2726233365.5417275,
+    "actual_total_usd": 4169084689.9500003,
+    "pi90_lo": 1187074855.0238676,
+    "pi90_hi": 6461181089.145192
+   },
+   "2024": {
+    "pred_total_usd": 1214184814.5410502,
+    "actual_total_usd": 927033735.1800001,
+    "pi90_lo": 528688512.47702837,
+    "pi90_hi": 2877621579.134701
+   }
+  },
+  "by_state": [
+   {
+    "state": "IA",
+    "year": 2021,
+    "pred_total_usd": 108441860.29315872,
+    "actual_total_usd": 55931419.17
+   },
+   {
+    "state": "IL",
+    "year": 2021,
+    "pred_total_usd": 30702681.77274715,
+    "actual_total_usd": 14098763.17
+   },
+   {
+    "state": "KS",
+    "year": 2021,
+    "pred_total_usd": 271217156.1961932,
+    "actual_total_usd": 144875850.23000002
+   },
+   {
+    "state": "MN",
+    "year": 2021,
+    "pred_total_usd": 213400718.029205,
+    "actual_total_usd": 436951450.01
+   },
+   {
+    "state": "MO",
+    "year": 2021,
+    "pred_total_usd": 21184662.862762723,
+    "actual_total_usd": 17692962.34
+   },
+   {
+    "state": "NE",
+    "year": 2021,
+    "pred_total_usd": 149387429.122731,
+    "actual_total_usd": 103363557.63000001
+   },
+   {
+    "state": "SD",
+    "year": 2021,
+    "pred_total_usd": 547564215.1957568,
+    "actual_total_usd": 521457081.14000005
+   },
+   {
+    "state": "IA",
+    "year": 2022,
+    "pred_total_usd": 244380305.4794264,
+    "actual_total_usd": 257495374.01
+   },
+   {
+    "state": "IL",
+    "year": 2022,
+    "pred_total_usd": 56660596.693699904,
+    "actual_total_usd": 24579214.629999995
+   },
+   {
+    "state": "KS",
+    "year": 2022,
+    "pred_total_usd": 1053268223.4646597,
+    "actual_total_usd": 1559825248.5099998
+   },
+   {
+    "state": "MN",
+    "year": 2022,
+    "pred_total_usd": 123249978.65258671,
+    "actual_total_usd": 131409323.11
+   },
+   {
+    "state": "MO",
+    "year": 2022,
+    "pred_total_usd": 114077426.84473681,
+    "actual_total_usd": 179675425.42000002
+   },
+   {
+    "state": "NE",
+    "year": 2022,
+    "pred_total_usd": 755740202.6051174,
+    "actual_total_usd": 929693792.3499999
+   },
+   {
+    "state": "SD",
+    "year": 2022,
+    "pred_total_usd": 360150623.05935943,
+    "actual_total_usd": 654153097.9300001
+   },
+   {
+    "state": "IA",
+    "year": 2023,
+    "pred_total_usd": 571909567.4699281,
+    "actual_total_usd": 716042142.1399999
+   },
+   {
+    "state": "IL",
+    "year": 2023,
+    "pred_total_usd": 146431378.7464403,
+    "actual_total_usd": 147872672.98
+   },
+   {
+    "state": "KS",
+    "year": 2023,
+    "pred_total_usd": 826898275.3558245,
+    "actual_total_usd": 1384103917.66
+   },
+   {
+    "state": "MN",
+    "year": 2023,
+    "pred_total_usd": 446447653.0452362,
+    "actual_total_usd": 647562523.55
+   },
+   {
+    "state": "MO",
+    "year": 2023,
+    "pred_total_usd": 212393956.9532179,
+    "actual_total_usd": 310611029.28
+   },
+   {
+    "state": "NE",
+    "year": 2023,
+    "pred_total_usd": 230025909.36972925,
+    "actual_total_usd": 644048690.85
+   },
+   {
+    "state": "SD",
+    "year": 2023,
+    "pred_total_usd": 292126624.6013513,
+    "actual_total_usd": 318843713.49
+   },
+   {
+    "state": "IA",
+    "year": 2024,
+    "pred_total_usd": 88156986.50166383,
+    "actual_total_usd": 58484940.65
+   },
+   {
+    "state": "IL",
+    "year": 2024,
+    "pred_total_usd": 79787995.25585216,
+    "actual_total_usd": 64658968.39999999
+   },
+   {
+    "state": "KS",
+    "year": 2024,
+    "pred_total_usd": 779901444.1426556,
+    "actual_total_usd": 554820302.13
+   },
+   {
+    "state": "MN",
+    "year": 2024,
+    "pred_total_usd": 8460003.627895935,
+    "actual_total_usd": 19705484.48
+   },
+   {
+    "state": "MO",
+    "year": 2024,
+    "pred_total_usd": 65007770.124661155,
+    "actual_total_usd": 87159435.38999999
+   },
+   {
+    "state": "NE",
+    "year": 2024,
+    "pred_total_usd": 145040721.01730445,
+    "actual_total_usd": 84604242.46
+   },
+   {
+    "state": "SD",
+    "year": 2024,
+    "pred_total_usd": 47829893.8710169,
+    "actual_total_usd": 57600361.67
+   }
+  ]
+ },
+ "v1_prediction_interval_by_year": {
+  "2021": {
+   "pred_total_usd": 1425840986.4901454,
+   "pi90_lo": 522858361.328064,
+   "pi90_hi": 3050692436.415136,
+   "actual_total_usd": 1294371083.69,
+   "actual_inside_pi": true
+  },
+  "2022": {
+   "pred_total_usd": 2120574319.1640797,
+   "pi90_lo": 777618278.6846609,
+   "pi90_hi": 4537125877.026923,
+   "actual_total_usd": 3736831475.96,
+   "actual_inside_pi": true
+  },
+  "2023": {
+   "pred_total_usd": 2160256916.205615,
+   "pi90_lo": 792169955.8064227,
+   "pi90_hi": 4622029733.6273155,
+   "actual_total_usd": 4169084689.9500003,
+   "actual_inside_pi": true
+  },
+  "2024": {
+   "pred_total_usd": 1119194854.0864105,
+   "pi90_lo": 410410693.0288939,
+   "pi90_hi": 2394600315.593994,
+   "actual_total_usd": 927033735.1800001,
+   "actual_inside_pi": true
+  }
+ },
+ "holdout_2012": {
+  "train_years": [
+   2001,
+   2011
+  ],
+  "test_year": 2012,
+  "note": "second out-of-time test; 2012 was not used to decide the v2 features (the 2001-2020 CV used to pick configurations includes 2012 as one fold)",
+  "metrics": {
+   "v1": {
+    "n": 628,
+    "mae": 44.1907383622053,
+    "rmse": 64.48415932065332,
+    "r2": 0.43460125201557886,
+    "spearman": 0.771817676473471,
+    "total_bias_pct": -10.63229579300518
+   },
+   "v2": {
+    "n": 628,
+    "mae": 45.123928988046586,
+    "rmse": 67.80293010361657,
+    "r2": 0.3749054931872672,
+    "spearman": 0.7680282210068646,
+    "total_bias_pct": -21.050574941684758
+   },
+   "baseline_mean": {
+    "n": 628,
+    "mae": 80.55040902203984,
+    "rmse": 115.43179547963094,
+    "r2": -0.8117557973889171,
+    "spearman": 0.06488863496218902,
+    "total_bias_pct": -82.75520212021134
+   },
+   "baseline_hazard_only": {
+    "n": 628,
+    "mae": 55.42382042153956,
+    "rmse": 79.18403662682958,
+    "r2": 0.14744180652287253,
+    "spearman": 0.5565987287310077,
+    "total_bias_pct": 0.8057972548170589
+   }
+  },
+  "total": {
+   "v1": {
+    "pred_total_usd": 8157854361.9608,
+    "actual_total_usd": 9128414380.06,
+    "pi90_lo": 3560204606.96078,
+    "pi90_hi": 23337670904.336483,
+    "actual_inside_pi": true
+   },
+   "v2": {
+    "pred_total_usd": 7206830669.997941,
+    "actual_total_usd": 9128414380.06,
+    "pi90_lo": 4110518082.387024,
+    "pi90_hi": 18923972472.591362,
+    "actual_inside_pi": true
+   },
+   "baseline_mean": {
+    "pred_total_usd": 1574176609.47091,
+    "actual_total_usd": 9128414380.06
+   },
+   "baseline_hazard_only": {
+    "pred_total_usd": 9201970892.542849,
+    "actual_total_usd": 9128414380.06
+   }
+  }
+ },
+ "prediction_intervals": {
+  "method": "split-conformal, Mondrian by 10 bins of predicted principal $/insured acre, from LOYO out-of-fold residuals in the training years; nominal 90%; 5th/95th pct of log(actual/pred) of LOYO out-of-fold region-year totals",
+  "county_coverage_2021_2024": {
+   "v1": {
+    "pooled": 0.8625742574257426,
+    "n": 2525,
+    "mean_width_usd_per_ac": 46.27311677689015,
+    "by_year": {
+     "2021": 0.9,
+     "2022": 0.838351822503962,
+     "2023": 0.7898894154818326,
+     "2024": 0.9223454833597464
+    }
+   },
+   "v2": {
+    "pooled": 0.8831683168316832,
+    "n": 2525,
+    "mean_width_usd_per_ac": 49.45768781735057,
+    "by_year": {
+     "2021": 0.8984126984126984,
+     "2022": 0.884310618066561,
+     "2023": 0.8199052132701422,
+     "2024": 0.93026941362916
+    }
+   }
+  },
+  "county_coverage_2012": {
+   "v1": {
+    "pooled": 0.571656050955414,
+    "n": 628,
+    "mean_width_usd_per_ac": 67.1230260512208,
+    "by_year": {
+     "2012": 0.571656050955414
+    }
+   },
+   "v2": {
+    "pooled": 0.5843949044585988,
+    "n": 628,
+    "mean_width_usd_per_ac": 66.86207383138651,
+    "by_year": {
+     "2012": 0.5843949044585988
+    }
+   }
+  },
+  "bootstrap_note": "the older lo/hi in by_year/by_state are parameter-bootstrap ranges (v1), NOT prediction intervals"
+ },
+ "app_model": "v1",
+ "decision": {
+  "rule": "use v2 only if LOYO CV RMSE (2001-2020) AND 2012-holdout county RMSE are both lower than v1's",
+  "cv_rmse": {
+   "v1": 15.752591879663573,
+   "v2": 15.909435893073821
+  },
+  "holdout_2012_rmse": {
+   "v1": 64.48415932065332,
+   "v2": 67.80293010361657
+  },
+  "app_model": "v1"
+ }
 }

@@ -19,5 +19,26 @@
   "hazard": "full",
   "n": 400,
   "leaves": 15
+ },
+ "v2": {
+  "kind": "ratio",
+  "hazard": "full",
+  "static": true,
+  "k": 5.0,
+  "alpha_r": 0.5,
+  "tvp": 1.2,
+  "name": "v2_ms_only",
+  "ms": true,
+  "label": "post-hoc (feature idea came after seeing the 2022-23 shortfall)"
+ },
+ "app": {
+  "name": "ratio_haz_static_a05_tvp12",
+  "kind": "ratio",
+  "hazard": "full",
+  "static": true,
+  "k": 5.0,
+  "alpha_r": 0.5,
+  "tvp": 1.2,
+  "version": "v1"
  }
 }

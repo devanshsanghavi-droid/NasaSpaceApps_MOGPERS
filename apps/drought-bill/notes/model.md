@@ -1,6 +1,8 @@
 # Module `model`: drought loss model, out-of-time validation, diversity effect, drought-bill simulation
 
-Built 2026-11-14. Source for VALIDATION.md. Every number below is read from the output files named in each section
+Built 2026-11-14 (v1), v2 pass the same day. Source for VALIDATION.md. **Labels:** v1 = pre-registered headline
+(features and selection rule fixed before any test year was evaluated); v2 = post-hoc (feature idea came after seeing
+the 2022-23 shortfall), reported in sections 2.4-2.7 and NOT used by the app (it failed the pre-declared rule). Every number below is read from the output files named in each section
 (all under `model/outputs/` unless stated); re-running the scripts regenerates them.
 
 ## Run order (re-runnable; Python `/home/user/venv-db/bin/python`, max 3 threads)
@@ -9,9 +11,12 @@ model/build_panel.py                  # hazard features from POWER daily + panel
 model/fit_loss.py --stage cv          # model selection by leave-one-year-out CV, 2001-2020 only (incremental; ~20 min cold)
 model/fit_loss.py --stage test        # ONE out-of-time test, 2021-2024, + 100 bootstrap refits per model (~12 min)
 model/fit_loss.py --stage ablation    # reported-only ablations (MODIS, USDM, JJA-only, no static) (~10 min)
+model/fit_v2.py --stage cv            # v2 (post-hoc) feature-set choice, LOYO CV 2001-2020 (~6 min)
+model/fit_v2.py --stage eval          # 2012 holdout + 2021-24 for v1/v2/baselines, conformal PIs, decision (~5 min)
 model/diversity_effect.py [--no-dml]  # rotation-diversity effect + diagnostics (~15 min with DML)
 model/simulate.py --B 100 --B_future 30   # climatological bill, 100 bootstrap refits, 2045 (~10 min)
 model/simulate.py --future-only       # re-run only the 2045 part (when more CMIP6 GCMs land)
+model/simulate.py --decompose         # 2045 heat / precipitation / soil-moisture decomposition (point model)
 model/export_web.py                   # web/data/county_bill.json, regional_summary.json, meta.json
 ```
 Library files: `model/common.py` (paths, constants), `model/hazard_features.py` (feature engine + CMIP6 delta method),
@@ -31,8 +36,9 @@ are not Census counties, so they had no NASA POWER hazard or soils. They are sum
 19156 -> 19155 (Pottawattamie IA, west part), 27112 -> 27111 (Otter Tail MN), 27120 -> 27119 (Polk MN),
 46113 -> 46102 (old Shannon SD code -> Oglala Lakota). Together about $2.5B of principal-crop liability over 2001-2025.
 
-**Panel rows** (`panel.parquet`, 70,384 rows, 2001-2025): corn 16,010; soybeans 15,361; wheat 13,771; sorghum 9,220;
-principal 16,022. Columns: RMA sums (insured_acres, liability_usd, premium_usd, subsidy_usd, indem_total/drought/heat/
+**Panel rows** (`panel.parquet`, 70,251 rows, 2001-2025, after the county-code merge): corn 15,974; soybeans 15,325;
+wheat 13,746; sorghum 9,220; principal 15,986. (Documentation correction in v2: the v1 notes quoted the pre-merge
+counts 70,384 / 16,010 / 15,361 / 13,771 / 9,220 / 16,022; all v1 results were computed on the merged panel.) Columns: RMA sums (insured_acres, liability_usd, premium_usd, subsidy_usd, indem_total/drought/heat/
 excess_moist_usd), lcr_drought, lcr_excess, lcr_total, drought_usd_per_ac, liab_per_ac, subsidy_share,
 irrigated_insured_share (acre-weighted for principal), liab_share_<crop> (principal crop mix), static modifiers, all
 hazard features, USDM (dsci_jja_mean, d2plus_pct_jja_max, dsci_mjjas_mean), MODIS (ndvi_jul_aug, vci_jul_aug, ndvi_z).
@@ -123,7 +129,7 @@ Pooled RMSE is dominated by the 2012 fold. The selected model's held-out 2012 re
 $9.13B (M1: $8.24B). Held-out region totals by year (selected model, $M predicted / actual): 2002 769/1,066;
 2003 481/962; 2006 889/836; 2011 1,269/1,140; 2012 9,267/9,128; 2013 1,983/2,736; 2017 837/571; 2020 817/518.
 
-### 2.2 Out-of-time test: train 2001-2020, predict 2021-2024 from observed NASA POWER hazard
+### 2.2 Out-of-time test (v1, pre-registered): train 2001-2020, predict 2021-2024 from observed NASA POWER hazard
 `validation.json`, `web/data/hindcast.json`, county predictions in `hindcast_county.parquet`. County level = principal
 crops, $/insured acre, county-years with >= 2,000 acres (n = 2,525 over 4 years). Metric CIs: 1,000 bootstrap
 resamples of counties (95%).
@@ -167,8 +173,8 @@ recovers much more of them. Adding antecedent (prior fall/winter) NASA POWER fea
 identified only after looking at the test years, so it was **not** added (that would be tuning on the test).
 
 **Interval coverage.** County-level 90% bootstrap intervals cover the actual value in only 39.0% of test county-years:
-they are parameter-uncertainty intervals (block bootstrap over training years), not predictive intervals. All lo/hi
-in the web files have this meaning and are labelled so.
+they are parameter-uncertainty intervals (block bootstrap over training years), not predictive intervals. In the v2
+pass they were replaced, for single-year predictions, by calibrated prediction intervals (section 2.6: 86% coverage).
 
 ### 2.3 Ablations (`ablations.json`; reported only, never used for selection)
 Selected model with one change; CV = LOYO 2001-2020 pooled RMSE; test = 2021-2024 county RMSE; totals $M pred/actual.
@@ -190,6 +196,89 @@ Selected model with one change; CV = LOYO 2001-2020 pooled RMSE; test = 2021-202
   points to the missing antecedent-drought signal, not to a defect in the NASA data.
 - JJA-only is slightly better in CV but worse on the test; the spring features stay (selection is by CV of the whole
   candidate, and the ablation is not a candidate).
+
+### 2.4 Model v2 — POST-HOC (feature idea came after seeing the 2022-23 shortfall) (`fit_v2.py`)
+v1 above is the pre-registered headline and its numbers are unchanged (snapshot: `model/outputs/v1/`, and nested as
+`v1` in `validation.json`). v2 = v1 + multi-season NASA POWER features, chosen for physical reasons (not by looking at
+which helped 2022-23), computed from the POWER daily cells (`hazard_features.multiseason_cell_year`), standardised
+against each cell's 1991-2020 values:
+
+| feature | window | physical motivation |
+|---|---|---|
+| gwetroot_am, gwetroot_am_pct, gwetroot_am_anom | Apr-May of year t | root-zone water at planting buffers the summer |
+| prcp_ondjfm_anom_pct | Oct (t-1) - Mar (t) | winter recharge of the soil profile |
+| gwetroot_son_prior_anom, gwetroot_son_prior_pct | Sep-Nov (t-1) | carry-over from the previous season (back-to-back droughts) |
+| prcp_ww_anom_pct, gwetroot_ww_anom, gwetroot_ww_pct, edd30_ww_anom | Oct (t-1) - Jun (t) | winter-wheat growing season (KS, NE, SD hard red winter wheat) |
+
+Year 1981 has no prior-year POWER data, so its prior-season features are NaN (LightGBM missing-value handling).
+Feature-set choice inside v2 by the same rule as v1 (LOYO CV 2001-2020, pooled county RMSE), `cv_results_v2.json`:
+
+| candidate | CV RMSE $/ac | MAE | R2 | Spearman | yr APE % | bias % |
+|---|---|---|---|---|---|---|
+| v1 (pre-registered) | **15.75** | 6.22 | 0.736 | 0.773 | 37.3 | -5.5 |
+| v2: planting + winter + prior fall, winter-wheat window on wheat rows | 16.23 | 6.08 | 0.720 | 0.775 | 26.4 | -7.6 |
+| v2: same, winter-wheat window on all crops | 16.99 | 6.20 | 0.693 | 0.778 | 27.2 | -10.5 |
+| v2: no prior fall, winter-wheat window on wheat rows | 16.21 | 6.07 | 0.721 | 0.781 | 31.6 | -8.1 |
+| **v2 selected: planting + winter + prior fall, no wheat window** (`v2_ms_only`) | 15.91 | 6.03 | 0.731 | 0.776 | 27.8 | -5.7 |
+
+The multi-season features improve MAE and the year-total error in CV, but not the pre-declared RMSE criterion.
+
+### 2.5 Second out-of-time test: train 2001-2011, predict 2012 (and 2021-2024 again)
+2012 was not used to decide the v2 features. Caveat: the 2001-2020 LOYO CV that picked the v1 and v2 configurations
+contains 2012 as one fold, so the holdout is untouched with respect to feature ideas but not fully pristine with
+respect to configuration choice (the same applies to v1 and v2 alike).
+
+| test | model | MAE $/ac | RMSE $/ac | R2 | Spearman | region total pred | actual | total bias |
+|---|---|---|---|---|---|---|---|---|
+| **2012** (train 2001-11, n=628) | v1 | **44.2** | **64.5** | **0.435** | **0.772** | $8.16B | $9.13B | -10.6% |
+| | v2 (post-hoc) | 45.1 | 67.8 | 0.375 | 0.768 | $7.21B | $9.13B | -21.1% |
+| | baseline_mean | 80.6 | 115.4 | -0.812 | 0.065 | $1.57B | $9.13B | -82.8% |
+| | baseline_hazard_only | 55.4 | 79.2 | 0.147 | 0.557 | $9.20B | $9.13B | +0.8% |
+| **2021-24** (train 2001-20, n=2,525) | v1 (pre-registered) | 15.2 | 31.2 | 0.356 | 0.783 | 2022 $2.12B / 2023 $2.16B | $3.74B / $4.17B | -32.6% |
+| | v2 (post-hoc) | **14.2** | **28.5** | **0.464** | **0.792** | 2022 $2.71B / 2023 $2.73B | $3.74B / $4.17B | -21.1% |
+| | baseline_mean | 22.1 | 36.4 | 0.127 | 0.402 | $2.26B / $2.39B | | -17.9% |
+| | baseline_hazard_only | 17.3 | 35.4 | 0.171 | 0.705 | $2.00B / $1.96B | | -42.8% |
+
+2012 by state ($M pred v1 / v2 / actual): IA 1,238 / 1,162 / 1,863; IL 1,880 / 1,600 / 2,910; KS 1,616 / 1,259 /
+1,011; MN 247 / 235 / 158; MO 817 / 664 / 1,036; NE 1,306 / 1,197 / 1,211; SD 1,054 / 1,089 / 940. On lcr, 2012:
+v1 RMSE 0.138, R2 0.44; v2 0.141, 0.41. Corn only, 2012: v1 RMSE 108.7 $/ac, Spearman 0.77, bias -22%; v2 115.5, 0.76,
+-29%. 2021-24 v2 by state ($M pred / actual): 2022 KS 1,053/1,560, NE 756/930, SD 360/654; 2023 KS 827/1,384,
+NE 230/644, MN 446/648, IA 572/716. On lcr 2021-24: v2 RMSE 0.066, R2 0.53 (v1 0.074, 0.40).
+
+Reading: the hazard-only baseline gets the 2012 regional total almost exactly (+0.8%) but ranks counties much worse
+(Spearman 0.56 vs 0.77). v2 helps exactly where it was designed after the fact (2021-24 multi-season droughts: 2022
+and 2023 totals rise from ~$2.1B to ~$2.7B, still well short of $3.7-4.2B) and does slightly worse than v1 on the
+untouched 2012 test.
+
+### 2.6 Calibrated prediction intervals (replace the bootstrap bands as prediction intervals)
+- County, single year: split-conformal, Mondrian by 10 bins of the predicted principal $/insured acre; bin-wise 5th
+  and 95th percentiles of LOYO out-of-fold residuals (actual - predicted) from the training years (12,461 county-years
+  for 2001-2020; 6,798 for 2001-2011); interval = [max(0, pred + q05), pred + q95], nominal 90%. Parameters in
+  `conformal_params.json`.
+- Region annual total: pred x exp(q05 .. q95 of log(actual/pred) of the out-of-fold region-year totals); with 20 (11)
+  years these quantiles are close to the most extreme observed ratios. v1, 2001-2020: x0.37 to x2.14.
+
+| test | model | county coverage (nominal 90%) | mean width $/ac | region total 90% PI | actual inside? |
+|---|---|---|---|---|---|
+| 2012 (calibrated on 2001-11 OOF) | v1 | **57.2%** | 67.1 | $3.56B - $23.3B | yes |
+| | v2 | 58.4% | 66.9 | $4.11B - $18.9B | yes |
+| 2021-24 (calibrated on 2001-20 OOF) | v1 | **86.3%** (2021 90.0, 2022 83.8, 2023 79.0, 2024 92.2) | 46.3 | 2022 $0.78B - $4.54B; 2023 $0.79B - $4.62B | yes (all 4 years) |
+| | v2 | 88.3% (2021 89.8, 2022 88.4, 2023 82.0, 2024 93.0) | 49.5 | 2022 $1.18B - $6.42B; 2023 $1.19B - $6.46B | yes (all 4 years) |
+
+Calibrated intervals are close to nominal on 2021-24 (86-88% vs 90%; v1's old bootstrap bands covered 39%) but
+under-cover in 2012 (57%), an extreme year beyond anything in the 2001-2011 calibration years. Region-total PIs are
+honest but very wide. In the web files, single-year ranges (county hindcast 2022/2023, slider bands) are now these
+calibrated prediction intervals; ranges on expected bills (expected, 1-in-5, 1-in-10, taxpayer, 2045) remain the
+parameter-uncertainty (bootstrap) ranges of a long-run average, and `county_bill.json` -> `interval_types` says which
+is which. The v1 bootstrap lo/hi kept in `hindcast.json` -> by_year/by_state are labelled as parameter ranges.
+
+### 2.7 Decision
+Pre-declared rule: use v2 in the app only if its LOYO CV RMSE (2001-2020) AND its 2012-holdout county RMSE are both
+below v1's. CV RMSE: v1 15.75, v2 15.91. 2012 RMSE: v1 64.5, v2 67.8. **v2 fails both; the app keeps v1.**
+`hindcast.json` keeps all pre-registered v1 fields and adds `v2` (label, metrics, by_year with PIs, by_state),
+`v1_prediction_interval_by_year`, `holdout_2012`, `prediction_intervals` (method, coverage), `app_model` = "v1",
+`decision`. The simulation outputs (`county_sim.parquet`, `sim_county_crop.parquet`) are therefore unchanged v1
+outputs (schemas unchanged); only the 2045 part was rerun (section 4.1).
 
 ## 3. Rotation-diversity effect (`diversity_effect.py` -> `diversity_effect.json`)
 **Question.** Does higher crop-rotation diversity, measured BEFORE the loss year, reduce drought loss sensitivity?
