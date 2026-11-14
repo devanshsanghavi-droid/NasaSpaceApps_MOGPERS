@@ -28,10 +28,11 @@ TRAIN = ("2016-01-01", "2022-12-31")
 TEST = ("2023-01-01", "2025-12-31")
 LIVE_START = "2026-01-01"
 
-# A MODIS gap longer than this (days between bracketing composites) is not trusted as a
-# straight-line interpolation: harvest/green-up are strongly non-linear in time. Such days
-# are replaced by the day-of-year climatology (2016-2024, non-filled days) and flagged.
-LONG_GAP_DAYS = 60
+# Cover must be CAUSAL: on day t only composites whose 16-day window ended >= ASOF_LAG days
+# before t are usable (the provided daily file's centred interpolation peeks ~16-30 d ahead).
+ASOF_LAG = 3
+FRESH_AGE = 24      # days; an as-of value older than this decays toward climatology
+STALE_EFOLD = 30.0  # e-folding (days) of the last anomaly once stale
 
 RAIN_WIN = [1, 3, 7, 14, 30, 60, 90, 180, 365]
 API_K = {"api_k85": 0.85, "api_k95": 0.95, "api_k98": 0.98}
@@ -110,35 +111,28 @@ def load_raw(proc: Path = PROC) -> pd.DataFrame:
         df["q_cfs"] = n["q_cfs"]
         df["no3_qual"] = n["no3_qual"]
 
-        # ---- cover (MODIS) with transparent handling of long gaps and the trailing edge
-        c = cv[cv.basin == basin].set_index("date").sort_index()
-        bare = c["bare_share"].astype(float).reindex(idx)
-        gap = c["gap_days"].reindex(idx)
-        filled = c["filled"].reindex(idx).fillna(False).astype(bool)
-        good = bare.notna() & ~filled
-        clim = doy_climatology(pd.Series(idx), pd.Series(bare.where(good).values), years=(2016, 2024))
+        # ---- cover (MODIS), CAUSAL. See cover_asof() for the rules.
+        asof, age, src = cover_asof(cv, c8, basin, idx)
+        df["bare_asof_raw"] = asof
+        df["cover_age_days"] = age
+        good = asof.notna() & (age <= FRESH_AGE)
+        # climatology from TRAINING years only (2016-2022), so test/live features use no future info
+        clim = doy_climatology(pd.Series(idx), pd.Series(asof.where(good).values), years=(2016, 2022))
         clim_today = pd.Series(clim.reindex(idx.dayofyear).values, index=idx)
-        src = pd.Series("modis", index=idx, dtype=object)
-        src[filled & (gap <= LONG_GAP_DAYS)] = "modis_interp"
-        longgap = filled & (gap > LONG_GAP_DAYS)
-        df["bare_share_provided"] = bare  # as delivered by the modis module (for robustness runs)
-        bare = bare.where(~longgap, clim_today)
-        src[longgap] = "clim_longgap"
-        # trailing edge: decay last anomaly toward climatology with e-folding 30 d
-        last = c["bare_share"].dropna().index.max()
-        if last is not None and last < idx[-1]:
-            anom = float(c.loc[last, "bare_share"]) - float(clim.loc[min(last.dayofyear, 366)])
-            tail = idx[idx > last]
-            lag = (tail - last).days.values
-            bare.loc[tail] = np.clip(clim_today.loc[tail].values + anom * np.exp(-lag / 30.0), 0, 1)
-            src.loc[tail] = "extrap"
-        # head (before MODIS start): climatology
-        head = bare.isna() & (idx < (c.index.min() if len(c) else idx[-1]))
-        bare[head] = clim_today[head]
-        src[head] = "clim_head"
+        clim_then = pd.Series(clim.reindex((idx - pd.to_timedelta(age.fillna(0), unit="D")).dayofyear).values,
+                              index=idx)
+        # stale composites (age > FRESH_AGE): keep the last observed anomaly but let it decay toward the
+        # day-of-year climatology (e-folding STALE_EFOLD days). Without a composite: climatology.
+        w = np.exp(-np.clip(age - FRESH_AGE, 0, None) / STALE_EFOLD)
+        bare = (clim_today + (asof - clim_then) * w).where(asof.notna(), clim_today)
+        src = src.where(~((age > FRESH_AGE) & asof.notna()), src + "_stale_decay")
+        src[asof.isna()] = "clim_no_composite"
         df["bare"] = bare.clip(0, 1)
         df["living"] = 1.0 - df["bare"]  # living + bare = 1 over valid row-crop pixels
         df["cover_src"] = src
+        # non-causal centred interpolation as delivered (diagnostics only; never a model input)
+        cc = cv[cv.basin == basin].set_index("date").sort_index()
+        df["bare_centred_diag"] = cc["bare_share"].astype(float).reindex(idx)
 
         # ---- CDL corn share (2016-2025). 2015 uses 2016; 2026 uses 2025 (persistence; flagged)
         cb = cdl[cdl.basin == basin].set_index("year")["corn"].astype(float)
