@@ -1,0 +1,16 @@
+{
+  "name": "Central Iowa (HLS tile 15TVG: Story, Boone, Polk, Marshall, Hamilton, Hardin, Jasper, Dallas and neighbours)",
+  "hls_tile": "T15TVG",
+  "crs": "EPSG:32615",
+  "tile_bounds_utm": [399960.0, 4590240.0, 509760.0, 4700040.0],
+  "tile_bounds_lonlat": [-94.2165, 41.4575, -92.8813, 42.4527],
+  "grid": {
+    "spacing_m": 480,
+    "x0": 400960.0, "y0": 4699040.0,
+    "ncols": 226, "nrows": 225,
+    "point_rule": "x = x0 + col*480, y = y0 - row*480 (UTM 15N). grid_id = row*226 + col. field_id = 'f' + zero-padded 5-digit grid_id"
+  },
+  "years_treatment_panel": [2016, 2024],
+  "years_cdl_history": [2008, 2024],
+  "hindcast": {"train_years": [2016, 2021], "test_years": [2022, 2023], "event": "2022-2023 Midwest drought"}
+}

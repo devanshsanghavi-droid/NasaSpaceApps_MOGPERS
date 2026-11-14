@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>COUNTERFIELD</title>
+  <meta name="description" content="Field-type causal evidence for rotation and conservation choices in central Iowa, built on NASA satellite and climate data.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="#" class="wordmark" id="home-link">COUNTERFIELD</a>
+      <span class="region" id="region-name">Central Iowa</span>
+    </div>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#workbench">Field</a>
+      <a href="#hindcast">Hindcast</a>
+      <a href="#county">County</a>
+      <a href="#about">Data</a>
+    </nav>
+  </header>
+
+  <div class="mock-banner" id="mock-banner" role="status" hidden>
+    <strong>MOCK DATA</strong>
+    <span id="mock-banner-text">Some numbers on this page are synthetic placeholders.</span>
+  </div>
+
+  <main>
+    <section class="workbench" id="workbench" aria-label="Map and field panel">
+      <div class="map-wrap">
+        <div id="map" role="region" aria-label="Map of field samples"></div>
+        <div class="map-controls" id="map-controls">
+          <fieldset class="seg" aria-label="Colour fields by">
+            <legend>Colour by</legend>
+            <label><input type="radio" name="colorby" value="strategy" checked> Best strategy</label>
+            <label><input type="radio" name="colorby" value="badge"> Evidence</label>
+            <label><input type="radio" name="colorby" value="type"> Field type</label>
+          </fieldset>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="map-status" id="map-status" hidden></div>
+      </div>
+
+      <aside class="panel" id="panel" aria-live="polite">
+        <div id="panel-body"><p class="loading">Loading data…</p></div>
+      </aside>
+    </section>
+
+    <section class="section" id="hindcast" aria-labelledby="hindcast-h">
+      <div class="container">
+        <div class="section-head">
+          <div class="sh-left">
+            <p class="eyebrow">Out-of-time test</p>
+            <h2 id="hindcast-h">Press hindcast</h2>
+          </div>
+          <div class="sh-right">
+            <p id="hindcast-lede">The model is frozen at the end of the training years and asked to rank strategies for each field type in the drought years. Then the real outcomes are revealed next to a rule-based selector and a correlational machine-learning model.</p>
+          </div>
+        </div>
+        <div id="hindcast-body"></div>
+      </div>
+    </section>
+
+    <section class="section" id="county" aria-labelledby="county-h">
+      <div class="container">
+        <div class="section-head">
+          <div class="sh-left">
+            <p class="eyebrow">Zoom to the county</p>
+            <h2 id="county-h">Where should cost-share go?</h2>
+          </div>
+          <div class="sh-right">
+            <p>A short policy tree learned from the field-type effects. Each line is a rule a conservation office could apply, with the estimated value of following it.</p>
+          </div>
+        </div>
+        <div id="county-body"></div>
+      </div>
+    </section>
+
+    <section class="section" id="about" aria-labelledby="about-h">
+      <div class="container">
+        <div class="section-head">
+          <div class="sh-left">
+            <p class="eyebrow">Data and caveats</p>
+            <h2 id="about-h">What this is built on</h2>
+          </div>
+          <div class="sh-right">
+            <p><strong>Decision support, not a replacement for your agronomist.</strong> Effects are estimated for field types from what similar fields actually did, anchored to published trials. Read the evidence badge before acting on any number.</p>
+          </div>
+        </div>
+        <div id="about-body"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>COUNTERFIELD · NASA Space Apps 2026</span>
+      <span id="footer-generated"></span>
+    </div>
+  </footer>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
