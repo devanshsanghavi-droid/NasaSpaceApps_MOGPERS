@@ -82,7 +82,7 @@ How to read these numbers:
 
 | factor | value | source / estimation |
 |---|---|---|
-| bare (HUC-12) | MODIS 13Q1 bare share on row-crop pixels | MODIS living share minus the MODIS−HLS monthly bias (focus area, `hls_vs_modis.json`, interpolated by day of year; May bias 0.29). MODIS is used as a relative index calibrated to HLS, as the orchestrator asked. Gaps > 60 d use HUC-12 day-of-year climatology. The Jul-Nov 2025 PC gap is filled with `cover_hls_huc12_8day.parquet` (HLS quantile-mapped to MODIS, 4,913 rows) |
+| bare (HUC-12) | MODIS 13Q1 bare share on row-crop pixels | MODIS living share minus the MODIS−HLS monthly bias (focus area, `hls_vs_modis.json`, interpolated by day of year; May bias 0.34). MODIS is used as a relative index calibrated to HLS, as the orchestrator asked. Gaps > 60 d use HUC-12 day-of-year climatology. The Jul-Nov 2025 PC gap is filled with `cover_hls_huc12_8day.parquet` (HLS quantile-mapped to MODIS, 4,913 rows) |
 | bare (field) | 1 − interpolated HLS `live_px_share` (share of the cell's pixels with NDVI ≥ 0.30) | Linear between clear observations, gaps ≤ 120 d (as in the fields module). Longer gaps (winter snow/cloud, and Jan-mid-Feb 2020) fall back to the field's HUC-12 corrected-MODIS bare: 4.1% of field-days. A generic spring spike-scene filter is in the code; it dropped 0 scenes on the fixed data (it dropped 2021-05-09, 2024-05-03 and 2024-05-24 on the old data) |
 | ε, leak under living cover | 0.15 | 1 − INRS land-retirement (CRP) reduction 85% (`inrs_crp_pct`) |
 | m, tile delivery | U[1, 4] grid, central 2.5 | Poorly and very poorly drained Iowa row-crop land is tile drained. The upper end comes from McIsaac & Hu (2004), cited by David, Drinkwater & McIsaac (2010, JEQ 39:1657): riverine nitrate export = 100% of net N inputs in tiled central Illinois vs 25-37% in the non-tiled south. The 2.7-4× ratio is **our inference**; 1 = no difference. HUC-12 share ranking vs m: Spearman ≥ 0.975 |
@@ -93,7 +93,7 @@ How to read these numbers:
 
 field kg/ha(y) = HUC-12 kg/ha(y) × field index(y) / mean field index in that HUC-12(y)
 
-This removes the HLS-vs-MODIS level difference: the HLS index is 1.07-1.38× the MODIS index. For 2016-2019, before HLS, each field's mean 2020-25 relative index is used.
+This removes the HLS-vs-MODIS level difference: the HLS index is 1.06-1.36× the MODIS index. For 2016-2019, before HLS, each field's mean 2020-25 relative index is used.
 
 **Field uncertainty (p10/p50/p90).** A Monte Carlo of 4,000 draws over four sources:
 - the weather year, uniform 2016-2025;
@@ -101,7 +101,7 @@ This removes the HLS-vs-MODIS level difference: the HLS index is 1.07-1.38× the
 - the gap-fill load error, normal with the basin-year SD;
 - m on its grid.
 
-Year-to-year weather dominates. **Median field: p10 0.8, p50 10.5, p90 29.3 lb N/ac/yr; long-run mean 13.3.**
+Year-to-year weather dominates. **Median field: p10 0.8, p50 10.5, p90 29.3 lb N/ac/yr; long-run mean 13.2.**
 
 Spread of field p50s:
 
@@ -137,7 +137,7 @@ The uncalibrated basin index per row-crop ha is compared with measured load per 
 **Honest reading.**
 1. Year-to-year load is driven by water. The index tracks it well (r ≈ 0.74), but not better than drainage or rain alone.
 2. The satellite cover term does **not** improve interannual tracking.
-   - The partial correlation of the cover part with load, controlling for drainage, is −0.40 (p = 0.08).
+   - The partial correlation of the cover part with load, controlling for drainage, is −0.40 (p ≈ 0.08).
    - In the ε sensitivity, pooled r rises from 0.71 (ε = 0) to 0.79 (ε = 1, cover ignored).
    - The reason is that interannual MODIS bare-share variation is mostly green-up timing (weather), not management, which the modis module already noted.
    - The cover term is kept on physical and trial grounds (INRS land-retirement efficiency). It matters for the seasonal calendar, for field-to-field differences and for the strategy logic, none of which the 20 basin-years can test.
@@ -145,7 +145,7 @@ The uncalibrated basin index per row-crop ha is compared with measured load per 
    - The index puts the Des Moines basin relatively higher. It is wetter and more poorly drained (0.52 vs 0.44 poorly drained share).
    - Saylorville Reservoir retention, which the index does not model, would push the measured Des Moines load lower, yet the measured ratio is still higher than the index's. So the index does not capture the between-basin level well; the per-basin calibration absorbs it.
 4. **No sub-basin gauge is used, so the within-basin HUC-12 pattern is unvalidated.**
-   - In the Raccoon the hotspot ranking follows bare-and-wet days (r = 0.77), which are dominated by POWER (50 km MERRA-2) wetness and rain differences, more than by poorly drained share (r = 0.11).
+   - In the Raccoon the hotspot ranking follows bare-and-wet days (r = 0.78), which are dominated by POWER (50 km MERRA-2) wetness and rain differences, more than by poorly drained share (r = 0.09).
    - The southern Raccoon HUC-12s (Mosquito, Panther Creek) rank top.
    - The focus area (North Raccoon headwaters) ranks mid-pack: leak_index 0.64-1.06, ranks 16-105 of 105.
    - Present this as "where bare ground meets wet soil", not as measured sub-basin loads.
@@ -192,11 +192,11 @@ Fertilizer value is an upper bound (the next crop does not recover all retained 
 
 ## 7. Inputs that changed during this build / rerun needs
 Final outputs were generated **after** the orchestrator's refresh landed. Mtimes are recorded in `basin_index_check.json` → `input_mtimes`:
-- hls_field_ts / field_year / field_month: rewritten 22:37 (spike-scene fix);
-- cover_huc12_8day: 22:41;
-- cover_hls_huc12_8day: the HLS fill for the 2025 MODIS gap, now used.
+- hls_field_ts / field_year / field_month: 22:43 (spike-scene fix);
+- cover_huc12_8day and cover_hls_huc12_8day (the HLS fill for the 2025 MODIS gap, now used): 22:43;
+- hls_vs_modis.json: 22:44 (the monthly MODIS→HLS bias is read from it).
 
-`hls_vs_modis.json` is still dated 22:33. If the fields agent regenerates it with the fixed HLS, **rerun m05 + m06**, because the monthly MODIS→HLS bias is read from it. Rerun both scripts after any change to POWER, NWIS, cover, HLS or facts.json; no code change is needed.
+The final run came after all of these; results moved by less than 0.1 lb/ac between the pre- and post-refresh runs. Rerun both scripts after any change to POWER, NWIS, cover, HLS or facts.json; no code change is needed.
 
 ## 8. Notes for the exporter and frontend
 - Strategy `n_loss_reduction.mean/lo/hi` are fractions; lo/hi are p10/p90 of the clipped prior. For S3 they are the whole-field effect (0.085).
