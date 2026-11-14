@@ -719,6 +719,16 @@ def main():
         cal["wetness"][:, m - 1] = gwf[:, s].mean(axis=1)
         cal["leak"][:, m - 1] = JF[:, s].sum(axis=1) / ny
     cal["leak_share"] = cal["leak"] / cal["leak"].sum(axis=1, keepdims=True)
+    # months with no clear HLS observation (field_month.interp_only; a missing field-month row, e.g. Jan 2020 before
+    # HLS starts, also counts): share of the 2020-2025 years, and a flag when that is half or more -> grey out in the UI
+    fmon = pd.read_parquet(PROC / "field_month.parquet")
+    fmon = fmon[fmon["year"].isin(FIELD_YEARS)]
+    if "interp_only" not in fmon.columns:
+        fmon["interp_only"] = fmon["n_obs"] == 0
+    known = fmon[~fmon["interp_only"].astype(bool)].groupby(["field_id", "month"]).size()
+    kn = known.unstack("month").reindex(index=fids, columns=range(1, 13)).fillna(0).to_numpy()
+    cal["interp_only_share"] = 1.0 - kn / len(FIELD_YEARS)
+    cal["interp_only"] = cal["interp_only_share"] >= 0.5
     cal["leak_risk"] = cal["leak"] / cal["leak"].max(axis=1, keepdims=True)
     octmay = np.isin(fmo, [10, 11, 12, 1, 2, 3, 4, 5])
     frac_octmay = JF[:, octmay].sum(axis=1) / JF.sum(axis=1)
@@ -772,8 +782,9 @@ def main():
     fs["n_soy_after_corn_cy2021_2025"] = ncs
     fs["freq_soy_after_corn_2016_2025"] = freq_cs
     fs["huc_sd_rel_mean"] = sd_rel[fh].mean(axis=1)
-    for key in ["bare_frac", "rain_mm", "storm_days", "wetness", "leak_risk", "leak_share"]:
+    for key in ["bare_frac", "rain_mm", "storm_days", "wetness", "leak_risk", "leak_share", "interp_only_share"]:
         fs[f"cal_{key}"] = [list(np.round(v, 4)) for v in cal[key]]
+    fs["cal_interp_only"] = [list(map(bool, v)) for v in cal["interp_only"]]
     fs["leak_q200"] = list(qf)
     fs["cover_years_json"] = [json.dumps(cover_years.get(f, {})) for f in fids]
     fs["ndvi_dates"] = [ndvi_recent.get(f, ([], []))[0] for f in fids]
@@ -811,6 +822,7 @@ def main():
             "lbN_ac_yr_p50_distribution": {k: round(float(v), 1) for k, v in zip(["p5", "p10", "p25", "p50", "p75", "p90", "p95"], np.percentile(fs["leak_lbN_ac_yr_p50"], [5, 10, 25, 50, 75, 90, 95]))},
             "lbN_ac_yr_central_by_year_focus_mean": {int(y): round(float(lb_c[yi].mean()), 1) for yi, y in enumerate(CAL_YEARS)},
             "hls_fallback_share_mean": round(float(fallback.mean()), 4),
+            "calendar_interp_only_months_share_by_month": {m + 1: round(float(cal["interp_only"][:, m].mean()), 3) for m in range(12)},
             "poorly_vs_well_p50_ratio": round(float(fs[fs.drainage.str.contains("Poorly|Very poorly", regex=True) & ~fs.drainage.str.contains("Somewhat")]["leak_lbN_ac_yr_p50"].median()
                                                    / fs[fs.drainage.isin(["Well drained", "Moderately well drained"])]["leak_lbN_ac_yr_p50"].median()), 3),
             "field_mean_vs_huc12_mean_check_max_abs_rel_diff": round(float(np.max(np.abs(fmean_by_huc / huc_focus.set_index("huc12")["lbN_ac_mean"].reindex(fmean_by_huc.index) - 1))), 4),

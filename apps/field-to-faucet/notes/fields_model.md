@@ -16,7 +16,7 @@ Outputs (model/out/):
 | `huc12_scores.parquet` | 290 HUC-12s. kgN_ha_<year> per row-crop ha, kgN_ha_mean, lbN_ac_mean, contrib_t_mean, share_of_basin_leak (2016-2025 mean), share_of_basin_leak_recent (2023-25), share_of_basin_area, leak_index (1 = basin average per row-crop ha), rank (1 = largest share in its basin), bare_days_wet, row_crop_share, poorly_drained_share, modis_filled_share_recent |
 | `huc12_props.json` | `{huc12: props}` in the web `huc12.geojson` contract shape, plus extras `lbN_ac_yr`, `share_of_basin_leak_recent`, `n_in_basin` |
 | `fields.geojson` | web contract: field_id, huc12, seq, leak_index, leak_pctile, drainage, slope_pct (+ `lbN_ac_yr_p50`) |
-| `field_detail.json` | web contract, a single file (4.7 MB, 1,769 fields). Extras: `leak.lbN_ac_yr.mean`, `leak.by_year`, `calendar.leak_share`, `strategies.<S>.*.mean`, `strategies.S1.note` (fields without soybean-after-corn years), `why_field` |
+| `field_detail.json` | web contract, a single file (5.0 MB, 1,769 fields). Extras: `leak.lbN_ac_yr.mean`, `leak.by_year`, `calendar.leak_share`, `calendar.interp_only` (bool per month: no clear HLS observation in ≥ half of 2020-2025, so grey it out) and `calendar.interp_only_share`, `strategies.<S>.*.mean`, `strategies.S1.note` (fields without soybean-after-corn years), `why_field` |
 | `strategies.json` | web contract (S0-S3) + `method`, `units`; `cost_usd_ac` carries `basis` and `source`; S3 cost has `verification` |
 | `basin_index_check.json` | drainage fit, loads + gap-fill cross-validation, calibration table, validation check, sensitivities, input mtimes |
 
@@ -118,6 +118,8 @@ Poorly drained fields: median p50 is 1.34× that of well and moderately well dra
 
 On the average field, 93% of the leak falls Oct-May and 54% Apr-Jun.
 
+**Interpolation-only months.** `interp_only[m]` is true when the field had no clear HLS observation in that month (`field_month.interp_only`, or no row, as in Jan 2020) in at least half of 2020-2025. Share of fields flagged: Jan 64%, Feb 72%, Dec 55%, other months ≈ 0. Mar-Jun, the main leak window, is observed.
+
 **HUC-12 outputs.**
 - `share_of_basin_leak` and `rank` use the 2016-2025 mean (the most climate-representative); 2023-25 values are in `*_recent`.
 - `bare_days_wet` = Σ bare share on days with D ≥ 1 mm, Mar-Jun + Sep-Dec, averaged over 2023-2025.
@@ -202,5 +204,6 @@ The final run came after all of these; results moved by less than 0.1 lb/ac betw
 - Strategy `n_loss_reduction.mean/lo/hi` are fractions; lo/hi are p10/p90 of the clipped prior. For S3 they are the whole-field effect (0.085).
 - **S2 `cost_usd_ac.lo/hi` are null (not quantified).** `farmer.js` currently treats a null midpoint as $0 in the "low net cost" ranking. It should treat it as unknown.
 - `leak_index`: fields use 1 = focus-area average; HUC-12s use 1 = basin average per row-crop ha. `share_of_basin_leak` is 0-1.
-- `field_detail.json` is 4.7 MB as one file; split by HUC-12 if the web budget needs it.
+- Grey out calendar months where `calendar.interp_only` is true.
+- `field_detail.json` is 5.0 MB as one file; split by HUC-12 if the web budget needs it.
 - Facts to add for verification: the ISU STRIPS cost ($24-39 per treated acre per year), and the McIsaac & Hu / David et al. 2010 tile-delivery ratio.
