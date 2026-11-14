@@ -79,6 +79,49 @@ def doy_climatology(dates: pd.Series, values: pd.Series, years=(2016, 2024), hal
     return s
 
 
+def cover_asof(cv: pd.DataFrame, c8: pd.DataFrame, basin: str, idx: pd.DatetimeIndex):
+    """Causal as-of bare share on each day in idx -> (bare_asof, age_days, src).
+
+    Preferred: the modis module's `bare_share_asof` / `age_days` (and `gapfill_src`) columns in
+    cover_basin_daily.parquet, when present. Fallback (built here, same rule): the latest
+    MODIS 13Q1 composite with valid_frac >= 0.30 and tile_cover_frac >= 0.90 whose 16-day window
+    (composite_start .. composite_start+15) ended at least ASOF_LAG days before t.
+    age_days = t - window end.
+    """
+    c = cv[cv.basin == basin].set_index("date").sort_index()
+    if "bare_share_asof" in c.columns:
+        bare = c["bare_share_asof"].astype(float).reindex(idx)
+        age = (c["age_days"].astype(float).reindex(idx) if "age_days" in c.columns
+               else pd.Series(np.nan, index=idx))
+        if "gapfill_src" in c.columns:
+            gs = c["gapfill_src"].reindex(idx).astype(object)
+            src = pd.Series(np.where(gs.notna() & (gs.astype(str) != "") & (gs.astype(str) != "None"),
+                                     "asof_" + gs.astype(str), "modis_asof"), index=idx, dtype=object)
+        else:
+            src = pd.Series("modis_asof", index=idx, dtype=object)
+        # beyond the end of the provided daily file: carry the last value forward, ageing it
+        last = bare.dropna().index.max() if bare.notna().any() else None
+        if last is not None and last < idx[-1]:
+            tail = idx > last
+            bare[tail] = bare[last]
+            age[tail] = age[last] + (idx[tail] - last).days
+            src[tail] = "modis_asof"
+        return bare, age.fillna(0.0), src
+    e = c8[(c8.basin == basin)].copy()
+    e = e[(e.valid_frac >= 0.30) & (e.tile_cover_frac >= 0.90) & e.bare_share.notna()]
+    e["avail"] = pd.to_datetime(e["composite_start"]) + pd.Timedelta(days=15 + ASOF_LAG)
+    e["wend"] = pd.to_datetime(e["composite_start"]) + pd.Timedelta(days=15)
+    e = e.sort_values("avail").drop_duplicates("avail", keep="last")
+    e["avail"] = e["avail"].astype("datetime64[ns]")
+    e["wend"] = e["wend"].astype("datetime64[ns]")
+    t = pd.DataFrame({"date": pd.DatetimeIndex(idx).astype("datetime64[ns]")})
+    m = pd.merge_asof(t, e[["avail", "wend", "bare_share"]], left_on="date", right_on="avail",
+                      direction="backward")
+    bare = pd.Series(m["bare_share"].values, index=idx, dtype=float)
+    age = pd.Series((m["date"] - m["wend"]).dt.days.values, index=idx, dtype=float)
+    return bare, age, pd.Series("modis_asof_m01", index=idx, dtype=object)
+
+
 def load_raw(proc: Path = PROC) -> pd.DataFrame:
     """One continuous daily frame per site with raw daily drivers (no rolling yet)."""
     nw = pd.read_parquet(proc / "nwis_daily.parquet")
@@ -87,6 +130,7 @@ def load_raw(proc: Path = PROC) -> pd.DataFrame:
     pw["date"] = pd.to_datetime(pw["date"])
     cv = pd.read_parquet(proc / "cover_basin_daily.parquet")
     cv["date"] = pd.to_datetime(cv["date"])
+    c8 = pd.read_parquet(proc / "cover_basin_8day.parquet")
     cdl = pd.read_parquet(proc / "cdl_basin_year.parquet")
 
     frames = []
@@ -119,7 +163,7 @@ def load_raw(proc: Path = PROC) -> pd.DataFrame:
         # climatology from TRAINING years only (2016-2022), so test/live features use no future info
         clim = doy_climatology(pd.Series(idx), pd.Series(asof.where(good).values), years=(2016, 2022))
         clim_today = pd.Series(clim.reindex(idx.dayofyear).values, index=idx)
-        clim_then = pd.Series(clim.reindex((idx - pd.to_timedelta(age.fillna(0), unit="D")).dayofyear).values,
+        clim_then = pd.Series(clim.reindex(pd.DatetimeIndex(idx - pd.to_timedelta(age.fillna(0).values, unit="D")).dayofyear).values,
                               index=idx)
         # stale composites (age > FRESH_AGE): keep the last observed anomaly but let it decay toward the
         # day-of-year climatology (e-folding STALE_EFOLD days). Without a composite: climatology.
