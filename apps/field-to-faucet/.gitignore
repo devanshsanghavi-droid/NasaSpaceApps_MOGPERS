@@ -1,2 +1,4 @@
 data/raw/
 __pycache__/
+model/cache/
+model/out/features_v2.parquet
