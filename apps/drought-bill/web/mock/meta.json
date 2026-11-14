@@ -1,0 +1,50 @@
+{
+ "generated_at": "MOCK",
+ "mock": true,
+ "region": {
+  "states": [
+   "IA",
+   "NE",
+   "KS",
+   "MO",
+   "IL",
+   "SD",
+   "MN"
+  ]
+ },
+ "data_sources": [
+  {
+   "name": "NASA POWER (precipitation, temperature, root-zone soil wetness)",
+   "nasa": true,
+   "role": "Drought hazard",
+   "url": "https://power.larc.nasa.gov/"
+  },
+  {
+   "name": "MODIS MOD13Q1 NDVI",
+   "nasa": true,
+   "role": "Vegetation stress",
+   "url": "https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061"
+  },
+  {
+   "name": "NASA NEX-GDDP-CMIP6",
+   "nasa": true,
+   "role": "2045 climate shift",
+   "url": "https://planetarycomputer.microsoft.com/dataset/nasa-nex-gddp-cmip6"
+  },
+  {
+   "name": "USDA RMA Cause of Loss and Summary of Business",
+   "nasa": false,
+   "role": "Insured losses",
+   "url": "https://www.rma.usda.gov/"
+  },
+  {
+   "name": "USDA NASS Cropland Data Layer",
+   "nasa": false,
+   "role": "Rotation diversity",
+   "url": "https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php"
+  }
+ ],
+ "caveats": [
+  "MOCK caveat: these files are synthetic placeholders for layout only."
+ ]
+}

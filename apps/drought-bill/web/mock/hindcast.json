@@ -1,0 +1,120 @@
+{
+ "mock": true,
+ "train_years": [
+  2001,
+  2020
+ ],
+ "test_years": [
+  2021,
+  2022,
+  2023,
+  2024
+ ],
+ "metrics": {
+  "model": {
+   "mae": 10.0,
+   "rmse": 15.0,
+   "r2": 0.5,
+   "spearman": 0.6,
+   "total_bias_pct": -10.0
+  },
+  "baseline_mean": {
+   "mae": 20.0,
+   "rmse": 30.0,
+   "r2": 0.0,
+   "spearman": 0.3,
+   "total_bias_pct": -50.0
+  },
+  "baseline_hazard_only": {
+   "mae": 15.0,
+   "rmse": 20.0,
+   "r2": 0.3,
+   "spearman": 0.5,
+   "total_bias_pct": -20.0
+  }
+ },
+ "by_year": {
+  "2021": {
+   "pred_total_usd": 1000000000.0,
+   "lo": 500000000.0,
+   "hi": 1500000000.0,
+   "actual_total_usd": 1000000000.0
+  },
+  "2022": {
+   "pred_total_usd": 4000000000.0,
+   "lo": 3000000000.0,
+   "hi": 5000000000.0,
+   "actual_total_usd": 5000000000.0
+  },
+  "2023": {
+   "pred_total_usd": 3000000000.0,
+   "lo": 2000000000.0,
+   "hi": 4000000000.0,
+   "actual_total_usd": 3500000000.0
+  },
+  "2024": {
+   "pred_total_usd": 1000000000.0,
+   "lo": 500000000.0,
+   "hi": 1500000000.0,
+   "actual_total_usd": 500000000.0
+  }
+ },
+ "by_state": [
+  {
+   "state": "IA",
+   "year": 2022,
+   "pred_total_usd": 500000000.0,
+   "lo": 350000000.0,
+   "hi": 650000000.0,
+   "actual_total_usd": 625000000.0
+  },
+  {
+   "state": "IL",
+   "year": 2022,
+   "pred_total_usd": 500000000.0,
+   "lo": 350000000.0,
+   "hi": 650000000.0,
+   "actual_total_usd": 625000000.0
+  },
+  {
+   "state": "KS",
+   "year": 2022,
+   "pred_total_usd": 1000000000.0,
+   "lo": 700000000.0,
+   "hi": 1300000000.0,
+   "actual_total_usd": 1250000000.0
+  },
+  {
+   "state": "MN",
+   "year": 2022,
+   "pred_total_usd": 500000000.0,
+   "lo": 350000000.0,
+   "hi": 650000000.0,
+   "actual_total_usd": 625000000.0
+  },
+  {
+   "state": "MO",
+   "year": 2022,
+   "pred_total_usd": 500000000.0,
+   "lo": 350000000.0,
+   "hi": 650000000.0,
+   "actual_total_usd": 625000000.0
+  },
+  {
+   "state": "NE",
+   "year": 2022,
+   "pred_total_usd": 1000000000.0,
+   "lo": 700000000.0,
+   "hi": 1300000000.0,
+   "actual_total_usd": 1250000000.0
+  },
+  {
+   "state": "SD",
+   "year": 2022,
+   "pred_total_usd": 500000000.0,
+   "lo": 350000000.0,
+   "hi": 650000000.0,
+   "actual_total_usd": 625000000.0
+  }
+ ]
+}

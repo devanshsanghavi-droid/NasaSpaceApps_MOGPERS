@@ -21,7 +21,7 @@ UA = {"User-Agent": "drought-bill-hackathon"}
 STATES = ["IA", "NE", "KS", "MO", "IL", "SD", "MN"]
 
 AWS_SQL = """
-SELECT l.areasymbol, l.areaname, l.areaacres, l.saverest,
+SELECT l.areasymbol, l.areaname, l.areaacres,
   SUM(mu.muacres) AS mu_acres,
   SUM(CASE WHEN ma.aws0100wta IS NOT NULL THEN mu.muacres ELSE 0 END) AS acres_aws100,
   SUM(ma.aws0100wta * mu.muacres) AS aws100_x_acres,
@@ -32,7 +32,7 @@ FROM legend l
 JOIN mapunit mu ON mu.lkey = l.lkey
 LEFT JOIN muaggatt ma ON ma.mukey = mu.mukey
 WHERE l.areasymbol LIKE '{st}%' AND l.areatypename = 'Non-MLRA Soil Survey Area'
-GROUP BY l.areasymbol, l.areaname, l.areaacres, l.saverest
+GROUP BY l.areasymbol, l.areaname, l.areaacres
 ORDER BY l.areasymbol
 """
 
