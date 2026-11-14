@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Water Clock</title>
+  <meta name="description" content="How many years of irrigation water are left under each field over the Ogallala aquifer in western Kansas, and how many years each crop rotation buys back. Built on NASA GRACE, POWER, IMERG, MODIS, HLS and NEX-GDDP-CMIP6 data.">
+  <meta name="color-scheme" content="light">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="mock-banner" id="mock-banner" role="alert" hidden>
+    <strong>MOCK DATA</strong>
+    <span>Fake placeholder numbers, not results. Do not use these values.</span>
+    <details><summary>Which files?</summary><span id="mock-banner-text"></span></details>
+  </div>
+
+  <header class="hero" id="top">
+    <div class="hero-inner">
+      <div class="brand">
+        <span class="wordmark">Water Clock</span>
+        <span class="region" id="region-name">Western Kansas, Groundwater Management Districts 1, 3 and 4</span>
+      </div>
+      <div class="headline" id="headline" aria-live="polite">
+        <div class="headline-num">
+          <span class="big" id="hl-years">...</span>
+          <span class="unit">years of irrigation water left</span>
+        </div>
+        <div class="headline-range" id="hl-range">Loading the region's clock...</div>
+        <p class="headline-context" id="hl-context"></p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-farmer" aria-controls="view-farmer" aria-selected="true" data-view="farmer">My field</button>
+      <button role="tab" id="tab-community" aria-controls="view-community" aria-selected="false" data-view="community" tabindex="-1">My county</button>
+      <button role="tab" id="tab-grace" aria-controls="view-grace" aria-selected="false" data-view="grace" tabindex="-1">From space</button>
+      <button role="tab" id="tab-data" aria-controls="view-data" aria-selected="false" data-view="data" tabindex="-1">Proof &amp; data</button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- Shared map + side panel for farmer and community views -->
+    <section class="workbench" id="workbench" aria-label="Map and water clock">
+      <div class="map-col">
+        <div class="map-toolbar">
+          <label class="search">
+            <span class="sr-only">Find a county</span>
+            <input id="county-search" type="search" list="county-list" placeholder="Find a county" autocomplete="off">
+            <datalist id="county-list"></datalist>
+          </label>
+          <fieldset class="seg" aria-label="Usable-water threshold">
+            <legend>Usable when aquifer is thicker than</legend>
+            <label><input type="radio" name="thr" value="15"> 15 ft</label>
+            <label><input type="radio" name="thr" value="30" checked> 30 ft</label>
+            <label><input type="radio" name="thr" value="50"> 50 ft</label>
+          </fieldset>
+        </div>
+        <div class="map-wrap">
+          <div id="map" role="region" aria-label="Map of years of irrigation water left. Click a dot (an irrigation well) or a county."></div>
+          <div class="map-note" id="map-note" hidden></div>
+          <div class="legend" id="legend" aria-label="Map legend"></div>
+          <label class="grid-toggle"><input type="checkbox" id="grid-toggle"> Show detailed grid</label>
+        </div>
+        <p class="hint">Click a dot (an irrigation well) or a county, or search a county above.</p>
+      </div>
+
+      <div class="panel-col">
+        <div id="view-farmer" role="tabpanel" aria-labelledby="tab-farmer" class="view">
+          <div id="farmer-panel"></div>
+        </div>
+        <div id="view-community" role="tabpanel" aria-labelledby="tab-community" class="view" hidden>
+          <div id="community-panel"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-grace" role="tabpanel" aria-labelledby="tab-grace" class="view page" hidden>
+      <div id="grace-panel"></div>
+    </section>
+
+    <section id="view-data" role="tabpanel" aria-labelledby="tab-data" class="view page" hidden>
+      <div id="data-panel"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p><strong>Decision support, not a replacement for your agronomist</strong> or your groundwater management district.
+      Numbers are model estimates with uncertainty; check local well records before acting.</p>
+    <p id="foot-gen"></p>
+  </footer>
+</body>
+</html>
