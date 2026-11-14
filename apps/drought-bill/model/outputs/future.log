@@ -1,1 +1,17 @@
   ACCESS-CM2 ssp245 emulator done 20s
+  ACCESS-CM2 ssp245 no_emulator done 35s
+  ACCESS-CM2 ssp585 emulator done 50s
+  ACCESS-CM2 ssp585 no_emulator done 65s
+  GFDL-ESM4 ssp245 emulator done 81s
+  GFDL-ESM4 ssp245 no_emulator done 96s
+  GFDL-ESM4 ssp585 emulator done 112s
+  GFDL-ESM4 ssp585 no_emulator done 127s
+  MPI-ESM1-2-HR ssp245 emulator done 142s
+  MPI-ESM1-2-HR ssp245 no_emulator done 158s
+  MPI-ESM1-2-HR ssp585 emulator done 173s
+  MPI-ESM1-2-HR ssp585 no_emulator done 188s
+  MRI-ESM2-0 ssp245 emulator done 204s
+  MRI-ESM2-0 ssp245 no_emulator done 219s
+  MRI-ESM2-0 ssp585 emulator done 235s
+  MRI-ESM2-0 ssp585 no_emulator done 250s
+future done 250s

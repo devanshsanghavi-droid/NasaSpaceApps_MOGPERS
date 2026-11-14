@@ -28,19 +28,29 @@ MPI-ESM1-2-HR ssp585 heat_only (temperature/VPD; so 98.6
 MPI-ESM1-2-HR ssp585 heat_only_no_emulator (tempera 41.2
 MPI-ESM1-2-HR ssp585 precip_only (soil wetness resp 7.7
 MPI-ESM1-2-HR ssp585 full_no_emulator (soil wetness 42.3
+MRI-ESM2-0 ssp245 full 70.5
+MRI-ESM2-0 ssp245 heat_only (temperature/VPD; so 91.5
+MRI-ESM2-0 ssp245 heat_only_no_emulator (tempera 48.8
+MRI-ESM2-0 ssp245 precip_only (soil wetness resp -13.8
+MRI-ESM2-0 ssp245 full_no_emulator (soil wetness 49.8
+MRI-ESM2-0 ssp585 full 124.1
+MRI-ESM2-0 ssp585 heat_only (temperature/VPD; so 136.1
+MRI-ESM2-0 ssp585 heat_only_no_emulator (tempera 62.9
+MRI-ESM2-0 ssp585 precip_only (soil wetness resp -7.9
+MRI-ESM2-0 ssp585 full_no_emulator (soil wetness 65.7
 {
  "ssp245": {
-  "full": 78.3,
-  "full_no_emulator (soil wetness held at observed)": 24.5,
-  "heat_only (temperature/VPD; soil wetness responds to temperature)": 98.3,
-  "heat_only_no_emulator (temperature/VPD; soil wetness unchanged)": 41.3,
-  "precip_only (soil wetness responds to precipitation)": -7.7
+  "full": 74.4,
+  "full_no_emulator (soil wetness held at observed)": 37.1,
+  "heat_only (temperature/VPD; soil wetness responds to temperature)": 94.9,
+  "heat_only_no_emulator (temperature/VPD; soil wetness unchanged)": 45.1,
+  "precip_only (soil wetness responds to precipitation)": -10.8
  },
  "ssp585": {
-  "full": 111.0,
-  "full_no_emulator (soil wetness held at observed)": 42.3,
-  "heat_only (temperature/VPD; soil wetness responds to temperature)": 111.1,
-  "heat_only_no_emulator (temperature/VPD; soil wetness unchanged)": 46.1,
-  "precip_only (soil wetness responds to precipitation)": -2.8
+  "full": 117.5,
+  "full_no_emulator (soil wetness held at observed)": 54.0,
+  "heat_only (temperature/VPD; soil wetness responds to temperature)": 123.6,
+  "heat_only_no_emulator (temperature/VPD; soil wetness unchanged)": 54.5,
+  "precip_only (soil wetness responds to precipitation)": -4.5
  }
 }

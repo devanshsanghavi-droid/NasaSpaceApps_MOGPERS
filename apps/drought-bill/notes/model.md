@@ -455,9 +455,9 @@ liability, which is why it is higher. Region expected bill: $1.78B/yr, of which 
 ### 4.1 2045 bill (NEX-GDDP-CMIP6 delta method)
 **Inputs.** `cmip6_deltas.parquet` (sat module): per county x GCM x scenario, changes 2035-2054 vs 1995-2014
 (10 sampled years per period) in JJA and monthly (Jun/Jul/Aug) precipitation (%), Tmax and Tmin (C), EDD30, VPD
-(VPD is NaN in this build: no hurs). GCMs available when this was run: 3 (ACCESS-CM2, GFDL-ESM4, MPI-ESM1-2-HR) (the sat module was still fetching
-the others; re-run `model/simulate.py --future-only && model/export_web.py` when more land — `regional_summary.json`
-is then authoritative over the table below).
+(VPD is NaN in this build: no hurs). Final GCM list: 4 (ACCESS-CM2, GFDL-ESM4, MPI-ESM1-2-HR, MRI-ESM2-0). NorESM2-MM, the fifth planned GCM, returned no data in the sat
+module ("no data NorESM2-MM" in data/raw/nex_gddp/run.log). If more GCMs land, re-run
+`model/simulate.py --future-only && model/simulate.py --decompose && model/export_web.py`.
 
 **Delta method** (`hazard_features.perturb_county_season`): monthly Jun/Jul/Aug precipitation sums x (1 + monthly
 delta) (exact for a multiplicative delta); May has no CMIP6 delta here, so May precipitation is unchanged; daily
@@ -468,35 +468,66 @@ shifted with a within-cell OLS emulator fitted to NASA POWER 1981-2024 (gwetroot
 fraction anomaly + 0.037 x JJA precip fraction anomaly - 0.0124 per C of Tmax anomaly; within R2 0.62; Jul-Aug R2
 0.62; May-Jun R2 0.47). All features are re-standardised against the OBSERVED 1991-2020 climatology, then the same
 bootstrap models (point fit + 30 bootstrap refits) are rerun on the 44 perturbed years.
-est = median over GCMs of the point-model expected bill; lo/hi = 5th-95th percentile over GCM x bootstrap draws;
-change % uses the historical bill of the same bootstrap model.
+**v2 pass change: two soil-moisture assumptions are now carried as structural uncertainty** (after the decomposition
+below showed that the emulator's temperature slope drives most of the rise): "emulator" (root-zone wetness shifted as
+above) and "no_emulator" (root-zone wetness held at observed). est = median over GCM x soil assumption of the
+point-model expected bill; lo/hi = 5th-95th percentile over GCM x soil assumption x bootstrap draws; change % uses the
+historical bill of the same bootstrap model. (v1 pass, 3 GCMs, emulator only: +78% ssp245, +111% ssp585.)
 
 Consistency check: the EDD increase recomputed from shifted POWER daily data averages +61 degC-day (ACCESS-CM2
 ssp245) vs the GCM-native d_edd30_jja of +75 (county correlation 0.89): the delta method gives ~20% less extra heat
 than the GCMs' own hotter tails. Mean feature shifts over counties (perturbed minus observed, 1981-2024):
-ACCESS-CM2 ssp245: hazard_z +1.18, EDD30 +60.8 degC-day, SPI -0.06, GWETROOT -0.040, VPD +0.24 kPa; ACCESS-CM2 ssp585: hazard_z +0.65, EDD30 +39.3 degC-day, SPI +0.28, GWETROOT -0.024, VPD +0.18 kPa; GFDL-ESM4 ssp245: hazard_z +0.26, EDD30 +25.0 degC-day, SPI +0.41, GWETROOT -0.016, VPD +0.12 kPa; GFDL-ESM4 ssp585: hazard_z +0.43, EDD30 +27.6 degC-day, SPI +0.16, GWETROOT -0.024, VPD +0.13 kPa; MPI-ESM1-2-HR ssp245: hazard_z +0.13, EDD30 +11.9 degC-day, SPI +0.17, GWETROOT -0.004, VPD +0.06 kPa; MPI-ESM1-2-HR ssp585: hazard_z +0.52, EDD30 +25.9 degC-day, SPI -0.08, GWETROOT -0.024, VPD +0.12 kPa.
+ACCESS-CM2 ssp245: hazard_z +1.18, EDD30 +60.8 degC-day, SPI -0.06, GWETROOT -0.040, VPD +0.24 kPa; ACCESS-CM2 ssp585: hazard_z +0.65, EDD30 +39.3 degC-day, SPI +0.28, GWETROOT -0.024, VPD +0.18 kPa; GFDL-ESM4 ssp245: hazard_z +0.26, EDD30 +25.0 degC-day, SPI +0.41, GWETROOT -0.016, VPD +0.12 kPa; GFDL-ESM4 ssp585: hazard_z +0.43, EDD30 +27.6 degC-day, SPI +0.16, GWETROOT -0.024, VPD +0.13 kPa; MPI-ESM1-2-HR ssp245: hazard_z +0.13, EDD30 +11.9 degC-day, SPI +0.17, GWETROOT -0.004, VPD +0.06 kPa; MPI-ESM1-2-HR ssp585: hazard_z +0.52, EDD30 +25.9 degC-day, SPI -0.08, GWETROOT -0.024, VPD +0.12 kPa; MRI-ESM2-0 ssp245: hazard_z +0.31, EDD30 +26.9 degC-day, SPI +0.28, GWETROOT -0.014, VPD +0.13 kPa; MRI-ESM2-0 ssp585: hazard_z +0.59, EDD30 +40.3 degC-day, SPI +0.12, GWETROOT -0.024, VPD +0.17 kPa.
 
 | area | expected bill today | 2045 ssp245 | change ssp245 [5-95%] | 2045 ssp585 | change ssp585 [5-95%] | change by GCM (point model) |
 |---|---|---|---|---|---|---|
-| **Region** | $1,780M | $3,180M | +78% [+18, +303] | $3,760M | +111% [+80, +156] | ssp245: ACCESS-CM2 +284%, GFDL-ESM4 +78%, MPI-ESM1-2-HR +26%; ssp585: ACCESS-CM2 +146%, GFDL-ESM4 +110%, MPI-ESM1-2-HR +111% |
-| IA | $236M | $373M | +58% [+16, +372] | $449M | +90% [+56, +169] | ssp245: ACCESS-CM2 +352%, GFDL-ESM4 +58%, MPI-ESM1-2-HR +20%; ssp585: ACCESS-CM2 +156%, GFDL-ESM4 +90%, MPI-ESM1-2-HR +70% |
-| NE | $228M | $585M | +156% [+30, +311] | $650M | +185% [+112, +220] | ssp245: ACCESS-CM2 +297%, GFDL-ESM4 +156%, MPI-ESM1-2-HR +44%; ssp585: ACCESS-CM2 +159%, GFDL-ESM4 +198%, MPI-ESM1-2-HR +185% |
-| KS | $457M | $1,020M | +124% [+6, +182] | $1,210M | +165% [+93, +190] | ssp245: ACCESS-CM2 +162%, GFDL-ESM4 +124%, MPI-ESM1-2-HR +15%; ssp585: ACCESS-CM2 +122%, GFDL-ESM4 +165%, MPI-ESM1-2-HR +173% |
-| MO | $166M | $272M | +64% [+8, +192] | $295M | +78% [+56, +111] | ssp245: ACCESS-CM2 +155%, GFDL-ESM4 +64%, MPI-ESM1-2-HR +14%; ssp585: ACCESS-CM2 +78%, GFDL-ESM4 +88%, MPI-ESM1-2-HR +71% |
-| IL | $252M | $367M | +46% [+2, +270] | $389M | +54% [+31, +126] | ssp245: ACCESS-CM2 +233%, GFDL-ESM4 +46%, MPI-ESM1-2-HR +8%; ssp585: ACCESS-CM2 +100%, GFDL-ESM4 +44%, MPI-ESM1-2-HR +54% |
-| SD | $307M | $481M | +57% [+19, +472] | $569M | +86% [+51, +210] | ssp245: ACCESS-CM2 +454%, GFDL-ESM4 +34%, MPI-ESM1-2-HR +57%; ssp585: ACCESS-CM2 +198%, GFDL-ESM4 +74%, MPI-ESM1-2-HR +86% |
-| MN | $139M | $171M | +23% [+3, +452] | $224M | +61% [+41, +247] | ssp245: ACCESS-CM2 +419%, GFDL-ESM4 +8%, MPI-ESM1-2-HR +23%; ssp585: ACCESS-CM2 +228%, GFDL-ESM4 +47%, MPI-ESM1-2-HR +61% |
+| **Region** | $1,780M | $2,860M | +60% [+14, +277] | $3,430M | +92% [+33, +146] | ssp245: ACCESS-CM2 (emulator) +284%, ACCESS-CM2 (no_emulator) +146%, GFDL-ESM4 (emulator) +78%, GFDL-ESM4 (no_emulator) +24%, MPI-ESM1-2-HR (emulator) +26%, MPI-ESM1-2-HR (no_emulator) +18%, MRI-ESM2-0 (emulator) +70%, MRI-ESM2-0 (no_emulator) +50%; ssp585: ACCESS-CM2 (emulator) +146%, ACCESS-CM2 (no_emulator) +75%, GFDL-ESM4 (emulator) +110%, GFDL-ESM4 (no_emulator) +36%, MPI-ESM1-2-HR (emulator) +111%, MPI-ESM1-2-HR (no_emulator) +42%, MRI-ESM2-0 (emulator) +124%, MRI-ESM2-0 (no_emulator) +66% |
+| IA | $236M | $375M | +59% [+10, +341] | $428M | +81% [+43, +155] | ssp245: ACCESS-CM2 (emulator) +352%, ACCESS-CM2 (no_emulator) +244%, GFDL-ESM4 (emulator) +58%, GFDL-ESM4 (no_emulator) +31%, MPI-ESM1-2-HR (emulator) +20%, MPI-ESM1-2-HR (no_emulator) +14%, MRI-ESM2-0 (emulator) +87%, MRI-ESM2-0 (no_emulator) +59%; ssp585: ACCESS-CM2 (emulator) +156%, ACCESS-CM2 (no_emulator) +113%, GFDL-ESM4 (emulator) +90%, GFDL-ESM4 (no_emulator) +54%, MPI-ESM1-2-HR (emulator) +70%, MPI-ESM1-2-HR (no_emulator) +49%, MRI-ESM2-0 (emulator) +108%, MRI-ESM2-0 (no_emulator) +73% |
+| NE | $228M | $392M | +72% [+20, +286] | $491M | +115% [+44, +197] | ssp245: ACCESS-CM2 (emulator) +297%, ACCESS-CM2 (no_emulator) +120%, GFDL-ESM4 (emulator) +156%, GFDL-ESM4 (no_emulator) +38%, MPI-ESM1-2-HR (emulator) +44%, MPI-ESM1-2-HR (no_emulator) +26%, MRI-ESM2-0 (emulator) +91%, MRI-ESM2-0 (no_emulator) +53%; ssp585: ACCESS-CM2 (emulator) +159%, ACCESS-CM2 (no_emulator) +60%, GFDL-ESM4 (emulator) +198%, GFDL-ESM4 (no_emulator) +52%, MPI-ESM1-2-HR (emulator) +185%, MPI-ESM1-2-HR (no_emulator) +54%, MRI-ESM2-0 (emulator) +159%, MRI-ESM2-0 (no_emulator) +72% |
+| KS | $457M | $624M | +37% [+10, +164] | $877M | +92% [+19, +178] | ssp245: ACCESS-CM2 (emulator) +162%, ACCESS-CM2 (no_emulator) +48%, GFDL-ESM4 (emulator) +124%, GFDL-ESM4 (no_emulator) +20%, MPI-ESM1-2-HR (emulator) +15%, MPI-ESM1-2-HR (no_emulator) +25%, MRI-ESM2-0 (emulator) +30%, MRI-ESM2-0 (no_emulator) +43%; ssp585: ACCESS-CM2 (emulator) +122%, ACCESS-CM2 (no_emulator) +24%, GFDL-ESM4 (emulator) +165%, GFDL-ESM4 (no_emulator) +24%, MPI-ESM1-2-HR (emulator) +173%, MPI-ESM1-2-HR (no_emulator) +35%, MRI-ESM2-0 (emulator) +149%, MRI-ESM2-0 (no_emulator) +62% |
+| MO | $166M | $274M | +65% [+8, +164] | $289M | +74% [+41, +127] | ssp245: ACCESS-CM2 (emulator) +155%, ACCESS-CM2 (no_emulator) +113%, GFDL-ESM4 (emulator) +64%, GFDL-ESM4 (no_emulator) +43%, MPI-ESM1-2-HR (emulator) +14%, MPI-ESM1-2-HR (no_emulator) +13%, MRI-ESM2-0 (emulator) +84%, MRI-ESM2-0 (no_emulator) +66%; ssp585: ACCESS-CM2 (emulator) +78%, ACCESS-CM2 (no_emulator) +54%, GFDL-ESM4 (emulator) +88%, GFDL-ESM4 (no_emulator) +59%, MPI-ESM1-2-HR (emulator) +71%, MPI-ESM1-2-HR (no_emulator) +51%, MRI-ESM2-0 (emulator) +122%, MRI-ESM2-0 (no_emulator) +93% |
+| IL | $252M | $372M | +48% [+2, +224] | $404M | +60% [+27, +107] | ssp245: ACCESS-CM2 (emulator) +233%, ACCESS-CM2 (no_emulator) +170%, GFDL-ESM4 (emulator) +46%, GFDL-ESM4 (no_emulator) +35%, MPI-ESM1-2-HR (emulator) +8%, MPI-ESM1-2-HR (no_emulator) +7%, MRI-ESM2-0 (emulator) +61%, MRI-ESM2-0 (no_emulator) +50%; ssp585: ACCESS-CM2 (emulator) +100%, ACCESS-CM2 (no_emulator) +80%, GFDL-ESM4 (emulator) +44%, GFDL-ESM4 (no_emulator) +35%, MPI-ESM1-2-HR (emulator) +54%, MPI-ESM1-2-HR (no_emulator) +46%, MRI-ESM2-0 (emulator) +84%, MRI-ESM2-0 (no_emulator) +66% |
+| SD | $307M | $461M | +50% [+7, +442] | $551M | +80% [+20, +192] | ssp245: ACCESS-CM2 (emulator) +454%, ACCESS-CM2 (no_emulator) +180%, GFDL-ESM4 (emulator) +34%, GFDL-ESM4 (no_emulator) +8%, MPI-ESM1-2-HR (emulator) +57%, MPI-ESM1-2-HR (no_emulator) +18%, MRI-ESM2-0 (emulator) +102%, MRI-ESM2-0 (no_emulator) +44%; ssp585: ACCESS-CM2 (emulator) +198%, ACCESS-CM2 (no_emulator) +102%, GFDL-ESM4 (emulator) +74%, GFDL-ESM4 (no_emulator) +21%, MPI-ESM1-2-HR (emulator) +86%, MPI-ESM1-2-HR (no_emulator) +33%, MRI-ESM2-0 (emulator) +129%, MRI-ESM2-0 (no_emulator) +54% |
+| MN | $139M | $186M | +34% [+0, +409] | $216M | +55% [+25, +224] | ssp245: ACCESS-CM2 (emulator) +419%, ACCESS-CM2 (no_emulator) +260%, GFDL-ESM4 (emulator) +8%, GFDL-ESM4 (no_emulator) +0%, MPI-ESM1-2-HR (emulator) +23%, MPI-ESM1-2-HR (no_emulator) +12%, MRI-ESM2-0 (emulator) +73%, MRI-ESM2-0 (no_emulator) +44%; ssp585: ACCESS-CM2 (emulator) +228%, ACCESS-CM2 (no_emulator) +152%, GFDL-ESM4 (emulator) +47%, GFDL-ESM4 (no_emulator) +27%, MPI-ESM1-2-HR (emulator) +61%, MPI-ESM1-2-HR (no_emulator) +37%, MRI-ESM2-0 (emulator) +78%, MRI-ESM2-0 (no_emulator) +49% |
 
-**Reading.** With 3 GCM(s) the regional expected drought bill rises by +78% (ssp245; range
-+18 to +303%) and +111% (ssp585; +80 to +156%) around 2045, at today's insured acres and
-2020-2024 liability. Region expected bill: $3.18B/yr (ssp245) and $3.76B/yr (ssp585) vs $1.78B today.
-The rise comes mainly from more extreme heat (EDD) in every year; projected JJA precipitation changes are small
-(GCM-mean -4% to +11%). Caveats: (1) the GCM spread is the dominant uncertainty and the ensemble is small; ACCESS-CM2 is
-a high-climate-sensitivity model; ssp585 can come out below ssp245 for a GCM because each period is only 10 sampled
-years (internal variability); (2) the loss model learned heat effects mostly from years when heat came with dry soils,
-so adding heat with little drying may overstate losses; tree models also cap responses at the most extreme hazard seen
-in 1981-2024; (3) no adaptation, no change in insured acreage, prices, coverage or technology; (4) year-to-year
-variability is held at 1981-2024's (delta method).
+**Decomposition of the 2045 change** (`future_decomposition.json`; point model, region total, % change vs today; each
+row re-runs the delta method with parts of the CMIP6 deltas switched off; parts do not add exactly because the
+model is non-linear):
+
+| scenario | GCM | full delta method | full, soil wetness held | heat only (+ emulator drying) | heat only, soil wetness held | precipitation only (+ emulator) |
+|---|---|---|---|---|---|---|
+| ssp245 | ACCESS-CM2 | +284% | +145% | +259% | +129% | +12% |
+| ssp245 | GFDL-ESM4 | +78% | +24% | +98% | +41% | -15% |
+| ssp245 | MPI-ESM1-2-HR | +26% | +18% | +35% | +20% | -8% |
+| ssp245 | MRI-ESM2-0 | +70% | +50% | +91% | +49% | -14% |
+| ssp585 | ACCESS-CM2 | +146% | +75% | +159% | +79% | -6% |
+| ssp585 | GFDL-ESM4 | +110% | +36% | +111% | +46% | -3% |
+| ssp585 | MPI-ESM1-2-HR | +111% | +42% | +99% | +41% | +8% |
+| ssp585 | MRI-ESM2-0 | +124% | +66% | +136% | +63% | -8% |
+| ssp245 | **median** | **+74%** | **+37%** | **+95%** | **+45%** | **-11%** |
+| ssp585 | **median** | **+118%** | **+54%** | **+124%** | **+54%** | **-4%** |
+
+**Sanity check / reading.** (1) Precipitation alone slightly LOWERS the bill (median -11% ssp245,
+-4% ssp585): on average the GCMs project slightly wetter summers. (2) Heat with soil wetness held at
+observed raises it by +45% / +54% (median, ssp245 / ssp585): the direct EDD/Tmax/VPD effect learned by the
+loss model. (3) The soil-moisture emulator roughly doubles the rise (full +74% vs +37% with soil wetness held, ssp245;
++118% vs +54%, ssp585), almost entirely through its temperature slope (-0.0124 root-zone wetness per C of
+Tmax anomaly). That slope comes from year-to-year co-variation, in which dry soils also CAUSE hot summers (less
+evaporative cooling), so it very likely overstates how much a forced warming dries the root zone. The v1 headline
+(+78% / +111%, 3 GCMs) used only the emulator branch and is therefore probably on the high side. (4) ACCESS-CM2 (a
+high-climate-sensitivity model, +3.3 C JJA Tmax for ssp245 in this 10-year sample) dominates the upper tail;
+MPI-ESM1-2-HR ssp245 (+0.8 C) is the lowest. ssp585 can come out below ssp245 for a GCM because each period is only
+10 sampled years.
+
+**Result used in the app** (median over 4 GCMs x 2 soil assumptions): the regional expected drought bill rises by
++60% (ssp245; 5-95% +14 to +277%) and +92% (ssp585; +33 to +146%) around 2045,
+i.e. $2.86B/yr and $3.43B/yr vs $1.78B today, at today's insured acres and 2020-2024 liability.
+By soil assumption (median over GCMs): emulator +74% / +118%; soil wetness held +37% / +54% (ssp245 / ssp585).
+GCM-mean JJA precipitation changes range -5% to +11%. Other caveats: the loss model learned heat effects
+mostly from years when heat came with dry soils; tree models cap responses at the most extreme hazard seen in
+1981-2024; no adaptation and no change in insured acreage, prices, coverage or technology; year-to-year variability is
+held at 1981-2024's (delta method); May and out-of-season windows have no CMIP6 delta in this build. State rows in the
+table above use the same ensemble; by-GCM columns show the point model for each GCM and soil assumption.
 <!-- FUTURE_END -->
 
 ## 5. Outputs
@@ -510,20 +541,25 @@ variability is held at 1981-2024's (delta method).
 | power_base_stats.pkl | per-cell 1991-2020 base statistics + emulator (used to standardise CMIP6-perturbed weather) |
 | cv_results.json, cv_oof/*.parquet | every CV candidate's metrics and out-of-fold predictions |
 | model_config.json | selected model + baselines |
-| validation.json | full test results: metrics, CIs, by year/state, per-year metrics, coverage, CV table, ablations |
-| hindcast_county.parquet | fips, state_abbr, year (2021-2024), insured_acres, liability_usd, actual_usd, pred_usd, lo, hi, pred_usd_baseline_mean, pred_usd_baseline_hazard_only (principal crops, nominal $) |
+| validation.json | `v1` = the pre-registered v1 results exactly as first written (metrics, CIs, by year/state, coverage, CV table, ablations); `v2_and_holdout` = 2012 holdout and 2021-24 tests for v1/v2/baselines with calibrated PIs and coverage; `cv_v2`; `app_model` |
+| hindcast_county.parquet | app model (v1): fips, state_abbr, year (2021-2024), pred_usd, actual_usd, liability_usd, insured_acres, pi90_lo, pi90_hi (= lo, hi: calibrated 90% prediction interval, $), pred_usd_{v1,v2,baseline_mean,baseline_hazard_only}, model_version (the v1 bootstrap version is in v1/) |
 | hindcast_crop.parquet | fips, crop, year, liability_usd, insured_acres, indem_drought_usd, pred (lcr) |
 | hindcast_boot.npz | bootstrap test predictions (crop rows) per model |
 | ablations.json | section 2.3 |
 | diversity_effect.json | section 3: every estimate, CI, n, diagnostics, verdict, app_effect |
-| county_sim.parquet | per county: principal_{mean,p80,p90,y2012,y2022,y2023}[_lo,_hi] and corn_* ($/insured ac/yr), principal/corn_2045_{ssp245,ssp585}[_lo,_hi], liab_recent, acres_recent, prem_recent, subs_recent, liab_per_ac, subsidy_share, n_gcms |
+| county_sim.parquet | per county: principal_{mean,p80,p90,y2012,y2022,y2023}[_lo,_hi] and corn_* ($/insured ac/yr; _lo/_hi = parameter uncertainty), principal/corn_2045_{ssp245,ssp585}[_lo,_hi], liab_recent, acres_recent, prem_recent, subs_recent, liab_per_ac, subsidy_share, n_gcms, gcms_2045 (schema unchanged except the added gcms_2045 column) |
 | county_sim_hist.parquet | same without the 2045 columns |
 | sim_principal_by_year.parquet | fips x y1981..y2024 simulated principal $/insured acre (point model) |
 | sim_totals_boot.parquet | boot (0 = point fit), state, expected_usd |
-| sim_future.parquet | fips, gcm, scenario, boot (0..30), principal_mean, principal_p90, corn_mean ($/ac), hist_principal_mean, hist_corn_mean (same bootstrap model) |
+| sim_future.parquet | fips, gcm, scenario, soil ("emulator" / "no_emulator"), boot (0..30), principal_mean, principal_p90, corn_mean ($/ac), hist_principal_mean, hist_corn_mean (same bootstrap model) |
 | sim_future_features.parquet | county mean of perturbed hazard_z, edd30_jja, spi_jja, gwetroot_jja, vpd per gcm x scenario |
 | sim_state.pkl.gz | fitted bootstrap models + simulation frame for `--future-only` (~40 MB, regenerable: suggest gitignore, as for hindcast_boot.npz and cv_oof*) |
 | sim_county_crop.parquet | per-crop simulated distributions for the strategy engine (schema below) |
+| v1/ | snapshot of the pre-registered v1 outputs before the v2 pass (validation_v1.json, hindcast_v1.json, county/crop hindcasts, county_sim, sim_county_crop, county_bill, regional_summary, model_config, notes) |
+| cv_results_v2.json, cv_oof/v2_*.parquet | v2 (post-hoc) candidates' LOYO CV results and out-of-fold predictions |
+| conformal_params.json | split-conformal bins and quantiles (cf20 = calibrated on 2001-2020 OOF, cf11 = on 2001-2011) for v1 and v2 |
+| future_decomposition.json/.parquet | 2045 heat / precipitation / soil-moisture decomposition (point model, region totals) |
+| model_config.json | `main` = v1 (pre-registered), `v2` = post-hoc config, `app` = the model used for the web files (v1) |
 
 ### `sim_county_crop.parquet` (for the strategy engine)
 94,908 rows = (county x crop with 2020-2024 liability > 0) x 44 hazard years 1981-2024. County-crops: corn 639,
@@ -545,9 +581,12 @@ Caveat: a crop's lcr is per dollar of that crop's liability; comparing crops nee
 have much lower liability per acre than corn), and a swap changes revenue too.
 
 ### `web/data/`
-- `hindcast.json`: {train_years, test_years, metrics_units, metrics{model, baseline_mean, baseline_hazard_only:
-  {n, mae, rmse, r2, spearman, total_bias_pct}}, metrics_ci, by_year (model), by_year_models (all three), by_state
-  [{state, year, pred_total_usd, lo, hi, actual_total_usd}], notes, mock:false}.
+- `hindcast.json`: pre-registered v1 fields unchanged {train_years, test_years, metrics_units, metrics{model,
+  baseline_mean, baseline_hazard_only: {n, mae, rmse, r2, spearman, total_bias_pct}}, metrics_ci, by_year (v1, lo/hi =
+  parameter bootstrap), by_year_models, by_state, notes, mock:false}; added in v2 pass: v1_label, v2 {label "post-hoc
+  ...", metrics, by_year (with pi90_lo/hi), by_state}, v1_prediction_interval_by_year (calibrated 90% PIs and whether
+  the actual fell inside), holdout_2012 {metrics, total per model}, prediction_intervals {method, county coverage},
+  app_model, decision.
 - `county_bill.json`: contract schema; plus per county `corn` {expected_bill, bill_1in10, bill_2045}, diversity
   {now, p90_region, n_crops_now, share_cont_corn, shannon_now}, slider {div_values, metric, hazard_year,
   bill_2022_style, lo, hi, bill_2012_style (same multipliers applied to the county's simulated 2012-hazard bill)}; top level `diversity_metric`, `slider_effect`, `notes`. $/ac rounded to 3 significant
@@ -557,12 +596,18 @@ have much lower liability per acre than corn), and a swap changes revenue too.
 - `regional_summary.json`: {units, dollar_year, region{name, insured_acres, expected_bill_usd, taxpayer_share_usd,
   taxpayer_fraction, actual_2022_usd, actual_2023_usd, actual_2012_usd, actual_mean_2001_2024_usd_nominal,
   expected_bill_per_insured_acre, diversity_savings_usd, bill_2045_usd, change_2045_pct (percent),
-  change_2045_pct_by_gcm}, states{...same}, notes}.
-- `meta.json`: generated_at, region, data_sources (nasa flags), caveats, validation metrics.
+  change_2045_pct_by_gcm ("GCM (soil assumption)"), change_2045_pct_by_soil_assumption, gcms_2045}, states{...same},
+  notes}.
+- `meta.json`: generated_at, region, data_sources (nasa flags), caveats (incl. v1/v2 and interval-type labels),
+  validation {v1_preregistered_2021_2024, v2_posthoc_2021_2024, holdout_2012, app_model}.
+- `county_bill.json` adds `model_version` and `interval_types` (which lo/hi are parameter ranges and which are
+  calibrated 90% prediction intervals). County hindcast lo/hi and slider lo/hi are now calibrated prediction intervals.
+- `web/js/charts.js`: slider x-axis label changed to "share of cropland in 3+ crop rotations" (coordinator request).
 
 ## 6. Limitations
-- **Under-prediction of the 2022-2023 totals by ~45-50%** (section 2.2); intervals are parameter intervals with 39%
-  county coverage. The simulated bill is fit on 2001-2024 (including 2022-2023), so it is less affected, but a bill
+- **Under-prediction of the 2022-2023 totals by ~45-50%** (v1, section 2.2; the post-hoc v2 closes part of the gap
+  but fails the pre-declared rule). Calibrated 90% prediction intervals cover 86% of 2021-24 county-years but only
+  57% in the extreme 2012 holdout; region-total intervals are very wide. The simulated bill is fit on 2001-2024 (including 2022-2023), so it is less affected, but a bill
   driven mainly by May-Aug weather will understate multi-season droughts and winter-wheat drought.
 - Hazard is JJA/May-June NASA POWER at one ~50 km MERRA-2 cell per county (no fall/winter/spring antecedent features,
   no September). Precipitation is MERRA-2 bias-corrected (POWER), not IMERG (host unreachable).
@@ -573,5 +618,7 @@ have much lower liability per acre than corn), and a swap changes revenue too.
 - Nominal dollars at 2020-2024 liability/acre (high-price years). Taxpayer share is an approximation.
 - Tree models cannot extrapolate: hazard combinations beyond those seen in 1981-2024 are capped at the most extreme
   observed response (relevant for 2045).
+- 2045: about half of the projected rise depends on the soil-moisture emulator's temperature slope, which is likely
+  inflated by land-atmosphere feedback; both soil assumptions are carried in the range (section 4.1). Only 4 GCMs.
 - Rotation diversity: no robust observational effect (section 3); the slider/savings use a labelled trial-based
   scenario.
