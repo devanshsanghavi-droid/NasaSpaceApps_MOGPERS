@@ -77,7 +77,9 @@ def main():
     g = gdf[gdf.huc12.isin(basin_of)].copy()
     g["basin"] = g.huc12.map(basin_of)
     g["area_km2"] = g.to_crs(5070).area / 1e6
-    g["in_focus"] = False
+    fa = PROC / "focus_area.json"
+    focus = set(json.loads(fa.read_text())["huc12s"]) if fa.exists() else set()
+    g["in_focus"] = g.huc12.isin(focus)
     g = g.reset_index(drop=True)
     out = pd.DataFrame(g.drop(columns="geometry"))
     out["geometry"] = g.geometry.to_wkb()
@@ -88,7 +90,7 @@ def main():
     gs = g.to_crs(5070)
     gs["geometry"] = gs.geometry.simplify(150)
     gs = gs.to_crs(4326)
-    gs[["huc12", "name", "basin", "area_km2", "geometry"]].to_file(WEB_DATA / "huc12.geojson", driver="GeoJSON",
+    gs[["huc12", "name", "basin", "area_km2", "in_focus", "geometry"]].to_file(WEB_DATA / "huc12.geojson", driver="GeoJSON",
                                                                    COORDINATE_PRECISION=4)
     basins = g.to_crs(5070).dissolve("basin", as_index=False)
     basins["area_km2"] = basins.area / 1e6

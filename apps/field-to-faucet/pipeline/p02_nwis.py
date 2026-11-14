@@ -82,8 +82,8 @@ def get_iv():
                f"iv_last{IV_DAYS}d.json", refresh=True)
     iv = parse(js, daily=False)
     iv = iv.dropna(subset=["value"])
-    # local date as reported by NWIS (timestamps carry the site's UTC offset)
-    iv["date"] = pd.to_datetime(iv.ts.str[:10]).dt.date
+    # NWIS daily values use local STANDARD time (CST = UTC-6) all year, so group IV by CST date (not clock time)
+    iv["date"] = (pd.to_datetime(iv.ts, utc=True) - pd.Timedelta(hours=6)).dt.date
     iv = iv.drop_duplicates(["site", "param", "ts"])
     g = iv.groupby(["site", "param", "date"])
     out = g.value.mean().to_frame("value")
