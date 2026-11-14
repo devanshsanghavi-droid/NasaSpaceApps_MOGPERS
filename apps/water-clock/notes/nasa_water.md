@@ -109,7 +109,31 @@ centroids from the Census cartographic boundary file https://www2.census.gov/geo
   differences), but the same storms. Pairs in `data/raw/imerg/pc_check.csv`, summary `data/raw/imerg/imerg_summary.json`.
 
 ## 4. NEX-GDDP-CMIP6 -> `cmip6_2045.json`
-CMIP6_SECTION
+- Access: NASA NCCS THREDDS NetCDF Subset Service (server-side bbox + Apr-Sep subset), e.g.
+  `https://ds.nccs.nasa.gov/thredds/ncss/grid/AMES/NEX/GDDP-CMIP6/GFDL-ESM4/ssp245/r1i1p1f1/hurs/hurs_day_GFDL-ESM4_ssp245_r1i1p1f1_gr1_2040_v2.0.nc?var=hurs&north=40.1&south=36.9&west=257.9&east=260.5&time_start=2040-04-01T00:00:00Z&time_end=2040-09-30T23:59:59Z&accept=netcdf4`
+  (file names from each catalog.xml, newest version per year). The Planetary Computer `nasagddp` copies are the same files
+  but chunked one global day per chunk, so NCSS is far cheaper; PC was not needed.
+- 5 GCMs (r1i1p1f1): ACCESS-CM2, GFDL-ESM4, MRI-ESM2-0, MPI-ESM1-2-HR, NorESM2-MM x historical 1995-2014 + ssp245/ssp585
+  2035-2055; variables pr, tasmax, tasmin, hurs, rsds, sfcWind; 1,860 variable-years, all fetched (transient connection
+  resets were retried on re-run). Region = the 95 0.25-deg cells with centres inside the 26 counties (all cells, not 2-4).
+- ET0: FAO-56 PM per cell-day (ea from mean RH, Rs from rsds, u2 from 10-m wind via FAO eq. 47, P from z = 900 m) and
+  Hargreaves-Samani as a cross-check; Apr-Sep sums. Change = mean(2035-2055) - mean(1995-2014) per model (delta method).
+- Results (ensemble mean [min..max] over 5 GCMs):
+
+| | ssp245 | ssp585 |
+|---|---|---|
+| Apr-Sep precip change, in | +0.44 [-1.22..+1.60] (+3.2%) | -0.64 [-2.57..+0.30] (-4.3%) |
+| JJA mean Tmax change, F | +3.5 [+2.5..+5.4] | +4.7 [+3.6..+5.7] |
+| Apr-Sep ET0 (PM) change, in | +2.38 [+1.11..+4.25] | +3.34 [+2.55..+3.72] |
+| Apr-Sep ET0 (PM) change, % | +5.9 [+2.8..+10.6] | +8.3 [+6.4..+9.3] |
+| Apr-Sep ET0 (Hargreaves) change, % | +4.7 [+3.1..+8.1] | +6.8 [+5.6..+8.4] |
+
+- Baselines (1995-2014, model region means): Apr-Sep precip 13.1-15.2 in (POWER 15.3), JJA Tmax 91.0-91.8 F (POWER 91.5),
+  PM ET0 Apr-Sep 39.6-40.5 in vs POWER FAO-56 46.2 in. The CMIP6 PM ET0 level is ~13% lower than POWER's (different
+  humidity/wind/radiation inputs and the 10 m -> 2 m wind conversion), so use the **% change** (or the inch change scaled to the
+  POWER baseline: +5.9% of 46.2 in = +2.7 in; +8.3% = +3.8 in), not CMIP6 absolute levels. Per-model numbers are in the JSON;
+  the 3-GCM first version is kept at `data/raw/cmip6/cmip6_2045_3gcm.json`.
+- Caveat: 5 GCMs is a small ensemble; precipitation sign is uncertain (models disagree), ET0 increase is robust in all models.
 
 ## Failures / blockers (also in BLOCKERS.md)
 - GRACE-DA 2025-10: HTTP 404 for all October-2025 weekly files tried (gap in the series).

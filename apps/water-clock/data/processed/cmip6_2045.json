@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-14T22:11:02+00:00",
+ "generated": "2026-11-14T22:42:34+00:00",
  "source": "NASA NEX-GDDP-CMIP6 v1.x/v2.0 daily 0.25 deg, via NASA NCCS THREDDS NCSS https://ds.nccs.nasa.gov/thredds/catalog/AMES/NEX/GDDP-CMIP6/catalog.html",
  "variant": "r1i1p1f1",
  "models": {
@@ -79,39 +79,113 @@
   },
   "MRI-ESM2-0": {
    "baseline_1995_2014": {
-    "pr_gs_in": 15.428,
-    "tasmax_jja_f": 90.973,
-    "et0_pm_gs_in": 39.574,
-    "et0_hg_gs_in": 38.961
+    "pr_gs_in": 15.225,
+    "tasmax_jja_f": 91.042,
+    "et0_pm_gs_in": 39.552,
+    "et0_hg_gs_in": 38.926
    },
-   "n_years_hist": 19,
+   "n_years_hist": 20,
    "ssp245": {
     "n_years": 21,
     "pr_gs_in_future": 16.219,
-    "pr_gs_in_change": 0.791,
-    "pr_gs_in_change_pct": 5.13,
+    "pr_gs_in_change": 0.994,
+    "pr_gs_in_change_pct": 6.53,
     "tasmax_jja_f_future": 94.9,
-    "tasmax_jja_f_change": 3.927,
+    "tasmax_jja_f_change": 3.858,
     "et0_pm_gs_in_future": 41.928,
-    "et0_pm_gs_in_change": 2.355,
-    "et0_pm_gs_in_change_pct": 5.95,
+    "et0_pm_gs_in_change": 2.376,
+    "et0_pm_gs_in_change_pct": 6.01,
     "et0_hg_gs_in_future": 41.056,
-    "et0_hg_gs_in_change": 2.095,
-    "et0_hg_gs_in_change_pct": 5.38
+    "et0_hg_gs_in_change": 2.131,
+    "et0_hg_gs_in_change_pct": 5.47
    },
    "ssp585": {
     "n_years": 21,
     "pr_gs_in_future": 14.878,
-    "pr_gs_in_change": -0.551,
-    "pr_gs_in_change_pct": -3.57,
+    "pr_gs_in_change": -0.348,
+    "pr_gs_in_change_pct": -2.28,
     "tasmax_jja_f_future": 96.694,
-    "tasmax_jja_f_change": 5.721,
+    "tasmax_jja_f_change": 5.652,
     "et0_pm_gs_in_future": 43.223,
-    "et0_pm_gs_in_change": 3.649,
-    "et0_pm_gs_in_change_pct": 9.22,
+    "et0_pm_gs_in_change": 3.671,
+    "et0_pm_gs_in_change_pct": 9.28,
     "et0_hg_gs_in_future": 42.199,
-    "et0_hg_gs_in_change": 3.238,
-    "et0_hg_gs_in_change_pct": 8.31
+    "et0_hg_gs_in_change": 3.273,
+    "et0_hg_gs_in_change_pct": 8.41
+   }
+  },
+  "MPI-ESM1-2-HR": {
+   "baseline_1995_2014": {
+    "pr_gs_in": 14.463,
+    "tasmax_jja_f": 91.184,
+    "et0_pm_gs_in": 40.182,
+    "et0_hg_gs_in": 38.97
+   },
+   "n_years_hist": 20,
+   "ssp245": {
+    "n_years": 21,
+    "pr_gs_in_future": 13.242,
+    "pr_gs_in_change": -1.22,
+    "pr_gs_in_change_pct": -8.44,
+    "tasmax_jja_f_future": 93.681,
+    "tasmax_jja_f_change": 2.497,
+    "et0_pm_gs_in_future": 42.089,
+    "et0_pm_gs_in_change": 1.908,
+    "et0_pm_gs_in_change_pct": 4.75,
+    "et0_hg_gs_in_future": 40.227,
+    "et0_hg_gs_in_change": 1.257,
+    "et0_hg_gs_in_change_pct": 3.23
+   },
+   "ssp585": {
+    "n_years": 21,
+    "pr_gs_in_future": 11.896,
+    "pr_gs_in_change": -2.567,
+    "pr_gs_in_change_pct": -17.75,
+    "tasmax_jja_f_future": 95.69,
+    "tasmax_jja_f_change": 4.506,
+    "et0_pm_gs_in_future": 43.812,
+    "et0_pm_gs_in_change": 3.63,
+    "et0_pm_gs_in_change_pct": 9.03,
+    "et0_hg_gs_in_future": 41.361,
+    "et0_hg_gs_in_change": 2.391,
+    "et0_hg_gs_in_change_pct": 6.14
+   }
+  },
+  "NorESM2-MM": {
+   "baseline_1995_2014": {
+    "pr_gs_in": 14.073,
+    "tasmax_jja_f": 91.29,
+    "et0_pm_gs_in": 39.998,
+    "et0_hg_gs_in": 39.33
+   },
+   "n_years_hist": 20,
+   "ssp245": {
+    "n_years": 21,
+    "pr_gs_in_future": 15.169,
+    "pr_gs_in_change": 1.096,
+    "pr_gs_in_change_pct": 7.79,
+    "tasmax_jja_f_future": 94.436,
+    "tasmax_jja_f_change": 3.146,
+    "et0_pm_gs_in_future": 41.111,
+    "et0_pm_gs_in_change": 1.113,
+    "et0_pm_gs_in_change_pct": 2.78,
+    "et0_hg_gs_in_future": 40.564,
+    "et0_hg_gs_in_change": 1.234,
+    "et0_hg_gs_in_change_pct": 3.14
+   },
+   "ssp585": {
+    "n_years": 21,
+    "pr_gs_in_future": 13.663,
+    "pr_gs_in_change": -0.41,
+    "pr_gs_in_change_pct": -2.92,
+    "tasmax_jja_f_future": 95.521,
+    "tasmax_jja_f_change": 4.23,
+    "et0_pm_gs_in_future": 42.547,
+    "et0_pm_gs_in_change": 2.549,
+    "et0_pm_gs_in_change_pct": 6.37,
+    "et0_hg_gs_in_future": 41.518,
+    "et0_hg_gs_in_change": 2.189,
+    "et0_hg_gs_in_change_pct": 5.56
    }
   }
  },
@@ -140,94 +214,94 @@
   "*_change_pct": "percent change"
  },
  "method": "Per model: region mean of per-cell season totals each year; change = mean(2035-2055) - mean(1995-2014) for the same model (delta method, so model bias largely cancels). Ensemble = mean/min/max across models.",
- "fetch_failures": 1,
+ "fetch_failures": 0,
  "ensemble": {
   "ssp245": {
    "et0_hg_gs_in_change": {
-    "mean": 2.238,
-    "min": 1.448,
+    "mean": 1.848,
+    "min": 1.234,
     "max": 3.172,
-    "n_models": 3
+    "n_models": 5
    },
    "et0_hg_gs_in_change_pct": {
-    "mean": 5.697,
-    "min": 3.66,
+    "mean": 4.71,
+    "min": 3.14,
     "max": 8.05,
-    "n_models": 3
+    "n_models": 5
    },
    "et0_pm_gs_in_change": {
-    "mean": 2.957,
-    "min": 2.266,
+    "mean": 2.383,
+    "min": 1.113,
     "max": 4.251,
-    "n_models": 3
+    "n_models": 5
    },
    "et0_pm_gs_in_change_pct": {
-    "mean": 7.37,
-    "min": 5.59,
+    "mean": 5.94,
+    "min": 2.78,
     "max": 10.57,
-    "n_models": 3
+    "n_models": 5
    },
    "pr_gs_in_change": {
-    "mean": 0.701,
-    "min": -0.291,
+    "mean": 0.436,
+    "min": -1.22,
     "max": 1.603,
-    "n_models": 3
+    "n_models": 5
    },
    "pr_gs_in_change_pct": {
-    "mean": 5.113,
-    "min": -1.99,
+    "mean": 3.218,
+    "min": -8.44,
     "max": 12.2,
-    "n_models": 3
+    "n_models": 5
    },
    "tasmax_jja_f_change": {
-    "mean": 4.029,
-    "min": 2.735,
+    "mean": 3.532,
+    "min": 2.497,
     "max": 5.425,
-    "n_models": 3
+    "n_models": 5
    }
   },
   "ssp585": {
    "et0_hg_gs_in_change": {
-    "mean": 2.874,
-    "min": 2.41,
-    "max": 3.238,
-    "n_models": 3
+    "mean": 2.647,
+    "min": 2.189,
+    "max": 3.273,
+    "n_models": 5
    },
    "et0_hg_gs_in_change_pct": {
-    "mean": 7.317,
-    "min": 6.09,
-    "max": 8.31,
-    "n_models": 3
+    "mean": 6.75,
+    "min": 5.56,
+    "max": 8.41,
+    "n_models": 5
    },
    "et0_pm_gs_in_change": {
-    "mean": 3.494,
-    "min": 3.114,
+    "mean": 3.337,
+    "min": 2.549,
     "max": 3.719,
-    "n_models": 3
+    "n_models": 5
    },
    "et0_pm_gs_in_change_pct": {
-    "mean": 8.72,
-    "min": 7.69,
-    "max": 9.25,
-    "n_models": 3
+    "mean": 8.324,
+    "min": 6.37,
+    "max": 9.28,
+    "n_models": 5
    },
    "pr_gs_in_change": {
-    "mean": -0.133,
-    "min": -0.551,
+    "mean": -0.635,
+    "min": -2.567,
     "max": 0.302,
-    "n_models": 3
+    "n_models": 5
    },
    "pr_gs_in_change_pct": {
-    "mean": -0.767,
-    "min": -3.57,
+    "mean": -4.336,
+    "min": -17.75,
     "max": 2.3,
-    "n_models": 3
+    "n_models": 5
    },
    "tasmax_jja_f_change": {
-    "mean": 4.879,
+    "mean": 4.661,
     "min": 3.627,
-    "max": 5.721,
-    "n_models": 3
+    "max": 5.652,
+    "n_models": 5
    }
   }
  },

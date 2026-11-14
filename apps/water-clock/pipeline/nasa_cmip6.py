@@ -56,7 +56,7 @@ def catalog(model, scen, var):
         return _cat[k]
     f = D / "catalog" / f"{model}_{scen}_{var}.txt"
     f.parent.mkdir(parents=True, exist_ok=True)
-    if f.exists():
+    if f.exists() and f.stat().st_size > 0:
         names = f.read_text().split()
     else:
         try:
@@ -65,7 +65,8 @@ def catalog(model, scen, var):
             print("catalog fail", model, scen, var, e, flush=True)
             txt = ""
         names = sorted(set(re.findall(rf'name="({var}_day_{re.escape(model)}_{scen}_{VARIANT}_\w+?_\d{{4}}(?:_v[\d.]+)?\.nc)"', txt)))
-        f.write_text("\n".join(names))
+        if names:  # never cache an empty listing (transient catalog failures)
+            f.write_text("\n".join(names))
     by = {}
     for nm in names:
         m = re.search(r"_(\d{4})(?:_v([\d.]+))?\.nc$", nm)
