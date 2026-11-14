@@ -10,3 +10,6 @@ Data sources that could not be reached from the build environment, with the erro
 | NASS QuickStats API | quickstats.nass.usda.gov | Needs an API key; host also blocked | Free key | NASS bulk file from www.nass.usda.gov/datasets |
 | USDA AMS Market News | mymarketnews.ams.usda.gov | Host blocked; API needs a key | Key + allowlist | NASS prices received (bulk file) |
 | OpenET | openet API | No API key | Free OpenET key | MODIS MOD16A3GF ET + NASA POWER FAO-56 reference ET |
+| KGS WIZARD download file host | maps.kgs.ku.edu | Proxy CONNECT 403 on the sites/wlevel CSV links from wizarddownload.cfm | Allowlist maps.kgs.ku.edu | Same files fetched from https://geohydro.kgs.ku.edu/geohydro/downloads/ (identical path) |
+| USGS NWIS legacy gwlevels service | waterservices.usgs.gov/nwis/gwlevels (redirects to waterdata.usgs.gov) | 301 to a decommission notice (api-decom-fall-2025); waterdata.usgs.gov refused by proxy | None needed | USGS Water Data OGC API api.waterdata.usgs.gov/ogcapi/v0 field-measurements |
+| KGS High Plains section-level database (bedrock elevation / saturated thickness per section) | hercules.kgs.ku.edu (geohydro.kgs.ku.edu same path = 404) | Proxy 403 | Allowlist hercules.kgs.ku.edu | USGS OFR 98-393 base-of-aquifer contours + KGS WIZARD depth-to-bedrock picks; USGS SIR 2012-5177 2009 saturated thickness for cross-check |

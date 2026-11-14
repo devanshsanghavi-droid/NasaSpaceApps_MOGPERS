@@ -1,0 +1,298 @@
+{
+ "raw": {
+  "kgs_sites": 3023,
+  "kgs_measurements": 138665,
+  "kgs_bad_flagged": 3019,
+  "nwis_sites_listed": 23787,
+  "nwis_measurements": 116014,
+  "nwis_bad_flagged": 3071
+ },
+ "merge": {
+  "nwis_meas_same_well_date_as_kgs": 104008,
+  "share_identical_within_0.05ft": 0.9925294208137836,
+  "nwis_rows_added": 9828,
+  "nwis_wells_merged_by_location_50m": 23,
+  "nwis_only_wells": 5529,
+  "non_hpa_wells_dropped": 82
+ },
+ "same_day_duplicates_dropped": 1259,
+ "sat_flag_counts_wells_with_annual": {
+  "ok": 3597,
+  "thin_or_absent_usgs2009": 237,
+  "outside_hpa_2009_raster": 160,
+  "negative_sat_thick": 74,
+  "base_or_land_elev_inconsistent": 59
+ },
+ "cleaning_rules_dropped": {
+  "negative_dtw": 13,
+  "dtw_gt_well_depth+5": 88,
+  "before_1940": 1572
+ },
+ "annual_spikes_flagged": 30,
+ "wells_with_annual_levels": 4127,
+ "kgs_wells_with_annual_levels": 2865,
+ "median_record_years_kgs_wells": 19.0,
+ "median_record_years_wells_ge2y": 20.0,
+ "wells_ge15_years": 1699,
+ "wells_ge15_years_and_measured_since_2016": 943,
+ "median_record_years": 9.0,
+ "annual_values": 68694,
+ "year_range": [
+  1940,
+  2026
+ ],
+ "annual_values_by_year_2000plus": {
+  "2000": 980,
+  "2001": 1017,
+  "2002": 1026,
+  "2003": 964,
+  "2004": 946,
+  "2005": 996,
+  "2006": 976,
+  "2007": 779,
+  "2008": 1017,
+  "2009": 1030,
+  "2010": 1027,
+  "2011": 1017,
+  "2012": 1016,
+  "2013": 1003,
+  "2014": 1017,
+  "2015": 1021,
+  "2016": 1018,
+  "2017": 1030,
+  "2018": 1049,
+  "2019": 1014,
+  "2020": 1048,
+  "2021": 1033,
+  "2022": 1039,
+  "2023": 1006,
+  "2024": 1023,
+  "2025": 1037,
+  "2026": 1034
+ },
+ "wells_with_base": 4127,
+ "wells_base_from_kgs_pick": 800,
+ "base_pick_minus_usgs_ft": {
+  "n": 800,
+  "median": -5.6593779897830245,
+  "mad": 22.565850858919475
+ },
+ "sat2009_wells_minus_usgs_raster_ft": {
+  "n": 984,
+  "median": 0.9372415161130903,
+  "mae": 21.871304481368778,
+  "corr": 0.9333381803464132
+ },
+ "negative_sat_thick_annual_values": 2579,
+ "base_contour_arcs_used": 139,
+ "per_county": [
+  {
+   "county_fips": "20023",
+   "wells": 193,
+   "wells_15y": 81,
+   "median_years": 10.0,
+   "name": "Cheyenne",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20039",
+   "wells": 106,
+   "wells_15y": 54,
+   "median_years": 17.5,
+   "name": "Decatur",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20055",
+   "wells": 369,
+   "wells_15y": 152,
+   "median_years": 10.0,
+   "name": "Finney",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20057",
+   "wells": 236,
+   "wells_15y": 75,
+   "median_years": 5.0,
+   "name": "Ford",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20063",
+   "wells": 71,
+   "wells_15y": 35,
+   "median_years": 14.0,
+   "name": "Gove",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20065",
+   "wells": 71,
+   "wells_15y": 34,
+   "median_years": 12.0,
+   "name": "Graham",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20067",
+   "wells": 287,
+   "wells_15y": 81,
+   "median_years": 1.0,
+   "name": "Grant",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20069",
+   "wells": 240,
+   "wells_15y": 74,
+   "median_years": 1.0,
+   "name": "Gray",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20071",
+   "wells": 96,
+   "wells_15y": 35,
+   "median_years": 7.0,
+   "name": "Greeley",
+   "gmd": 1
+  },
+  {
+   "county_fips": "20075",
+   "wells": 169,
+   "wells_15y": 60,
+   "median_years": 3.0,
+   "name": "Hamilton",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20081",
+   "wells": 152,
+   "wells_15y": 61,
+   "median_years": 12.0,
+   "name": "Haskell",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20093",
+   "wells": 226,
+   "wells_15y": 69,
+   "median_years": 5.5,
+   "name": "Kearny",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20101",
+   "wells": 71,
+   "wells_15y": 23,
+   "median_years": 1.0,
+   "name": "Lane",
+   "gmd": 1
+  },
+  {
+   "county_fips": "20109",
+   "wells": 62,
+   "wells_15y": 18,
+   "median_years": 1.0,
+   "name": "Logan",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20119",
+   "wells": 89,
+   "wells_15y": 57,
+   "median_years": 20.0,
+   "name": "Meade",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20129",
+   "wells": 157,
+   "wells_15y": 56,
+   "median_years": 1.0,
+   "name": "Morton",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20153",
+   "wells": 105,
+   "wells_15y": 56,
+   "median_years": 20.0,
+   "name": "Rawlins",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20171",
+   "wells": 236,
+   "wells_15y": 85,
+   "median_years": 5.0,
+   "name": "Scott",
+   "gmd": 1
+  },
+  {
+   "county_fips": "20175",
+   "wells": 86,
+   "wells_15y": 44,
+   "median_years": 15.0,
+   "name": "Seward",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20179",
+   "wells": 147,
+   "wells_15y": 82,
+   "median_years": 18.0,
+   "name": "Sheridan",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20181",
+   "wells": 203,
+   "wells_15y": 96,
+   "median_years": 11.0,
+   "name": "Sherman",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20187",
+   "wells": 166,
+   "wells_15y": 66,
+   "median_years": 6.0,
+   "name": "Stanton",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20189",
+   "wells": 162,
+   "wells_15y": 64,
+   "median_years": 8.5,
+   "name": "Stevens",
+   "gmd": 3
+  },
+  {
+   "county_fips": "20193",
+   "wells": 148,
+   "wells_15y": 90,
+   "median_years": 20.0,
+   "name": "Thomas",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20199",
+   "wells": 93,
+   "wells_15y": 53,
+   "median_years": 17.0,
+   "name": "Wallace",
+   "gmd": 4
+  },
+  {
+   "county_fips": "20203",
+   "wells": 186,
+   "wells_15y": 98,
+   "median_years": 15.5,
+   "name": "Wichita",
+   "gmd": 1
+  }
+ ]
+}
