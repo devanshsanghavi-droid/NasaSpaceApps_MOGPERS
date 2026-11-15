@@ -267,7 +267,7 @@
       "quote": "The Des Moines area’s first-ever lawn watering ban has been in effect for over a week . Central Iowa Water Works (CIWW) said compliance reduced demand by over 30%, allowing the regional utility to keep pace with nitrate removal and meet federal standards.",
       "verification": "primary",
       "source_kind": "news",
-      "notes": "Fetched with curl 2026-11-15; quote copied from the page text (the stray space before the full stop is a link boundary on the page). Also supports 'the tap water met the standard' for 2025.",
+      "notes": "Fetched with curl 2026-11-15; quote copied from the page text (the stray space before the full stop is a link boundary on the page). The 'meet federal standards' part is CIWW's statement as reported by IPR for June 2025 only; the app does not claim the tap met the standard.",
       "checked_at": "2026-11-15"
     },
     {

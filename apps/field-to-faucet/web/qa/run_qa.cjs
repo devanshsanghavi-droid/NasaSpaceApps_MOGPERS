@@ -92,7 +92,7 @@ async function run(width, height, tag, dsf) {
   const heroSrc = await page.textContent("#city-h-src");
   if (!/92% of the nitrogen entering Iowa streams/.test(heroSrc) || !/inrs_nonpoint_share_pct/.test(heroSrc)) problems.push(`[${tag}] hero source note (INRS 92% nonpoint + fact id) missing: ${heroSrc}`);
   const cityTxt = await page.textContent("#view-city");
-  if (/\bat the intake\b|River intake was|kept on upstream fields|stays on the fields|already paid for/.test(cityTxt)) problems.push(`[${tag}] old wording (intake / kept on fields / already paid) still on the city view`);
+  if (/\bat the intake\b|River intake was|kept on upstream fields|stays on the fields|already paid for|up to ~\$|tap met the standard/.test(cityTxt)) problems.push(`[${tag}] old wording (intake / kept on fields / already paid) still on the city view`);
   if (!/Van Meter \(upstream of the intake\)/.test(cityTxt)) problems.push(`[${tag}] gauge should be named "Raccoon River at Van Meter (upstream of the intake)"`);
   if (!/incl\. capital/.test(kpis)) problems.push(`[${tag}] 2025 KPI cost should say "incl. capital": ${kpis}`);
   if (!/homes: 40/.test(kpis)) problems.push(`[${tag}] ban KPI should give the homes figure`);

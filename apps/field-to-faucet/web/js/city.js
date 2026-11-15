@@ -116,6 +116,9 @@ const usdRange = (lo, hi) => {
   return ua === ub && /[kM]/.test(ua) ? `${a.slice(0, -1)}–${b.slice(1)}` : `${a}–${b}`;
 };
 
+// "$47k–507k": unit kept on both ends (avoided-cost ranges)
+const usdRangeK = (lo, hi) => { const a = usd(lo), b = usd(hi); return a === b ? a : `${a}–${b.replace(/^\$/, "")}`; };
+
 // Tooltip that also works on touch (focus) and with keyboard.
 function tip(text, body) {
   return `<span class="tip" tabindex="0">${text}<span class="tip-body" role="tooltip">${body}</span></span>`;
@@ -266,7 +269,7 @@ function renderImpact() {
     text.innerHTML = `Move the slider: what if more upstream corn and soy acres kept living roots over winter?`;
   } else {
     const pdN = Math.round(pd?.mid ?? 0);
-    text.innerHTML = `If cover went on <strong>${shareAsFreq(lvl.x)}</strong> of all upstream corn and soy acres${today != null ? ` (beyond today's ~${today}%)` : ""}: about <strong>${km.n} ${km.u} of nitrogen</strong> kept out of the rivers (measured at the gauges), <strong>${fmtInt(pdN)} fewer plant ${plural(pdN, "day")}</strong>${pd && rangeTxt(pd) ? ` (${rangeTxt(pd)})` : ""}, a watering ban <strong>${bs.n} ${bs.u} shorter</strong> <span class="muted">(${tip("indicative, proxy rule", banTip)})</span>, and <strong>up to ~${usd(cost?.mid)}</strong> operating cost avoided (estimate; avoided days are often lower-output days${costQ1 ? `; ~${usd(costQ1.mid)} at the Q1-2026 rate` : ""}).`;
+    text.innerHTML = `If cover went on <strong>${shareAsFreq(lvl.x)}</strong> of all upstream corn and soy acres${today != null ? ` (beyond today's ~${today}%)` : ""}: about <strong>${km.n} ${km.u} of nitrogen</strong> kept out of the rivers (measured at the gauges), <strong>${fmtInt(pdN)} fewer plant ${plural(pdN, "day")}</strong>${pd && rangeTxt(pd) ? ` (${rangeTxt(pd)})` : ""}, a watering ban <strong>${bs.n} ${bs.u} shorter</strong> <span class="muted">(${tip("indicative, proxy rule", banTip)})</span>, and about <strong>${usd(cost?.mid)}</strong> operating cost avoided (estimate${cost && Math.round(cost.lo) !== Math.round(cost.hi) ? `; range ${usdRangeK(cost.lo, cost.hi)}` : ""}; avoided days are often lower-output days).`;
   }
   const lbRange = (b) => (b && Math.round(b.lo) !== Math.round(b.hi) ? `range ${fmtLbRange(b.lo, b.hi)}` : "");
   const toTxt = {
@@ -279,7 +282,7 @@ function renderImpact() {
     { k: "lbN_kept", b: kept, v: `${km.n}<span class="itile-u"> ${km.u}</span>`, l: "of nitrogen kept out of the rivers (measured at the gauges)", r: lbRange(kept) },
     { k: "plant_days", b: pd, v: `${fmtInt(pd?.mid)}<span class="itile-u"> fewer plant ${plural(pd?.mid ?? 0, "day")}</span>`, l: "the city's nitrate-removal plant runs less", r: rangeTxt(pd) ? `${rangeTxt(pd)} days` : "" },
     { k: "ban_days", b: ban, v: `${bs.n}<span class="itile-u"> ${bs.u} shorter</span>`, l: `lawn-watering ban ${banLabel}`, r: rangeTxt(ban) ? `${rangeTxt(ban)} days` : "" },
-    { k: "cost_usd", b: cost, v: lvl.x > 0 ? `<span class="itile-u">up to </span>~${usd(cost?.mid)}` : usd(cost?.mid), l: `operating cost avoided <span class="muted">(upper estimate: avoided days are often lower-output days${costQ1 && lvl.x > 0 ? `; ~${usd(costQ1.mid)} at the Q1-2026 rate` : ""})</span>`, r: cost ? rangeTxt(cost, usd) : "" },
+    { k: "cost_usd", b: cost, v: lvl.x > 0 ? `<span class="itile-u">about </span>${usd(cost?.mid)}` : usd(cost?.mid), l: `operating cost avoided <span class="muted">(estimate; avoided days are often lower-output days${costQ1 && lvl.x > 0 ? `; ~${usd(costQ1.mid)} at the Q1-2026 rate` : ""})</span>`, r: cost && rangeTxt(cost) ? `range ${usdRangeK(cost.lo, cost.hi)}` : "" },
   ];
   const zero = lvl.x === 0;
   tiles.innerHTML = t.map((x) => {
@@ -295,7 +298,7 @@ function renderImpact() {
   fine.innerHTML = [
     xd ? `<strong>What the slider means:</strong> ${esc(xd)}${/[.!?]$/.test(xd.trim()) ? "" : "."}` : "",
     `Ranges: 8 in 10${isNum(nDraws) ? ` of ${fmtInt(nDraws)}` : ""} simulations${anyTrials ? "; “trials only” = Iowa field-trial evidence alone, without our satellite-trained river model" : ""}.`,
-    `$ = operating cost only${cpd ? ` (plant days × ~${usd(cpd.lo)}–${usd(cpd.hi)} a day: 2025 O&M per run day to full capacity)` : ""}, an upper estimate because the days avoided are often partial-output days${th.cost_per_plant_day_q1_2026?.value ? ` (CIWW's Q1-2026 average was ~${usd(th.cost_per_plant_day_q1_2026.value)} a day)` : ""}; capital is not avoided.`,
+    `$ = operating cost only${cpd ? ` (plant days × ~${usd(cpd.lo)}–${usd(cpd.hi)} a day: 2025 O&M per run day to full capacity)` : ""}; the days avoided are often partial-output days, so the true saving may be lower${th.cost_per_plant_day_q1_2026?.value ? ` (CIWW's Q1-2026 average was ~${usd(th.cost_per_plant_day_q1_2026.value)} a day)` : ""}; capital is not avoided.`,
     cover ? `Today about ${Math.round(cover.value)}% of Iowa corn and soy acres have cover (${link(cover.url, cover.source || "source")}).` : "",
     `NASA HLS sees winter cover on only ~${Math.round(hs.lo) === Math.round(hs.hi) ? fmtInt(hs.lo) : `${fmtInt(hs.lo)}–${fmtInt(hs.hi)}`}% of focus-area fields: a lower bound, because small or late-planted covers aren't visible from space.`,
     "The river may take more than one season to respond (nitrate stored in soils).",
@@ -339,7 +342,7 @@ function renderKpis() {
   const lede = document.getElementById("city-lede");
   const partial = obs.partial_year_through ? ` ${YEAR} is a partial year (data through ${fmtDate(parseDate(obs.partial_year_through))}).` : "";
   lede.innerHTML = isNum(obs.days_over10) && isNum(measured)
-    ? `In ${YEAR} the ${esc(gauge)} (upstream of the intake) was above the 10 mg/L drinking-water limit on ${fmtInt(obs.days_over10)} of ${fmtInt(measured)} measured days, ${naturalFreq(obs.days_over10, measured)}. That limit applies to drinking water: the utility treated the water so the tap met the standard.${partial} NASA satellites show when upstream fields sit bare on wet soil — when nitrate can wash out.`
+    ? `In ${YEAR} the ${esc(gauge)} (upstream of the intake) was above the 10 mg/L drinking-water limit on ${fmtInt(obs.days_over10)} of ${fmtInt(measured)} measured days, ${naturalFreq(obs.days_over10, measured)}.${partial} NASA satellites show when upstream fields sit bare on wet soil — when nitrate can wash out.`
     : "";
 }
 

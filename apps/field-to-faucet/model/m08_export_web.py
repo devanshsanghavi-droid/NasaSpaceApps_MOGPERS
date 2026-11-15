@@ -420,7 +420,7 @@ def export_meta(dm, river_end, scen, sizes):
              url="https://www.extension.iastate.edu/agdm/"),
     ]
     caveats = [
-        "The river model explains normal years well (test NSE about 0.6) but badly misses the 2025-26 level: rivers carried about twice the nitrate the drivers explain, likely legacy nitrate after the 2020-23 drought. Scenarios therefore change the MEASURED series by a relative amount; the model's absolute 2025 level is never used for impact counts.",
+        "The river model explains normal years well (test NSE about 0.6) but badly misses the 2025-26 level: rivers carried about twice the nitrate the drivers explain, one hypothesis: nitrate left over after the 2020-2023 drought. Scenarios therefore change the MEASURED series by a relative amount; the model's absolute 2025 level is never used for impact counts.",
         "Scenario effects combine Iowa field trials (cereal rye: 28% average cut, SD 26) with the learned river response to less bare soil, which is weakly identified because past cover changes were mostly seasonal. Ranges are 8 in 10 of the simulated outcomes.",
         "Legacy nitrate: a change on fields takes more than one season to show in the river.",
         "Cover-crop adoption is already about 17% of Iowa corn and soybean acres (statewide, secondary source); the slider adds acres on top, assuming adopters are typical fields.",
