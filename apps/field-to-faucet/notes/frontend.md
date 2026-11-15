@@ -1,102 +1,73 @@
 # Module: frontend (web/)
 
-A static app in `web/`, with plain ES modules and no build step. Libraries are vendored and pinned in `web/vendor/`: MapLibre GL JS 4.7.1 and Chart.js 4.4.6. They came from the npm tarballs, with their LICENSE files kept and the `sourceMappingURL` comments removed. The page makes no CDN calls and loads no external tiles. Maps are drawn only from our own GeoJSON on a plain light background.
+A static app in `web/`, with plain ES modules and no build step. Libraries are vendored and pinned in `web/vendor/`: MapLibre GL JS 4.7.1 and Chart.js 4.4.6 (npm tarballs, LICENSE kept, `sourceMappingURL` removed). No CDN calls, no external tiles: maps are drawn only from our own GeoJSON.
 
 ## Run
 ```
 cd apps/field-to-faucet/web && python3 -m http.server 8731      # open http://localhost:8731/
-python3 -I mock/_make_mock.py                                   # (re)write web/mock/* (deterministic, seed 20261114)
-node qa/run_qa.cjs http://localhost:8731/                       # Playwright QA + screenshots into web/qa/
+node qa/run_qa.cjs http://localhost:8731/ [--shots-dir=DIR]     # Playwright QA + screenshots into web/qa/
 ```
-Routes: `#city` (landing), `#farmer`, `#farmer/<field_id>` (deep link to a field), `#method`.
+Routes: `#city` (landing), `#farmer`, `#farmer/<field_id>` (deep link), `#method`.
+
+## Status: all data real
+Every file in `web/data/` is real (written by `model/m08_export_web.py`). The mock fallback (`web/mock/`) is still in the loader but unused: QA asserts that no MOCK banner and no MOCK chip is visible on any view.
 
 ## Structure
 | File | Role |
 |---|---|
-| `index.html` | Shell: mock banner, tab bar, the three views, footer |
-| `css/app.css` | Tokens: ink/ground, one accent (deep teal `#0b5f66`), nitrate red `#c0322b`, sequential warm leak ramp `--leak-0..5`. Breakpoints at 960 and 560 px |
-| `js/main.js` | Loads data, renders the views, hash router. Maps are created lazily when their view first shows |
-| `js/data.js` | Loader, mock fallback, banner, provenance table, `facts.json` normaliser, field-detail access (single file or split) |
-| `js/city.js` | KPI strip, 2025 replay (slider, deltas, chart), river chart, hotspot map and list, 14-day outlook |
-| `js/farmer.js` | Field map, field facts, leak calendar and its plain-language sentence, NDVI, priorities, strategy cards and ranking |
-| `js/method.js` | Validation tables, sources (NASA tag), caveats, file provenance |
-| `js/charts.js` | Chart.js on a linear ms time axis (no date adapter). Draws split shading, the EPA-limit line, a crosshair, and an 8-in-10 band in the tooltip. Nulls are drawn as gaps (`spanGaps:false`) |
-| `js/map.js` | Blank-style MapLibre map, HTML-marker labels (no glyph server), context layers, quantile `step` colouring, ramp legend |
-| `js/util.js` | Formatting, natural frequencies, small DOM helpers |
-| `mock/_make_mock.py` | Writes every mock file and `mock/_manifest.json` |
-| `qa/run_qa.cjs` | Playwright QA at 1280 and 375 px |
+| `index.html` | Shell: mock banner, tab bar, three views, footer |
+| `css/app.css` | Tokens: ink/ground, one accent (teal `#0b5f66`), nitrate red `#c0322b`, warm sequential leak ramp `--leak-0..5`, blue sequential driver ramp. Breakpoints 960 / 560 px |
+| `js/main.js` | Creates the store, renders views, hash router; re-renders banner + provenance after each lazy group loads |
+| `js/data.js` | Grouped/lazy loader, mock fallback, banner, provenance, `factsMap` (resolves `aliases`), `getFieldDetail`, `nasaStrip` |
+| `js/city.js` | Impact hero + year switch, KPI strip, replay chart, river chart + honest line, hotspot map, outlook |
+| `js/farmer.js` | Field map, field facts, leak calendar, NDVI, priorities, strategy cards and ranking |
+| `js/method.js` | Honest miss, validation tables, outlook skill, proxy-rule test, sources, caveats, provenance |
+| `js/charts.js` | Chart.js on a linear ms time axis; split shading, threshold line, crosshair, band tooltip (`bandLabel`). Nulls are gaps |
+| `js/map.js` | Blank-style MapLibre, HTML-marker labels, quantile `step` colouring, ramp legend |
+| `js/util.js` | Formatting (`meanBand`, `shareAsFreq`, `fmtLbAc`, `linkify`), natural frequencies, segmented control |
 
-## How the data maps to the UI
-- **KPI strip** (replay year `scenarios.replay.year`, 2025):
-  - days above 10: `scenarios.by_year[Y].observed.days_over10`, linked to the USGS site page.
-  - plant days: `observed.plant_days`, or else `facts.plant_days_<Y>`.
-  - $ cost: `facts.plant_cost_<Y>_usd`, or else `plant_days × thresholds.cost_per_plant_day{lo,hi}`, shown as a range.
-  - ban days: `observed.ban_days`, or else `facts.ban_days_<Y>`.
-  - people served: `facts.people_served`.
-  - Each tile links its source (`facts[*].url` / `thresholds.source`).
-- **Replay**:
-  - The slider steps through `scenarios.adoption_levels` and opens at 25%.
-  - The chart shows `replay.obs`, `replay.base_p50` and `replay.by_level[x]`. The area between the base and scenario lines is shaded as "nitrate kept out of the river".
-  - Deltas use `levels[x].avoided.<metric>{p50,lo,hi}` if the exporter adds it. Otherwise they are `levels[0].p50 − levels[x].{p50,hi,lo}`, clamped at 0.
-  - Metrics: days_over10, plant_days, cost_usd, ban_days, plus lbN_kept as a sentence.
-  - Natural-frequency sentence: observed days minus the delta, over measured days, e.g. "about 1 day in 7".
-- **River chart**: `river_series.sites[site].{dates,obs,p10,p50,p90}`.
-  - Toggles: site (Raccoon / Des Moines) and range (all / test 2023+ / 2025).
-  - `split` drives the shaded "Training / Out-of-time test / Live" periods. `mcl` draws the red dashed line.
-- **Hotspot map**: `huc12.geojson`, coloured by `share_of_basin_leak` or `leak_index` in 6 equal-count classes.
-  - Popup: name, HUC-12, basin, row_crop_share, poorly_drained_share, bare_days_wet, share_of_basin_leak, rank "of N in basin".
-  - The dashed outline is `in_focus`.
-  - The side list shows the Raccoon top 6 by `rank`, and their area share against their leak share.
-  - Context layers: `basins`, `rivers` (width by `order`), `counties` (optional), `sites`, and `places`. Town labels appear only at zoom ≥ 7.8. `kind: "intake"` places are skipped because sites draw them.
-- **Outlook**: the fan is `outlook.{dates,p10,p50,p90}`, anchored at `last_obs` and preceded by 30 days of measured values from `river_series`.
-  - `prob_over10` is a 14-cell strip. The headline is the peak probability, phrased as "N in 10".
-  - `drivers.*_pctile` become plain-language comparisons with past years.
-  - `text` is shown verbatim.
-- **Farmer map**: `fields.geojson` squares, coloured by `leak_pctile` in fifths. The focus HUC-12 outlines come from the HUC-12s the fields fall in.
-  - "Pick a sample field" cycles through 5 fields from the top tenth by leak percentile, preferring poorly drained ones.
-- **Field panel**: `field_detail[id]`, loaded from a single file or from `field_detail/<huc12>.json`.
-  - Facts: `leak.lbN_ac_yr{p10,p50,p90}`, drainage, slope, crop_2025, crop sequence chips, and `cover_years`.
-  - Leak calendar: the rows are `bare_frac`, `rain_mm`, `storm_days`, `wetness`, and `leak_risk`, each shaded within its own row.
-  - The riskiest 3-month window (by summed `leak_risk`) is outlined, and the sentence is built from it: average bare share, the window's share of storm days, and whether peak wetness falls inside it.
-  - NDVI comes from `ndvi_recent`, with a 0.30 living-cover line.
-- **Strategy cards**: text from `strategies.json`, field numbers from `field_detail.strategies[S].{lbN_kept_ac,fert_value_usd_ac}`.
-  - If the field numbers are missing, lb kept is estimated as `n_loss_reduction × field leak`, and the card says so.
-  - Each card shows why, evidence (trials and `satellite_evidence`), lb N kept with range and an interval bar on a shared axis, fertilizer value, cost, yield risk, soil health, gaps, local-review risks, and who pays (with links).
-- **Ranking** (shown under "How we rank"): each goal is min-max scaled to 0–1 across S0..S3. Score = Σ(weight × goal score) / Σ weights, with weights 0–3 from the sliders (default 2, 2, 1, 1). The goals:
-  - nitrogen kept: lbN_kept p50.
-  - yield safety: `yield_risk` level, low 1 / medium 0.5 / high 0.
-  - soil: `soil_score`, or else the count of `soil_health` items.
-  - low net cost: −(cost midpoint − fertilizer value p50).
-- **Method**: `validation.json`, `meta.sources` (NASA badge), `meta.caveats`, and a per-file provenance table.
+## Loading (first-view weight)
+| Group | Files | When |
+|---|---|---|
+| core | meta, facts, scenarios, river_series, validation, outlook, sites (~0.83 MB) | before first render |
+| map | huc12, basins, rivers, places, counties (~0.6 MB) | right after first render (city map + hotspots) |
+| farm | fields.geojson, strategies (~0.68 MB) | only when the farmer view opens (tab, deep link or sample button) |
+| detail | field_index.json (42 KB) + field_detail/<huc12>.json (0.2–0.8 MB) | on first field click; HUC-12 from the index (fallback: the field's `huc12` prop) |
 
-## Mock fallback
-1. `data.js` reads the `python -m http.server` directory listing of `data/` and `mock/_manifest.json`, so a missing file is never requested and the console shows no 404s. On `*.github.io` there is no listing, so each `data/` file is requested directly.
-2. Each contract file loads from `data/<file>`. If it is missing, `mock/<file>` is used and the file is recorded as `mock`. A `data/` file with a top-level `"mock": true` also counts as mock.
-3. **Partial case:** when the real `huc12.geojson` has outlines but no `leak_index` (true today), the scores are taken from `mock/huc12.geojson` by huc12 id. That file is reported as "huc12.geojson (leak scores)".
-4. `field_detail` must come from the same place as `fields`. Real fields with no real detail show "not exported yet"; the panel never shows mock detail for real fields.
-5. A red sticky **"MOCK DATA — not real"** banner names every mock file. Every section that draws mock values also carries a small red `MOCK` chip. Every mock text string starts with "MOCK".
+First view (`#city`, network idle, uncompressed from `http.server`): 28 requests, ~2.96 MB, of which ~1.0 MB is vendored JS. No farmer data is fetched on the city view (QA asserts it).
 
-## Still mock (as of this build)
-`meta.json`, `river_series.json`, `validation.json`, `scenarios.json`, `outlook.json`, `fields.geojson`, `field_detail` (split, 9 HUC-12s, 1,338 fields), `strategies.json`, `facts.json`, and the HUC-12 leak scores.
+## City view (impact first)
+- **Hero h1** (replay year Y, all numbers from facts.json via aliases, never hard-coded):
+  `Y: Des Moines' nitrate removal plant ran [a record] N days (cost); 600,000+ people faced a lawn-watering ban …`
+  - cost: `plant_cost_Y_usd` → "~$2.2M incl. capital"; no fact (2026) → `plant days × thresholds.cost_per_plant_day{lo,hi}` → "~$2.8–3.1M operating cost, estimate".
+  - "a record" when plant days > `plant_days_record_prior`.
+  - ban: homes vs all from `observed.ban_days_homes` (or fact `range.lo`). If the fact label says the headline count is the business one (2026) → "(23 days for homes, 42 for businesses)"; otherwise (2025, all-customer Stage III window) → "of up to 56 days (40 for homes)".
+  - "600,000+" when the people fact says "more than".
+- **Impact card**: slider (synced with the replay slider) and the sentence "If 1 in 4 more upstream fields kept living roots over winter: about N fewer plant days (range a–b), ~$X operating cost avoided, ~M fewer ban days indicative (proxy rule)". From `levels[x].avoided.{plant_days,cost_usd,ban_days}` (p50, lo, hi). $ is labelled "operating cost avoided (estimate)". The ban label is a hover/focus/tap tooltip with `thresholds.ban_rule` and the 2026 test (`calibration.ban.test_2026`: 40 proxy vs 42 real days). Fine print: n_draws, $/day range, "capital not avoided", today's ~17% cover (fact `iowa_cover_share_pct`), legacy-N lag.
+- **Year switch**: `Replay 2025 | Replay 2026` from `scenarios.replays` ∩ `by_year`; drives hero, KPIs, replay and the river "year" range.
+- **What NASA sees** strip (also on Farmer and Method): HLS, MODIS, NASA POWER (GWETROOT), GPM IMERG, NASADEM, matched by name in `meta.sources`, with links and `data_through`.
+- **KPI strip** ("The Y record, with sources"): days > 10 (USGS link), plant days (fact link), cost ("incl. capital" with O&M/capital split; 2026 "estimate"), ban days (links the `ban_days_Y` fact), people served.
+- **Replay chart**: "Measured, today's fields" = `replays[Y].obs` (base_kind observed); "With X% more living cover" = `by_level[x]`; teal fill between = "nitrate kept out of the river"; optional checkbox shows the scenario band `by_level_lo/hi`; 10 mg/L line. If a future export has `base_kind` ≠ observed, a dashed model baseline is added. Side tiles: days > 10 avoided (Raccoon, Des Moines), t N kept, lb N kept sentence.
+- **River chart**: display model per site from `river_series.sites[s].model.model` → `display_model` (river_series or validation); legend "Model v2 (+ drought carry-over), median". Above it the honest line, built from validation numbers (mean test NSE of v1 `gbm`, 2025 `level_ratio_obs_over_model` min–max): "The weather-and-cover model explains normal years (test NSE ~0.6) but under-predicted 2025-26 by about 1.7–2.1× — likely nitrate left over after the 2020-23 drought (a hypothesis). That's why impact numbers replay the measured river with relative changes." Caption names USGS + NASA POWER/MODIS/HLS + CDL, and says v2 is post-hoc.
+- **Outlook**: gauge toggle from `outlook.sites`. Headline "Already above the limit (…). Expect about N of the next 14 days above 10 mg/L" (`expected_days_over10` or Σ prob). Skill line: "No weather forecast used"; 7-day error skill vs persistence; Brier skill at 14 days (< 5% → "no probability skill"). Probability cells beyond the last lead with Brier skill ≥ 5% (from `validation.outlook_skill`) are faded.
+- **Hotspot map**: unchanged; popup adds `lbN_ac_yr` and uses `n_in_basin`.
 
-Real today: `basins.geojson`, `huc12.geojson` (outlines), `sites.json`, `rivers.geojson`, `places.json`, `counties.geojson`.
+## Farmer view
+- Headline leak = `leak.lbN_ac_yr.mean` (long-run average), "p10–p90 lb in 8 of 10 years"; red block "In a wet year like 2016: … lb N/acre" from `leak.wet_year_2016`; `why_field` shown.
+- Leak calendar rows: bare (HLS), rain, big-storm days, soil wetness, leak risk, **Leak, lb N/acre** (`leak_lb_ac`). Months with `interp_only` are hatched grey in the bare row and the header ("no clear satellite view"). The sentence also says what share of the yearly loss falls in the riskiest window.
+- Cards: headline `lbN_kept_ac.mean`, bar p10–p90, "In a wet year like 2016" (`wet_year_2016.lbN_kept_ac`), fertilizer value mean "(upper bound)" + `fert_value_note`, cost with basis and source link, `S1.note` when present. Evidence/who-pays/gaps text is linkified; every item links its URL.
+- **Ranking fix**: a null `cost_usd_ac.lo/hi` is UNKNOWN: excluded from the min-max normalisation and from that option's weighted sum (score = Σ known w·s ÷ Σ known w). The card shows "cost not verified" and "Ranked without: low net cost (unknown)". The formula is shown under the sliders and in "How we rank".
+- Agronomist note kept (hero + strategies disclaimer).
 
-Mock focus area: 9 Raccoon HUC-12s around Jefferson/Scranton (071000061401-05, 071000061004, 071000061301, 071000070101, 071000070103). The real focus area comes from the fields module.
+## Method view
+Honest miss block (same line + `crisis_2025.text`), `validation.lines` (minus the ones already quoted), per-site test table (v1, v2 "shown in charts", reservoir, climatology, persistence; days > 10 measured/called), "Our models in every period" (train row = leave-one-year-out CV, v2 test/live marked post-hoc), blind 2013 check, outlook skill table (1/3/7/10/14 days), plant/ban proxy fit-2025/test-2026 table, sources, caveats, provenance.
 
 ## Contract interpretations (exporters: please match or tell frontend)
-- `facts.json` is not in the web contract, but the KPI strip needs it. The app reads `web/data/facts.json` as `{facts:{<key>:{value,unit,label,source,url,verified}}}` (a list of `{id,...}` also works). Keys used: `people_served`, `plant_days_<Y>`, `plant_cost_<Y>_usd`, `ban_days_<Y>`, `fert_price_usd_lb_N`.
-- `scenarios.levels[].<metric>` is read as the absolute modelled value at that adoption level. Ranges of differences cannot be derived exactly from marginal ranges, so please add `avoided:{days_over10:{p50,lo,hi}, plant_days, cost_usd, ban_days, lbN_kept}` per level; the app prefers it when present.
-- `scenarios.by_year[Y].observed` has no `cost_usd`; the cost comes from facts, or from plant days × cost per plant day.
-- `strategies[].yield_risk`: a string that starts with Low/Medium/Moderate/High, or `{level, text}`.
-- Optional extra: `soil_score` (0–1) for ranking.
-- `validation.json`: `{splits, sites:{<site>:{name, by_split:{test:{gbm:{NSE,KGE,RMSE,MAE,coverage80,CSI,...}, climatology:{...}, persistence_7d:{...}}}}}, lines:[...], crisis_2025:{text}}`. The raw `metrics.json` shape `{<site>:{<split>:{<model>:{...}}}}` also renders.
-- `places.json`: a top-level array. `kind` (`city` / `town` / `intake`) is used for label styling and zoom gating.
-- `outlook.drivers.*_pctile` is read as the percentile against past years for the same time of year (0–100).
-- `field_detail.calendar.wetness` is read on a 0–1 scale. `leak_risk` is 0–1.
+- `facts.json` `{facts:{id:{…}}, aliases:{key:id}}`; keys used: people_served, plant_days_Y, plant_cost_Y_usd, plant_om_cost_Y_usd, ban_days_Y (+ `range.lo` = homes), plant_days_record_prior, iowa_cover_share_pct, fert_price_usd_lb_N.
+- `scenarios.replays{Y}` preferred over `replay`; `thresholds.cost_per_plant_day` is `{lo,hi}`.
+- The hero's "businesses" wording depends on the ban fact label containing "<N> days for business"; a structured `homes_days` / `business_days` field would be sturdier.
 
 ## QA (`qa/run_qa.cjs`)
-The script runs at 1280×860 and 375×760. It loads City, moves the replay slider (and checks the deltas change), toggles the river site and range, and opens a hotspot popup. On Farmer it picks a sample field (checks ≥ 4 cards), changes priorities (checks the top card changes), clicks the map, and checks the hash deep link. It also loads Method.
+1280×860 and 375×760, `--use-angle=swiftshader`, deviceScaleFactor 1. City: hero/impact text checks ("incl. capital", "estimate" for 2026), ban tile link, hero↔replay slider sync, band toggle, year switch 2025→2026→2025, river toggles, hotspot popup. Farmer (tab click): sample field, ≥ 3 cards, "in 8 of 10 years", wet-year block, "cost not verified", lb row, agronomist note, priorities re-rank, map click, deep link. Method (tab click): honest line, "no weather forecast". Asserts no console errors/warnings, no failed/≥ 400 requests, no MOCK banner/chips, no horizontal scroll, no farmer data on the city view; prints first-view transfer. Result: **QA OK**.
 
-It asserts no console errors or warnings, no failed or ≥ 400 requests, and no horizontal scroll. Result: **QA OK**.
-
-The default headless GL backend in this container logs "GL Driver Message … GPU stall due to ReadPixels" while compositing the WebGL canvas. That message comes from the browser, not from page code. The script launches with `--use-angle=swiftshader`, which removes it, so the check stays strict. Screenshots are saved to `web/qa/*.png` and quantised to 128 colours to keep them small.
+Screenshots (quantised to 128 colours): `qa/city-hero-1280.png`, `qa/city-full-1280.png`, `qa/farmer-panel-1280.png`, `qa/method-1280.png`, `qa/city-375.png`, `qa/farmer-375.png`. `--shots-dir` adds section shots (replay, river, map, outlook, 2026 hero) elsewhere.

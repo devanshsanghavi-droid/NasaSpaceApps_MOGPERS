@@ -145,9 +145,14 @@ function yearFacts(y = YEAR) {
   const est = !costF && isNum(plantDays) && cpd ? { lo: plantDays * cpd.lo, hi: plantDays * cpd.hi } : null;
   const banF = fact(`ban_days_${y}`);
   const banDays = banF?.value ?? (isNum(obs.ban_days) ? obs.ban_days : null);
+  // homes were released earlier than businesses/government: fact range lo (or observed.ban_days_homes)
+  const banHomes = isNum(obs.ban_days_homes) ? obs.ban_days_homes : isNum(banF?.range?.lo) ? banF.range.lo : null;
+  // "for businesses" only when the fact says the headline day count is the business/government one (2026);
+  // in 2025 the headline 56 days is the all-customer Stage III window (businesses: 48), so it reads "up to 56".
+  const banBiz = isNum(banDays) && new RegExp(`\\b${banDays} days for business`, "i").test(banF?.label || "");
   const people = fact("people_served");
   const peopleTxt = people ? `${fmtInt(people.value)}${/more than|over/i.test(`${people.label} ${people.quote || ""}`) ? "+" : ""}` : null;
-  return { yb, obs, th, plantF, plantDays, record, costF, omF, cpd, est, banF, banDays, people, peopleTxt };
+  return { yb, obs, th, plantF, plantDays, record, costF, omF, cpd, est, banF, banDays, banHomes, banBiz, people, peopleTxt };
 }
 
 function renderHero() {
@@ -157,7 +162,13 @@ function renderHero() {
   const costTxt = yf.costF ? `~${usd(yf.costF.value)} incl. capital` : yf.est ? `~${usdRange(yf.est.lo, yf.est.hi)} operating cost, estimate` : null;
   const parts = [];
   if (isNum(yf.plantDays)) parts.push(`Des Moines' nitrate removal plant ran ${yf.record ? "a record " : ""}<strong>${fmtInt(yf.plantDays)} days</strong>${costTxt ? ` <span class="hero-cost">(${costTxt})</span>` : ""}`);
-  if (isNum(yf.banDays)) parts.push(`<strong>${yf.peopleTxt || "central Iowa's"} people</strong> faced a <strong class="red">${fmtInt(yf.banDays)}-day lawn-watering ban</strong>`);
+  if (isNum(yf.banDays)) {
+    const who = `<strong>${yf.peopleTxt || "central Iowa's"} people</strong> faced a lawn&#8209;watering ban`;
+    const homes = isNum(yf.banHomes) && yf.banHomes < yf.banDays;
+    parts.push(!homes ? `${who} of <strong class="red">${fmtInt(yf.banDays)} days</strong>`
+      : yf.banBiz ? `${who} <span class="hero-cost">(<strong class="red">${fmtInt(yf.banHomes)} days for homes</strong>, ${fmtInt(yf.banDays)} for businesses)</span>`
+      : `${who} of <strong class="red">up to ${fmtInt(yf.banDays)} days</strong> <span class="hero-cost">(${fmtInt(yf.banHomes)} for homes)</span>`);
+  }
   h.innerHTML = `<span class="hero-year">${YEAR}:</span> ${parts.join("; ")}.`;
 }
 
@@ -218,12 +229,12 @@ function renderKpis() {
     const src = (th.sources || []).find((s) => /cost_per_day|om_cost/.test(s.id));
     costS = src ? link(src.url, "CIWW cost per day") : "";
   }
-  const banHomes = isNum(obs.ban_days_homes) ? ` (homes: ${fmtInt(obs.ban_days_homes)})` : "";
+  const banHomesTxt = isNum(yf.banHomes) && yf.banHomes < yf.banDays ? (yf.banBiz ? ` for businesses and government (homes: ${fmtInt(yf.banHomes)})` : `, all customers (homes: ${fmtInt(yf.banHomes)})`) : "";
   const tiles = [
     { v: fmtInt(obs.days_over10), red: true, l: `days the Raccoon River intake was above the 10 mg/L limit${isNum(measured) ? ` (of ${fmtInt(measured)} measured)` : ""}`, s: srcLine(link(nwisUrl(site), `USGS ${site}`), chipSc) },
     { v: fmtInt(yf.plantDays), l: `days the nitrate-removal plant ran${yf.record ? " — a record" : ""}`, s: srcLine(yf.plantF ? link(yf.plantF.url, yf.plantF.source || "source") : "", yf.plantF ? chipF : chipSc) },
     { v: costV, l: costL, s: srcLine(costS, chipF) },
-    { v: fmtInt(yf.banDays), l: `days of lawn-watering ban${banHomes}`, s: srcLine(yf.banF ? link(yf.banF.url, `${yf.banF.source || "source"}: ban dates`) : "", chipF) },
+    { v: fmtInt(yf.banDays), l: `days of lawn-watering ban${banHomesTxt}`, s: srcLine(yf.banF ? link(yf.banF.url, `${yf.banF.source || "source"}: ban dates`) : "", chipF) },
     { v: yf.people ? (yf.people.value >= 1e5 ? `${Math.round(yf.people.value / 1000)}k${yf.peopleTxt?.endsWith("+") ? "+" : ""}` : fmtInt(yf.people.value)) : "–", l: "people drink this water", s: srcLine(yf.people ? link(yf.people.url, yf.people.source || "source") : "", chipF) },
   ];
   document.getElementById("city-kpis").innerHTML = tiles.map((t) => `<div class="kpi"><div class="kpi-value ${t.red ? "red" : ""}">${t.v}</div><div class="kpi-label">${t.l}</div><div class="kpi-src">${t.s || ""}</div></div>`).join("");
