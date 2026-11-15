@@ -29,20 +29,33 @@ function strategyNumbers(fips, s) {
   };
 }
 
+// Score = priority-weighted mix of years gained and income, both normalised over the alternative
+// plans only (S0 excluded from the range). A plan is eligible for "Best fit" only if it keeps at
+// least (1 - priority) of today's income, so a balanced setting never recommends giving up most of
+// the income; no water weight is given when no plan has a usable gain here.
 function scoreStrategies(fips, years) {
   const rows = D.strategyList.filter(s => strategyApplies(D, fips, s)).map(s => {
     const n = strategyNumbers(fips, s);
     const g = yearsGained(D, fips, s.id, years);
     return { s, n, g };
   });
+  const alt = rows.filter(r => r.s.id !== 'S0');
   const norm = (vals) => {
     const v = vals.filter(isNum);
     const mn = Math.min(...v), mx = Math.max(...v);
-    return x => (!isNum(x) ? 0 : mx - mn < 1e-9 ? 0.5 : (x - mn) / (mx - mn));
+    return x => (!isNum(x) || !v.length ? 0 : mx - mn < 1e-9 ? 0.5 : (x - mn) / (mx - mn));
   };
-  const nG = norm(rows.map(r => r.g?.est)), nI = norm(rows.map(r => num(r.n.income)));
-  const w = S.priority / 100;
-  rows.forEach(r => { r.score = w * nG(r.g?.est) + (1 - w) * nI(num(r.n.income)); });
+  const hasGain = alt.some(r => isNum(r.g?.est) && Math.abs(r.g.est) > 0.05);
+  const nG = norm(alt.map(r => r.g?.est)), nI = norm(alt.map(r => num(r.n.income)));
+  const w = hasGain ? S.priority / 100 : 0;
+  const inc0 = num(rows.find(r => r.s.id === 'S0')?.n.income);
+  const minInc = isNum(inc0) && inc0 > 0 ? (1 - S.priority / 100) * inc0 : null;
+  rows.forEach(r => {
+    r.score = w * nG(r.g?.est) + (1 - w) * nI(num(r.n.income));
+    r.eligible = r.s.id !== 'S0' && (!isNum(minInc) || (isNum(num(r.n.income)) && num(r.n.income) >= minInc));
+  });
+  rows.hasGain = hasGain;
+  rows.minIncShare = isNum(minInc) ? 1 - S.priority / 100 : null;
   return rows;
 }
 
@@ -54,9 +67,11 @@ function card(r, years, best, rank) {
     : NA;
   const gainTxt = isCur ? 'Today\'s clock'
     : years.below ? '<span class="na">already below the threshold here; try a lower threshold</span>'
-    : (g ? `${rangeText(g, v => fmtSigned(v, 0), 'years')}` : NA);
-  const newClock = !isCur && g && !years.below && isNum(years.p50) && years.p50 > 0 && years.p50 < CAP
-    ? `<div class="sub">clock ${yrs(years.p50)} &rarr; ${yrs(years.p50 + g.est)} years</div>` : '';
+    : !g ? NA
+    : g.atCap ? 'none needed: already 100+ years here'
+    : `${fmtSigned(g.est, 0)} years${g.hi - g.lo >= 0.5 ? ` <span class="rng">(range ${fmtSigned(g.lo, 0)} to ${g.hiCapped ? 'clock 100+' : fmtSigned(g.hi, 0)})</span>` : ''}`;
+  const newClock = !isCur && g && !g.atCap && !years.below && isNum(years.p50) && years.p50 > 0 && years.p50 < CAP
+    ? `<div class="sub">clock ${yrs(years.p50)} &rarr; ${yrs(years.p50 + g.est)} years${g.hiCapped && !g.capped ? ' (up to 100+)' : ''}</div>` : '';
   const rot = Array.isArray(s.rotation) && s.rotation.length ? s.rotation.map(c => `<span class="crop">${esc(c)}</span>`).join('<span class="arrow" aria-hidden="true">&rarr;</span>') : '';
   return `<article class="strat ${best ? 'best' : ''} ${isCur ? 'current' : ''}" aria-label="${esc(s.name || s.id)}">
     <header>
@@ -66,7 +81,7 @@ function card(r, years, best, rank) {
       <div class="rot">${rot}${s.irrigation ? `<span class="irr irr-${esc(s.irrigation)}">${esc({ full: 'full irrigation', limited: 'limited irrigation', none: 'no irrigation' }[s.irrigation] || s.irrigation)}</span>` : ''}</div>
     </header>
     <dl class="metrics">
-      <div><dt>Years gained</dt><dd class="m-gain">${gainTxt}${newClock}</dd></div>
+      <div><dt>Years gained if all irrigated land around you switched</dt><dd class="m-gain">${gainTxt}${newClock}</dd></div>
       <div><dt>Water pumped</dt><dd>${rangeText(n.water, v => fmt(v, 0), 'in/acre/yr')}</dd></div>
       <div><dt>Net income</dt><dd>${rangeText(n.income, money, '/acre/yr')}</dd></div>
       <div><dt>Drought yield risk</dt><dd>${s.yield_risk ? esc(s.yield_risk) : NA}</dd></div>
@@ -87,7 +102,8 @@ function card(r, years, best, rank) {
 function strategiesBlock(fips, years, crop) {
   if (!D.strategyList.length) return `<section class="card"><h3>Strategies</h3><p>${NA}: strategies.json is missing.</p></section>`;
   const rows = scoreStrategies(fips, years);
-  const best = rows.filter(r => r.s.id !== 'S0').sort((a, b) => b.score - a.score)[0];
+  const anyGain = rows.some(r => r.s.id !== 'S0' && r.g && isNum(r.g.est));
+  const best = anyGain ? rows.filter(r => r.eligible).sort((a, b) => b.score - a.score)[0] : null;
   const sorted = [...rows].sort((a, b) => (a.s.id === 'S0' ? -1 : b.s.id === 'S0' ? 1 : b.score - a.score));
   const share = pumpingShare(D, fips);
   const nAll = D.strategyList.length, nHere = rows.length;
@@ -105,9 +121,10 @@ function strategiesBlock(fips, years, crop) {
     ${cropNote}
     <div class="strat-list">${sorted.map((r, i) => card(r, years, best && r === best, i)).join('')}</div>
     ${hidNote}
-    <p class="fine">Years gained assume this field <em>and its neighbours</em> on the same part of the aquifer make the same change; one field alone barely moves the local water table.
-      ${share.assumed ? 'The share of the decline caused by pumping is not available for this county, so all of it is attributed to pumping (an upper bound on gains).'
-        : share.upperBound ? `In ${esc(countyName(D, fips))} County the whole water-table decline is treated as coming from local pumping (an upper bound, so gains may be smaller).`
+    ${best ? `<p class="fine">"Best fit" weighs years gained against income using the slider${isNum(rows.minIncShare) && rows.minIncShare > 0 ? `, among plans that keep at least ${fmt(rows.minIncShare * 100, 0)}% of today's income` : ''}.${rows.hasGain ? '' : ' No plan shows a years gain here, so it is based on income only.'}</p>` : '<p class="fine">No "best fit" is shown because no plan has a years-gained estimate at this spot and threshold.</p>'}
+    <p class="fine">Years gained assume this field <em>and all irrigated land around it</em> (every crop, not only corn) on the same part of the aquifer make the same change; one field alone barely moves the local water table. The "My county" slider moves only corn acres, so its gains are smaller.
+      ${share.assumed ? 'The share of the decline caused by pumping is not available for this county, so all of it is attributed to pumping.'
+        : share.capped ? `In ${esc(countyName(D, fips))} County the water balance says recent pumping alone would cause about ${fmt(share.raw, 1)} times the observed decline, so water also flows back in (recharge, return flow). The central number assumes the decline shrinks only in proportion to pumping, which is likely conservative: the top of each range lets the decline respond more strongly. In the Sheridan-6 area a 35% pumping cut slowed the decline by about 80% (Kansas Geological Survey, 2017).`
         : `In ${esc(countyName(D, fips))} County the model attributes about ${fmt(share.share * 100, 0)}% of the water-table decline to local pumping.`}
       Income ranges come from year-to-year swings in county yields and Kansas prices. ${D.strategies?.method ? esc(D.strategies.method) : ''}</p>
     <p class="agro"><b>Decision support, not a replacement for your agronomist.</b> Talk to your agronomist, crop insurer and GMD before changing a rotation or water right.</p>
@@ -125,7 +142,7 @@ function intro() {
         ${opts.sort((a, b) => String(a.name).localeCompare(b.name)).map(c => `<option value="${esc(c.fips)}">${esc(c.name)}</option>`).join('')}</select></li>
       <li>See how many years of water are left, and what each crop plan would change.</li>
     </ol>
-    <p class="fine">"Years left" means years until the water-bearing layer under you (the Ogallala / High Plains aquifer) is thinner than the threshold you choose, usually 30 ft, the point where most wells can no longer supply a center pivot.</p>
+    <p class="fine">"Years left" means years until the water-bearing layer under you (the Ogallala / High Plains aquifer) is thinner than the threshold you choose, usually 30 ft, the approximate minimum Kansas agencies use for large-volume irrigation wells.</p>
   </section>`;
 }
 
@@ -141,7 +158,18 @@ function fieldFacts(f) {
   </dl>`;
 }
 
-function clockCard(title, sub, y, extra) {
+// 2045 climate stress test (NASA NEX-GDDP-CMIP6) for the county, from climate.json.
+function climateLine(fips) {
+  const sc = D.climate?.scenarios?.ssp245;
+  const c = sc?.clock_shift_years_combined?.county?.[fips];
+  if (!c || !isNum(c.pumping_only)) return '';
+  const a = c.pumping_only, b = isNum(c.total_response) ? c.total_response : a;
+  const txt = Math.abs(a) < 0.5 && Math.abs(b) < 0.5 ? 'little change (the county clock is at or near 100+)'
+    : `about <b>${fmtSigned(Math.max(a, b), 0)} to ${fmtSigned(Math.min(a, b), 0)} years</b> on the county clock`;
+  return `<p class="nasa-line"><b>2045 climate</b> (NASA NEX-GDDP-CMIP6, 5 models, SSP2-4.5): ${txt}, from extra pumping only up to the full weather response of water levels.</p>`;
+}
+
+function clockCard(title, sub, y, extra, opts = {}) {
   return `<section class="card clock-card" aria-labelledby="ck-h">
     <h2 id="ck-h">${title}</h2>
     <p class="ck-sub">${sub}</p>
@@ -153,7 +181,8 @@ function clockCard(title, sub, y, extra) {
         ${thrButtons()}
       </div>
     </div>
-    <p class="plain">${uncertaintyText(y, S.thr)}</p>
+    <p class="plain">${opts.outside ? 'This well is outside the mapped High Plains aquifer area, so there is no saturated-thickness estimate and no clock here.' : uncertaintyText(y, S.thr)}</p>
+    ${opts.fips ? climateLine(opts.fips) : ''}
     ${extra || ''}
   </section>`;
 }
@@ -174,7 +203,8 @@ export function renderFarmer() {
   if (f) {
     const y = fieldYears(f, S.thr, D.defaultThr);
     html += clockCard('Your Water Clock', `Irrigation well ${esc(f.id)}, ${esc(countyName(D, f.fips))} County`, y,
-      fieldFacts(f) + `<button type="button" class="link-btn" id="to-county">See ${esc(countyName(D, f.fips))} County's clock</button>`);
+      fieldFacts(f) + `<button type="button" class="link-btn" id="to-county">See ${esc(countyName(D, f.fips))} County's clock</button>`,
+      { outside: !isNum(f.sat_ft), fips: f.fips });
     html += strategiesBlock(f.fips, y, f.crop);
   } else if (S.fips) {
     const c = D.countyByFips[S.fips];
@@ -185,7 +215,7 @@ export function renderFarmer() {
         <div><dt>Irrigated acres</dt><dd>${isNum(c.irrigated_acres) ? fmt(c.irrigated_acres) : NA}</dd></div>
         <div><dt>Monitoring wells used</dt><dd>${isNum(c.n_wells) ? fmt(c.n_wells) : NA}${c.data_quality ? ` <span class="dq dq-${esc(c.data_quality)}">${esc(c.data_quality)} data</span>` : ''}</dd></div>
       </dl>` : `<p>${NA}: no county clock for this county.</p>`) + fieldPicker(S.fips);
-    html += clockCard(`${esc(countyName(D, S.fips))} County's Water Clock`, 'Typical irrigated acre in the county. Click a dot or pick a well for your own spot.', y, extra);
+    html += clockCard(`${esc(countyName(D, S.fips))} County's Water Clock`, 'Typical irrigated acre in the county. Click a dot or pick a well for your own spot.', y, extra, { fips: S.fips });
     html += strategiesBlock(S.fips, y);
   } else {
     html = intro();

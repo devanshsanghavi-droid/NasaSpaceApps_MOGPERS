@@ -47,9 +47,23 @@ function renderHeader() {
   big.textContent = yrs(rc.y.p50);
   rng.innerHTML = isNum(rc.y.p10) && isNum(rc.y.p90) ? `likely range <b>${yrs(rc.y.p10)} to ${yrs(rc.y.p90)}</b> years` : '';
   const how = rc.how === 'region' ? 'across the region' : rc.how === 'weighted' ? `averaged over the irrigated acres of ${rc.n} counties` : `median of ${rc.n} counties`;
-  const sorted = (D.clocks?.counties || []).map(c => ({ c, y: countyYears(c, S.thr).p50 })).filter(x => isNum(x.y)).sort((a, b) => a.y - b.y);
-  const spread = sorted.length > 1 ? ` It ranges from about ${yrs(sorted[0].y)} years in ${esc(sorted[0].c.name)} County to ${yrs(sorted[sorted.length - 1].y)} in ${esc(sorted[sorted.length - 1].c.name)}.` : '';
-  ctx.innerHTML = `At today's pumping, that is how long the Ogallala aquifer under a typical irrigated acre stays thick enough (over ${S.thr} ft) to irrigate, ${how}.${spread}`;
+  const sorted = (D.clocks?.counties || []).map(c => ({ c, y: countyYears(c, S.thr, D) })).filter(x => isNum(x.y.p50)).sort((a, b) => a.y.p50 - b.y.p50);
+  let spread = '';
+  if (sorted.length > 1) {
+    const first = sorted[0], nCap = sorted.filter(x => x.y.p50 >= 99.95).length, last = sorted[sorted.length - 1];
+    const lowTxt = first.y.below || first.y.p50 <= 0 ? `already below ${S.thr} ft in ${esc(first.c.name)} County` : `about ${yrs(first.y.p50)} years in ${esc(first.c.name)} County`;
+    const highTxt = nCap > 1 ? `100+ in ${nCap} counties` : `${yrs(last.y.p50)} in ${esc(last.c.name)}`;
+    spread = ` It ranges from ${lowTxt} to ${highTxt}.`;
+  }
+  ctx.innerHTML = `At the 2011-2026 pace of pumping, with average weather, that is how long the Ogallala aquifer under a typical irrigated acre stays thick enough (over ${S.thr} ft) to irrigate, ${how}.${spread}`;
+  const st = document.getElementById('hl-stats');
+  if (st) {
+    const r = D.clocks?.region;
+    const sh = r?.share_irrigated_acres_under_25y;
+    const shortest = sorted.slice(0, 3).map(x => `${esc(x.c.name)} ${x.y.below || x.y.p50 <= 0 ? '0' : yrs(x.y.p50)}`).join(' &middot; ');
+    st.innerHTML = (isNum(sh) && S.thr === (D.defaultThr || 30) ? `<div class="hl-stat"><span class="v">${fmt(sh * 100, 0)}%</span><span class="l">of irrigated acres have under 25 years left (one acre in ${fmt(1 / sh, 0)})</span></div>` : '')
+      + (shortest ? `<div class="hl-stat short"><span class="v">${shortest}</span><span class="l">shortest county clocks (years, at ${S.thr} ft)</span></div>` : '');
+  }
 }
 
 function renderBanner() {
@@ -131,6 +145,7 @@ function wireControls() {
     });
   });
   document.querySelectorAll('input[name=thr]').forEach(r => r.addEventListener('change', () => actions.setThr(+r.value)));
+  document.querySelectorAll('[data-goview]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); setView(a.dataset.goview); }));
   const gt = document.getElementById('grid-toggle');
   if (!hasGrid()) gt.parentElement.hidden = true;
   gt.addEventListener('change', () => showGrid(gt.checked));

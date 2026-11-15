@@ -45,11 +45,11 @@ function countyTable() {
   const th = (k, label) => `<th scope="col"><button type="button" class="sort" data-sort="${k}" aria-pressed="${sortKey === k}">${label}${sortKey === k ? (sortDir > 0 ? ' &#9650;' : ' &#9660;') : ''}</button></th>`;
   return `<div class="table-wrap"><table class="ctable">
     <caption class="sr-only">County water clocks at the ${S.thr} ft threshold</caption>
-    <thead><tr>${th('name', 'County')}${th('gmd', 'GMD').replace('<th ', '<th class="hide-xs" ')}${th('years', 'Years left')}<th scope="col" class="hide-sm">Range <span class="sr-only">(0 to 100 years scale)</span></th>${th('decline', 'Drop ft/yr')}${th('acres', 'Irrig. acres')}</tr></thead>
+    <thead><tr>${th('name', 'County')}${th('gmd', 'GMD').replace('<th ', '<th class="hide-gmd" ')}${th('years', 'Years left')}<th scope="col" class="hide-sm">Range <span class="sr-only">(0 to 100 years scale)</span></th>${th('decline', 'Drop ft/yr')}${th('acres', 'Irrig.<br>acres')}</tr></thead>
     <tbody>${cs.map(({ c, y }) => `<tr class="${S.fips === String(c.fips) ? 'sel' : ''}">
       <th scope="row"><button type="button" class="link-btn" data-fips="${esc(c.fips)}">${esc(c.name)}</button>${c.data_quality === 'thin' ? ' <span class="dq dq-thin" title="few monitoring wells">thin data</span>' : ''}</th>
-      <td class="hide-xs">${esc(c.gmd || '')}</td>
-      <td><b>${yrs(y.p50)}</b>${y.below ? ' <span class="rng-sm">already below</span>' : `<span class="rng-sm">${isNum(y.p10) ? ` ${yrs(y.p10)}-${yrs(y.p90)}` : ''}</span>`}</td>
+      <td class="hide-gmd">${esc(c.gmd || '')}</td>
+      <td><b>${yrs(y.p50)}</b>${y.below ? ' <span class="rng-sm">already below</span>' : `<span class="rng-sm">${isNum(y.p10) && yrs(y.p10) !== yrs(y.p90) ? ` ${yrs(y.p10)}-${yrs(y.p90)}` : ''}</span>`}</td>
       <td class="hide-sm">${rangeBar(y)}</td>
       <td>${isNum(num(c.decline_ft_yr)) ? fmt(num(c.decline_ft_yr), 1) : 'n/a'}</td>
       <td>${isNum(c.irrigated_acres) ? compact(c.irrigated_acres) : 'n/a'}</td></tr>`).join('')}</tbody>
@@ -59,7 +59,9 @@ function countyTable() {
 function sliderBlock() {
   const fipsList = Object.keys(D.scenByFips).length ? Object.keys(D.scenByFips) : Object.keys(D.countyByFips);
   if (!fipsList.length) return `<section class="card"><h3>What if farmers shift?</h3><p>${NA}: scenario.json is missing.</p></section>`;
-  if (!S.fips || !fipsList.includes(S.fips)) S.cFips = S.cFips && fipsList.includes(S.cFips) ? S.cFips : fipsList.slice().sort((a, b) => countyName(D, a).localeCompare(countyName(D, b)))[0];
+  // default: Gray County (the pitch example, a finite clock), else the first county by name
+  const defF = fipsList.includes('20069') ? '20069' : fipsList.slice().sort((a, b) => countyName(D, a).localeCompare(countyName(D, b)))[0];
+  if (!S.fips || !fipsList.includes(S.fips)) S.cFips = S.cFips && fipsList.includes(S.cFips) ? S.cFips : defF;
   else S.cFips = S.fips;
   const strats = D.strategyList.filter(s => s.id !== 'S0' && strategyApplies(D, S.cFips, s));
   if (!S.cStrat || !strats.find(s => s.id === S.cStrat)) S.cStrat = strats[0]?.id;
@@ -74,8 +76,8 @@ function sliderBlock() {
     <div id="sh-out" class="sh-out" aria-live="polite"></div>
     <details class="formula"><summary>How this is calculated</summary>
       <p>Water saved = share &times; irrigated corn acres &times; (water pumped for corn &minus; water pumped for the new plan) &divide; 12.
-      The part of the water-table decline caused by pumping shrinks in proportion to the water saved. Years left = usable thickness &divide; decline rate (capped at 100).
-      Range uses the low and high decline-rate estimates.</p>
+      The main number assumes the part of the water-table decline caused by pumping shrinks in proportion to the water saved (conservative). Where the water balance shows water flowing back in (pumping alone would cause more decline than observed), the decline can respond more strongly; that higher reading is shown as the top of the range. Years left = usable thickness &divide; decline rate (capped at 100).
+      The low end uses the low and high decline-rate estimates.</p>
       ${D.scenario?.formula ? `<p><b>Model's formula (scenario.json):</b> ${esc(D.scenario.formula)}</p>` : ''}
     </details>
   </section>`;
@@ -93,13 +95,17 @@ function renderShift() {
     out.innerHTML = `<p class="sh-big">${name} County already has <b>100+</b> years at the ${S.thr} ft threshold.</p>`;
     return;
   }
-  const gainTxt = r.after >= CAP ? 'more than 100 years in total' : `<b>${fmtSigned(r.gain, 1)}</b> years`;
+  const gainTxt = r.after >= CAP ? `at least <b>${fmtSigned(r.gain, 1)}</b> years (the clock reaches 100+)` : `<b>${fmtSigned(r.gain, 1)}</b> years`;
+  const hiTxt = isNum(r.gainNetInflow) && r.gainNetInflow > r.gain + 0.05
+    ? (r.afterNetInflow >= CAP ? 'the clock could reach 100+ (decline stops or nearly stops)' : `${fmtSigned(r.gainNetInflow, 1)} years`) : null;
+  const lowTxt = fmtSigned(r.gainLo, 1);
   out.innerHTML = `<p class="sh-sentence">If <b>${S.cPct}%</b> of irrigated corn in ${name} County shifts to <b>${esc(s?.short || s?.name || S.cStrat)}</b>, the county clock gains ${gainTxt}.</p>
     <div class="sh-clocks"><div><span class="lab">Now</span><span class="v" style="color:${yearColor(r.before)}">${yrs(r.before, 1)}</span><span class="u">years</span></div>
       <div class="sh-arrow" aria-hidden="true">&rarr;</div>
       <div><span class="lab">After shift</span><span class="v" style="color:${yearColor(r.after)}">${yrs(r.after, 1)}</span><span class="u">years</span></div></div>
-    <p class="fine">Range of the gain: ${fmtSigned(r.gainLo, 1)} to ${fmtSigned(r.gainHi, 1)} years. Water saved: about ${fmt(r.savedAf, 0)} acre-ft per year.
-    Water-table drop: ${fmt(r.decline, 2)} &rarr; ${fmt(r.newDecline, 2)} ft/yr.</p>`;
+    <p class="fine">Range of the gain: ${lowTxt} to ${fmtSigned(r.gainHi, 1)} years (low and high decline-rate estimates).${hiTxt ? ` If water flowing back in is counted (the model's water balance says pumping alone would cause more decline than observed here, so the decline can respond more than in proportion), the gain is ${hiTxt}.` : ''} Water saved: about ${fmt(r.savedAf, 0)} acre-ft per year.
+    Water-table drop: ${fmt(r.decline, 2)} &rarr; ${fmt(r.newDecline, 2)} ft/yr.</p>
+    ${isNum(r.cornShare) ? `<p class="fine">Only corn acres switch here (${fmt(r.cornShare * 100, 0)}% of irrigated acres), so gains are smaller than on the "My field" cards, which assume all irrigated land around a field switches.</p>` : ''}`;
 }
 
 const CTX_LABELS = {
@@ -110,6 +116,15 @@ const CTX_LABELS = {
   ag_share_of_economy: 'Share of economy from irrigated farming',
   econ_note: 'Local economy',
 };
+
+function climateNote(fips) {
+  const c = D.climate?.scenarios?.ssp245?.clock_shift_years_combined?.county?.[fips];
+  if (!c || !isNum(c.pumping_only)) return '';
+  const a = c.pumping_only, b = isNum(c.total_response) ? c.total_response : a;
+  const txt = Math.abs(a) < 0.5 && Math.abs(b) < 0.5 ? 'little change (the clock is at or near 100+)'
+    : `about <b>${fmtSigned(Math.max(a, b), 0)} to ${fmtSigned(Math.min(a, b), 0)} years</b>`;
+  return `<p class="nasa-line"><b>2045 climate</b> (NASA NEX-GDDP-CMIP6, 5 models, SSP2-4.5) on this county's ${D.defaultThr || 30} ft clock: ${txt}, from extra pumping only up to the full weather response of water levels.</p>`;
+}
 
 function countyContext() {
   const c = D.countyByFips[S.cFips];
@@ -138,15 +153,16 @@ function countyContext() {
       <div><dt>Corn share</dt><dd>${corn || NA}</dd></div>
     </dl>
     ${items.length ? `<dl class="kv ctx">${items.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}</dl>` : '<p>Town and local-economy details: not available.</p>'}
+    ${climateNote(S.cFips)}
     ${c.town_note ? '<p class="fine">Town public-supply wells are not linked to this clock.</p>' : ''}</section>`;
 }
 
 export function renderCommunity() {
   const root = document.getElementById('community-panel');
-  root.innerHTML = `<section class="card"><h2>County and district water clocks</h2>
+  root.innerHTML = `${sliderBlock()}<section class="card"><h2>County and district water clocks</h2>
       <p class="ck-sub">Years until the typical irrigated acre falls below ${S.thr} ft of water-bearing layer. Click a county name to zoom the map.</p>
       ${gmdCards()}${countyTable()}</section>
-    ${sliderBlock()}<div id="cc-ctx"></div>`;
+    <div id="cc-ctx"></div>`;
   document.getElementById('cc-ctx').innerHTML = countyContext();
   renderShift();
   root.querySelectorAll('[data-sort]').forEach(b => b.addEventListener('click', () => {

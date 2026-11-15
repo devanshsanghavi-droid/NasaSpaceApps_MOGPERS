@@ -99,7 +99,7 @@ function drawMap(canvas, mf) {
 
 function legend() {
   if (mapLayer === 'tws_trend_cm_yr') return `<div class="glg"><span>losing 2+ cm/yr</span><span class="bar trend"></span><span>gaining</span></div>`;
-  return `<div class="glg"><span>0 = driest on record</span><span class="bar"></span><span>100 = wettest</span></div>`;
+  return `<div class="glg"><span>0 = driest</span><span class="bar"></span><span>100 = wettest (vs 1948-2012)</span></div>`;
 }
 
 function seriesChart(canvas) {
@@ -147,12 +147,39 @@ function wellsVsGrace() {
   const src = w || v;
   if (!src) return `<p>${NA}</p>`;
   const r = num(src.correlation);
+  const rd = num(w?.correlation_detail?.gfz_tws_cm?.r_first_difference ?? v?.correlation_first_difference);
+  const tw = num(src.trend_wells_cm_yr), tg = num(src.trend_grace_cm_yr);
   return `<dl class="facts big-facts">
-    <div><dt>Correlation, wells vs GRACE</dt><dd>${isNum(r) ? fmt(r, 2) : NA}</dd></div>
-    <div><dt>Trend from wells</dt><dd>${isNum(num(src.trend_wells_cm_yr)) ? rangeText(src.trend_wells_cm_yr, x => fmt(x, 2), 'cm/yr') : NA}</dd></div>
-    <div><dt>Trend from GRACE</dt><dd>${isNum(num(src.trend_grace_cm_yr)) ? rangeText(src.trend_grace_cm_yr, x => fmt(x, 2), 'cm/yr') : NA}</dd></div>
+    <div><dt>Timing agrees: correlation of yearly levels</dt><dd>${isNum(r) ? 'r = ' + fmt(r, 2) : NA}</dd></div>
+    <div><dt>Correlation of year-to-year changes</dt><dd>${isNum(rd) ? 'r = ' + fmt(rd, 2) : NA}</dd></div>
+    <div><dt>Size differs: trend from wells</dt><dd>${isNum(tw) ? rangeText(src.trend_wells_cm_yr, x => fmt(x, 2), 'cm/yr') : NA}</dd></div>
+    <div><dt>Trend from GRACE</dt><dd>${isNum(tg) ? rangeText(src.trend_grace_cm_yr, x => fmt(x, 2), 'cm/yr') : NA}${isNum(tw) && isNum(tg) && tg < 0 ? ` <span class="rng">(wells about ${fmt(tw / tg, 0)}&times; GRACE)</span>` : ''}</dd></div>
   </dl>
-  ${src.notes ? `<p class="fine">${esc(src.notes)}</p>` : ''}`;
+  <p class="plain">The wells and GRACE share the long-term fall and the drought dips, but the wells show a much bigger storage loss. GRACE is used to check timing and direction, not to set the size of the clock.</p>
+  ${src.notes ? `<details><summary>Full explanation</summary><p class="fine">${esc(src.notes)}</p></details>` : ''}`;
+}
+
+// Headline numbers from the series: GRACE/GRACE-FO storage drop since 2003 (independent of the
+// file's zero point) and the latest GRACE-DA groundwater percentile.
+function graceHeadline() {
+  const s = D.grace?.series;
+  if (!s?.dates?.length) return '';
+  const yearMean = (arr, y) => {
+    const v = s.dates.map((d, i) => [d, arr[i]]).filter(([d, x]) => String(d).startsWith(String(y)) && isNum(x)).map(([, x]) => x);
+    return v.length ? { m: v.reduce((a, b) => a + b, 0) / v.length, n: v.length } : null;
+  };
+  const out = [];
+  if (Array.isArray(s.tws_cm)) {
+    const lastY = Number(String(s.dates[s.dates.length - 1]).slice(0, 4));
+    const a = yearMean(s.tws_cm, 2003), b = yearMean(s.tws_cm, lastY);
+    if (a && b) out.push(`<div class="hl-g"><span class="v">${fmt(a.m - b.m, 0)} cm</span><span class="l">less water stored over the region in ${lastY}${b.n < 12 ? ` (months available, n = ${b.n})` : ''} than in 2003 (GRACE/GRACE-FO total water storage)</span></div>`);
+  }
+  if (Array.isArray(s.gws_pct)) {
+    let i = s.gws_pct.length - 1;
+    while (i > 0 && !isNum(s.gws_pct[i])) i--;
+    if (isNum(s.gws_pct[i])) out.push(`<div class="hl-g"><span class="v">${fmt(s.gws_pct[i], 1)}</span><span class="l">GRACE-DA groundwater percentile, ${esc(String(s.dates[i]).slice(0, 7))}: drier than about ${fmt(100 - s.gws_pct[i], 0)}% of the same time of year in 1948-2012 (a drought index, not a volume)</span></div>`);
+  }
+  return out.length ? `<div class="grace-hl">${out.join('')}</div>` : '';
 }
 
 export function renderGrace() {
@@ -169,7 +196,8 @@ export function renderGrace() {
     <section class="card wide">
       <h2>The water clock, seen from space</h2>
       <p class="ck-sub">NASA's GRACE and GRACE-FO satellites weigh the water in and under the ground by measuring tiny changes in Earth's gravity.
-      The groundwater percentile compares each week with the same time of year since 2002 (0 = driest on record, 100 = wettest).</p>
+      The groundwater percentile compares each week with the same time of year in a 1948-2012 reference period (0 = driest, 100 = wettest).</p>
+      ${graceHeadline()}
       <div class="chart-box"><canvas id="grace-chart" aria-label="GRACE groundwater over time" role="img"></canvas></div>
       <p class="fine">Lines in cm are each set to zero on their own 2003-2026 average, because the files use different reference levels; compare their trend and timing, not their height.</p>
     </section>
@@ -183,7 +211,7 @@ export function renderGrace() {
           <canvas id="grace-map" width="360" height="${Math.round(360 * (mf.bbox[3] - mf.bbox[1]) / (mf.bbox[2] - mf.bbox[0]) * 1.27)}" role="img" aria-label="Map of GRACE groundwater"></canvas>
           ${legend()}
           ${mapLayer === 'tws_trend_cm_yr' && periods.length > 1 ? `<label class="picker">Period <select id="gm-period">${periods.map(k => `<option value="${esc(k)}" ${k === trendPeriod ? 'selected' : ''}>${esc(periodLabel(k))}</option>`).join('')}</select></label>` : ''}
-          ${mapLayer === 'tws_trend_cm_yr' ? `<p class="fine">Total water storage trend on a coarser ${fmt(mf.frames.tws_trend_cm_yr[trendPeriod]?.cell, 1)}&deg; grid (GRACE sees ~300 km blobs).</p>` : ''}
+          ${mapLayer === 'tws_trend_cm_yr' ? `<p class="fine">Total water storage trend on a coarser ${fmt(mf.frames.tws_trend_cm_yr[trendPeriod]?.cell, 1)}&deg; grid (GRACE sees areas a few hundred kilometres across).</p>` : ''}
           ${mapLayer === 'gws_pct' && nFrames > 1 ? `<label class="picker">Date: <b id="gm-date">${esc(mf.frames.gws_pct[mapIdx].date)}</b>
             <input id="gm-idx" type="range" min="0" max="${nFrames - 1}" value="${mapIdx}"></label>` : (nFrames && mapLayer === 'gws_pct' ? `<p class="fine">Date: ${esc(mf.frames.gws_pct[mapIdx]?.date || '')}</p>` : '')}
           ${mapLayer === 'gws_pct' ? `<p class="fine">Grid cells ${fmt(mf.cell, 3)}&deg;; county outlines for orientation.</p>` : ''}` : `<p>${NA}: grace.json has no maps.</p>`}
@@ -191,7 +219,7 @@ export function renderGrace() {
       <section class="card">
         <h3>Do the wells agree with the satellites?</h3>
         ${wellsVsGrace()}
-        <p class="fine">Well storage = water-level change &times; specific yield, averaged over the region. GRACE senses all water (soil, groundwater, reservoirs) over large areas (~300 km), so agreement in trend and timing, not exact values, is the test.</p>
+        <p class="fine">Well storage = water-level change &times; specific yield, averaged over the region. GRACE senses all water (soil, groundwater, reservoirs) over areas a few hundred kilometres across, so agreement in trend and timing, not exact values, is the test.</p>
       </section>
     </div>`;
   seriesChart(document.getElementById('grace-chart'));

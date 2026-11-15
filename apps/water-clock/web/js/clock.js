@@ -52,7 +52,7 @@ export function uncertaintyText(y, thr) {
       : ` There is roughly a 1-in-10 chance it is shorter than <b>${yrs(y.p10)}</b> years.`;
     r = `${low} There is roughly a 1-in-10 chance it is longer than <b>${yrs(y.p90)}</b> years.`;
   }
-  return `If pumping and weather continue like the past decade, the aquifer under this spot is expected to stay thicker than ${thr} ft for about <b>${yrs(y.p50)}</b> more years.${r} The spread comes from how fast the water table has been falling, how much water the sand and gravel hold, and how much rain soaks back in.`;
+  return `If pumping continues at the 2011-2026 pace, with average weather, the aquifer under this spot is expected to stay thicker than ${thr} ft for about <b>${yrs(y.p50)}</b> more years.${r} The spread comes from how fast the water table has been falling, how much water the sand and gravel hold, and how much rain soaks back in.`;
 }
 
 export function rangeLine(y) {

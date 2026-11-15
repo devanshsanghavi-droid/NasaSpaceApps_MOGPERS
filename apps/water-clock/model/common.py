@@ -39,8 +39,12 @@ PRIORS = {
     },
     "recharge_in_yr": {
         "lo": 0.1, "hi": 1.5,
-        "cite": ("Recharge prior for western Kansas, 0.1-1.5 in/yr (range given in CONTRACTS.md from literature for the central "
-                 "High Plains; used only as a plausibility check on the regression intercept)."),
+        "cite": ("Recharge prior for western Kansas, 0.1-1.5 in/yr. Primary sources for the central High Plains water budget: "
+                 "Stanton, J.S., Qi, S.L., Ryter, D.W., et al. (2011) Selected approaches to estimate water-budget components "
+                 "of the High Plains, 1940 through 1949 and 2000 through 2009. USGS SIR 2011-5183 (verify exact Kansas values); "
+                 "and Hansen, C.V. (1991) Estimates of freshwater storage and potential natural recharge for principal "
+                 "aquifers in Kansas. USGS WRI 87-4230 (verify). Used only as a plausibility check on the regression "
+                 "intercept; the county water balance suggests net inflow in parts of GMD4/GMD1 above this range."),
     },
     "base_sd_ft": {
         "value": 22.0,

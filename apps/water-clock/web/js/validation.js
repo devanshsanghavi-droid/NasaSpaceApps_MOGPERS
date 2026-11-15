@@ -17,7 +17,7 @@ function cell(v) {
   if (isRange(v)) return rangeText(v, x => fmt(x, 2));
   if (typeof v === 'boolean') return v ? 'yes' : 'no';
   if (Array.isArray(v)) return v.length <= 8 && v.every(x => typeof x !== 'object') ? esc(v.join(', ')) : `<span class="na">${v.length} values</span>`;
-  if (typeof v === 'string') return esc(v.length > 300 ? v.slice(0, 300) + '...' : v);
+  if (typeof v === 'string') return esc(v.length > 1500 ? v.slice(0, 1500) + '...' : v);
   return null;
 }
 
@@ -70,16 +70,23 @@ function climateBlock() {
       const reg = isObj(s) && 'region' in s ? s.region : s;
       return `<div class="clim">
         <h4>${esc(label(k))}</h4>
-        <div class="clim-big">${isNum(num(reg)) ? `<b>${fmtSigned(num(reg), 1)}</b> years on the region's clock` : 'Clock shift: <span class="na">n/a</span>'}</div>
-        ${isNum(num(reg)) && isNum(lo(reg)) && lo(reg) !== hi(reg) ? `<div class="fine">range ${fmtSigned(lo(reg), 1)} to ${fmtSigned(hi(reg), 1)} years</div>` : ''}
-        ${isObj(s) && isNum(num(s.county)) ? `<div class="fine">${esc(countyName(D, s.cf))} County: ${rangeText(s.county, x => fmtSigned(x, 1), 'years')}</div>` : ''}
+        ${(() => {
+          const cb = v.clock_shift_years_combined?.region;
+          if (cb && isNum(cb.pumping_only) && isNum(cb.total_response)) {
+            return `<div class="clim-big"><b>${fmtSigned(cb.pumping_only, 0)} to ${fmtSigned(cb.total_response, 0)}</b> years on the region's clock</div>
+              <div class="fine">From extra pumping only (${fmtSigned(cb.pumping_only, 1)}) to the full fitted weather response of water levels, which also counts lower recharge (${fmtSigned(cb.total_response, 1)}). Range over 5 models and both routes: ${fmtSigned(cb.hi, 1)} to ${fmtSigned(cb.lo, 1)} years.</div>`;
+          }
+          return `<div class="clim-big">${isNum(num(reg)) ? `<b>${fmtSigned(num(reg), 1)}</b> years on the region's clock` : 'Clock shift: <span class="na">n/a</span>'}</div>
+            ${isNum(num(reg)) && isNum(lo(reg)) && lo(reg) !== hi(reg) ? `<div class="fine">range ${fmtSigned(lo(reg), 1)} to ${fmtSigned(hi(reg), 1)} years</div>` : ''}`;
+        })()}
+        ${isObj(s) && isNum(num(s.county)) ? `<div class="fine">${esc(countyName(D, s.cf))} County: ${rangeText(s.county, x => fmtSigned(x, 1), 'years')} (pumping only)${isNum(num(v.clock_shift_years_total_response?.county?.[s.cf])) ? `; ${fmtSigned(num(v.clock_shift_years_total_response.county[s.cf]), 1)} with the full weather response` : ''}</div>` : ''}
         <dl class="facts">
           <div><dt>Crop water demand (ET0)</dt><dd>${r(v.et0_change_pct, x => fmtSigned(x, 1), '%')}</dd></div>
           <div><dt>Apr-Sep rain</dt><dd>${r(v.gs_precip_change_in, x => fmtSigned(x, 1), 'in')}</dd></div>
           <div><dt>Extra irrigation needed</dt><dd>${r(v.extra_pumping_in_ac, x => fmtSigned(x, 1), 'in/acre')}</dd></div>
         </dl></div>`;
     }).join('')}</div>
-    <p class="fine">Change from ${esc(c.baseline || '1995-2014')} to ${esc(c.future || 'around 2045')}${Array.isArray(c.models) ? `, ${c.models.length} climate models (${esc(c.models.join(', '))})` : ''}. Source: NASA NEX-GDDP-CMIP6.</p>`;
+    <p class="fine">Change from ${esc(c.baseline || '1995-2014')} to ${esc(c.future || 'around 2045')}${Array.isArray(c.models) ? `, ${c.models.length} climate models (${esc(c.models.join(', '))})` : ''}. Source: NASA NEX-GDDP-CMIP6. The 2035-2055 change is applied from today over the whole horizon.</p>`;
 }
 
 function sourcesBlock() {
@@ -92,17 +99,50 @@ function sourcesBlock() {
       <b>${link(s.name || 'source', s.url)}</b>${s.role ? ` &mdash; ${esc(s.role)}` : ''}</li>`).join('')}</ul>`;
 }
 
+const TABLE_TITLES = {
+  hindcast_2014_temporal_10yr_change_ft: 'Trained to 2014: 10-year change 2014 to 2024, same wells (ft)',
+  hindcast_2014_spatial_10yr_change_ft: 'Trained to 2014: 10-year change 2014 to 2024, wells the model never saw (ft). This is the test that matches the field clock.',
+  hindcast_2004_temporal_10yr_change_ft: 'Trained to 2004: 10-year change 2004 to 2014, same wells (ft)',
+  hindcast_2004_spatial_10yr_change_ft: 'Trained to 2004: 10-year change 2004 to 2014, wells the model never saw (ft)',
+  hindcast_2014_temporal_latest_level_ft: 'Trained to 2014: latest water level (2024-2026), same wells (ft)',
+  hindcast_2014_spatial_latest_level_ft: 'Trained to 2014: latest water level, wells the model never saw (ft)',
+  hindcast_2004_temporal_latest_level_ft: 'Trained to 2004: water level about 10 years later, same wells (ft)',
+  hindcast_2004_spatial_latest_level_ft: 'Trained to 2004: water level about 10 years later, wells the model never saw (ft)',
+  saturated_thickness_vs_usgs_2009: 'Our rebuilt 2009 saturated thickness vs the USGS 2009 map',
+  water_balance: 'Water balance (pumping vs decline)',
+  grace_vs_wells: 'GRACE vs wells',
+  model_settings: 'Model settings',
+};
+const OPEN_TABLES = ['hindcast_2014_temporal_10yr_change_ft', 'hindcast_2014_spatial_10yr_change_ft', 'hindcast_2004_temporal_10yr_change_ft'];
+
+function verdictTiles(v) {
+  const covs = Object.entries(v).filter(([k, x]) => k.startsWith('hindcast_') && isNum(x?.model?.cov80)).map(([, x]) => x.model.cov80);
+  const t4 = v.hindcast_2004_temporal_10yr_change_ft, pub = v.saturated_thickness_vs_usgs_2009;
+  const tiles = [];
+  if (covs.length) tiles.push([`${fmt(Math.min(...covs) * 100, 0)}-${fmt(Math.max(...covs) * 100, 0)}%`, `of the time our 80% ranges held the truth (${covs.length} tests; should be about 80%)`]);
+  if (isNum(t4?.model?.mae) && isNum(t4?.baseline_no_change?.mae)) tiles.push([`${fmt(t4.model.mae, 1)} vs ${fmt(t4.baseline_no_change.mae, 1)} ft`, 'error when trained to 2004, model vs "no change" (declines sped up after 2004)']);
+  if (isNum(pub?.r)) tiles.push([`r = ${fmt(pub.r, 2)}`, `our rebuilt 2009 thickness vs the USGS 2009 map (typical error ${fmt(pub.mae_ft, 0)} ft)`]);
+  return tiles.length ? `<div class="verdicts">${tiles.map(([a, b]) => `<div class="verdict"><span class="v">${esc(a)}</span><span class="l">${esc(b)}</span></div>`).join('')}</div>` : '';
+}
+
+function tableBlock(k, x) {
+  return `<div class="nest"><h4>${esc(TABLE_TITLES[k] || prettyKey(k))}</h4>${render(x)}</div>`;
+}
+
 export function renderValidation() {
   const root = document.getElementById('data-panel');
   const v = D.validation;
-  const vv = v ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== 'grace_vs_wells')) : null;
+  const skip = new Set(['summary', 'train_end', 'test_years', 'n_wells_test']);
+  const rest = v ? Object.entries(v).filter(([k]) => !skip.has(k) && !OPEN_TABLES.includes(k)) : [];
   root.innerHTML = `
     <section class="card wide">
       <h2>Does the clock work? Testing on the past</h2>
-      <p class="ck-sub">We hid the water levels measured after 2014, let the model predict them from earlier data only, then compared with what wells actually measured.
+      <p class="ck-sub">We hid the water levels measured after a cut-off year (2014, and separately 2004), let the model predict the next 10 years from earlier data only, then compared with what wells actually measured.
       Lower error is better; "80% interval coverage" should be near 0.80. Baselines are simple rules the model must beat.</p>
-      ${vv ? render(vv) : `<p>${NA}: validation.json is missing.</p>`}
-      ${v?.grace_vs_wells ? `<h4>GRACE vs wells</h4>${render(v.grace_vs_wells)}` : ''}
+      ${v ? verdictTiles(v) : ''}
+      ${v?.summary ? `<p class="plain">${esc(v.summary)}</p>` : ''}
+      ${v ? OPEN_TABLES.filter(k => v[k]).map(k => tableBlock(k, v[k])).join('') : `<p>${NA}: validation.json is missing.</p>`}
+      ${rest.length ? `<details class="tech"><summary>Technical tables (water levels, other tests, water balance, GRACE, model settings)</summary>${rest.map(([k, x]) => tableBlock(k, x)).join('')}</details>` : ''}
     </section>
     <div class="two-col">
       <section class="card"><h3>How climate shifts the clock by 2045</h3>${climateBlock()}</section>

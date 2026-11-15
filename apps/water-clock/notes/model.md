@@ -122,13 +122,14 @@ At every field and grid cell, I draw 10,000 times (raised from 2,000 in the fix 
 **Aggregation**
 - County, GMD and region values are the acre-weighted median, over their irrigated points (weights = reported acres), of each point's p10, p50 and p90.
 - `sat_thick_ft` p10/p50/p90 is the acre-weighted spread across the county's points.
-- `decline_ft_yr.est` is the acre-weighted mean of point declines. Its interval is est ± 1.28 × sqrt(SE² + sigma_reg²), with SE = county EB SE; for GMDs the EB GMD-level SE (`se_gmd` from pooling), for the region the acre-weighted combination of the three GMD SEs (`decline_se_ft_yr`; previously a hard-coded 0.1).
+- `decline_ft_yr.est` is the acre-weighted mean of point declines. Its interval is est ± 1.28 × sqrt(SE² + sigma_reg²), with SE = county EB SE; for GMDs the EB GMD-level SE (`se_gmd` from pooling), for the region the acre-weighted combination of the three GMD SEs (`decline_se_ft_yr`). **Final fix pass:** before, the GMD/region intervals reused the last county's (Graham's) spread by a variable-scope bug, so they were 2-3x too narrow (GMD3 1.43-2.00, region 1.05-1.62); they now use sqrt(se² + sigma_reg(d)²) as described (GMD3 0.85-2.58, region 0.66-2.02).
+- **Decline-window sensitivity** (`county_clocks.json` → `sensitivity.decline_window`): the same code run with 2001-2026 and 2016-2026 windows. Region p50 at 30 ft 58.8 / 68.7 (used) / 76.8 years; Ford 49.6 / 62.0 / 84.0; Gray 24.3 / 31.1 / 41.6. With q_s ≈ 0 the slope is close to the window mean change, and 2011-2013 was the pumping peak (2016-2025 pumping averaged 28% less).
 - GMD and region `data_quality` = good if ≥50% of their irrigated acres are in "good" counties, fair if good+fair ≥50%, else thin. GMD blocks have `town_note: null`.
 - In four counties (Decatur, Logan, Gove, Graham) the mean is ≤ 0.05 ft/yr. There, est is the mean over declining points and `decline_note` says so.
 
 **Literature priors** (`common.PRIORS`)
 - **Specific yield Sy:** 0.15, range 0.10-0.20. USGS uses about 15% as an area-weighted average for High Plains storage change (McGuire, USGS SIR 2017-5040 and earlier reports, from Gutentag et al. 1984, USGS PP 1400-B). The exact page was not re-checked.
-- **Recharge:** 0.1-1.5 in/yr, the range from CONTRACTS.md. Used only as a plausibility check.
+- **Recharge:** 0.1-1.5 in/yr. Cited to Stanton et al. 2011 (USGS SIR 2011-5183) and Hansen 1991 (USGS WRI 87-4230), both marked "verify" (not re-opened). Used only as a plausibility check.
 
 Sy and recharge do not enter the baseline clock directly, because the decline is observed. They enter the water balance (section 4) and the GRACE comparison.
 
@@ -149,14 +150,14 @@ Sy and recharge do not enter the baseline clock directly, because the decline is
 - The intercept implies near-zero net inflow (about 0.1 in/yr). That is at the low end of the recharge prior.
 
 **Outputs per county**
-- `decline_from_pumping_ft_yr = (1/Sy_app) × Q_recent / A_aq`, where Q_recent is WIMAS groundwater irrigation, mean 2016-2025. Finney: 1.80 ft/yr out of an observed 2.35.
+- `decline_from_pumping_aquifer_mean_ft_yr = (1/Sy_app) × Q / A_aq`, where Q is WIMAS groundwater irrigation, **mean 2011-2025** (final fix pass: same years as the 2011-2026 decline window; it was 2016-2025, which inflated the response per AF by about 9%). Finney: 1.98 ft/yr against an aquifer-mean observed decline of 1.61. `scenario.json` `pumping_af_yr` is this 2011-2025 mean; `pumping_af_yr_2016_2025` keeps the recent mean (county_clocks shows the recent mean).
 - `ft_per_af_ac = (1/Sy_app) × irrigated_acres / A_aq`.
-- **One basis for scenario response (fix pass).** Both quantities above are aquifer-area averages, while `decline_ft_yr.est` is an acre-weighted mean over irrigated points (local, higher). Mixing them made the pumping-attributable decline exceed the observed decline in 12 counties (a big shift then drove decline to ≤0 and jumped to 100 years), and in Hamilton/Wallace explain only 20-35% of it. Now: `pumping_share = min(1, decline_from_pumping_aquifer_mean / decline_aquifer_mean)`, where `decline_aquifer_mean` = mean kriged decline over the county's aquifer grid cells (fallback share 1 if that mean is ≤ 0); `decline_from_pumping_ft_yr = pumping_share × decline_ft_yr.est`; `ft_per_af_ac` is scaled by the same factor. The share is at the cap of 1 in 24 counties (the water balance attributes all observed decline to pumping; net inflow is near zero), 0.93 in Grant and 0.54 in Wallace. Raw aquifer-mean values are kept in `scenario.json` (`decline_from_pumping_aquifer_mean_ft_yr`, `decline_aquifer_mean_ft_yr`, `ft_per_af_ac_aquifer_mean`, `pumping_share_capped`).
+- **One basis for scenario response (fix pass).** Both quantities above are aquifer-area averages, while `decline_ft_yr.est` is an acre-weighted mean over irrigated points (local, higher). Mixing them made the pumping-attributable decline exceed the observed decline in 12 counties (a big shift then drove decline to ≤0 and jumped to 100 years), and in Hamilton/Wallace explain only 20-35% of it. Now: `pumping_share = min(1, decline_from_pumping_aquifer_mean / decline_aquifer_mean)`, where `decline_aquifer_mean` = mean kriged decline over the county's aquifer grid cells (fallback share 1 if that mean is ≤ 0); `decline_from_pumping_ft_yr = pumping_share × decline_ft_yr.est`; `ft_per_af_ac` is scaled by the same factor. The share is at the cap of 1 in 20 counties. **Final fix pass:** a ratio above 1 means pumping alone would cause more decline than observed, i.e. net inflow (recharge, return flow, lateral flow), so capping it discards evidence that the decline responds more than proportionally to a cut. `scenario.json` now also carries `pumping_share_raw` (uncapped; 1.03-5.1 where above 1, e.g. Sheridan 3.6, Rawlins 5.1) and `decline_from_pumping_ft_yr_net_inflow` = max(raw, share) × decline. The app shows the proportional value as the central (conservative) gain and the net-inflow value as the top of the range. Supporting: GMD time-series zero-decline pumping 1.05 MAF vs 1.54 recent (GMD3) and 411k vs 410k AF (GMD4); within-county slope 7.2 ft/ft vs cross-section 4.74; Sheridan-6 LEMA 35% cut → decline about 80% slower (KGS 2017). Raw aquifer-mean values are kept in `scenario.json` (`decline_from_pumping_aquifer_mean_ft_yr`, `decline_aquifer_mean_ft_yr`, `ft_per_af_ac_aquifer_mean`, `pumping_share_capped`).
 - `irrigated_acres` = WIMAS groundwater acres (`irr_acres_gw`, mean 2021-2025). These are about 1.4x the Census of Agriculture irrigated land, because several points can report the same field. They are used because they pair with WIMAS AF/acre (notes/pumping.md). Census 2022 values are shown alongside in county_clocks (`irrigated_acres_census_2022`, `irrigated_corn_acres_census_2022`).
 
 **Scenario formula** (`scenario.json`, matches `web/js/scenario.js countyShift`)
 - `saved_af = X × irrigated_corn_acres × (net_S0 - net_Sk)/12`
-- `new_decline = decline - decline_from_pumping × saved_af / pumping_af_yr`
+- `new_decline = decline - decline_from_pumping × saved_af / pumping_af_yr` (proportional, central); high end with `decline_from_pumping_ft_yr_net_inflow`
 - `years = sat_avail_ft[T] / decline`, capped at 100.
 - `sat_avail_ft[T] = years_p50[T] × decline_ft_yr.est`. The usable thickness is the effective value consistent with the county clock, so a 0% shift reproduces the clock exactly. `run_all.py` checks this for every county and threshold (zero_shift_check = passed).
 - Where the county clock is at the 100-year cap, `years_p50 × decline` understates the thickness (e.g. Graham: 1.2 ft), so `sat_avail_ft[T] = max(100 × decline, sat_thick_p50 − T)` (Graham: 55.7 ft at 30 ft). X = 0 still gives 100.
@@ -220,12 +221,12 @@ MAE / RMSE / bias (ft); model 80% interval coverage in brackets.
 
 | Period | Wells | GFZ GRACE |
 |---|---|---|
-| 2003-2026 | -3.96 cm/yr (Sy range: -2.64 to -5.28); -5.38 at the water-balance Sy_app 0.204 | -0.90 ± 0.22 cm/yr |
+| 2003-2026 | -3.96 cm/yr (Sy range: -2.64 to -5.28) | -0.90 ± 0.22 cm/yr |
 | 2018-2026 (GRACE-FO) | -3.26 cm/yr | -2.19 cm/yr |
 
-- GRACE agrees with the wells on timing and sign, including the drought drawdowns. But its long-term trend is about 4 times smaller at Sy 0.15, and about 6 times smaller at the model's own water-balance Sy_app (0.204).
+- GRACE agrees with the wells on timing and sign, including the drought drawdowns. But its long-term trend is about 4 times smaller at Sy 0.15 (3-6x over Sy 0.10-0.20). The water-balance Sy_app is a gross-pumping response coefficient (it absorbs return flow and net inflow), so it is not used to convert head change into storage (final fix pass removed that series).
 - Reported gross pumping, 2.04 MAF/yr in 2016-2025, equals 4.2 cm/yr over the region. Net depletion is somewhat smaller but of the same order as the wells.
-- A likely explanation, not tested here, is GRACE's ~300 km footprint, which mixes the concentrated loss with a larger, partly non-irrigated area (leakage). But that footprint also includes neighbouring areas that are losing water too, so leakage alone may not explain the gap. The implied Sy would be about 0.03, far below any plausible value.
+- A possible explanation, not tested here, is GRACE's footprint of a few hundred kilometres, which mixes the concentrated loss with a larger, partly non-irrigated area (leakage). But that footprint also includes neighbouring areas that are losing water too, so leakage alone may not explain the gap. The implied Sy would be about 0.03, far below any plausible value.
 - A year with too few wells (<50% of the aquifer area) would now be interpolated in the chained series rather than counted as zero change (none occur today; `n_years_change_interpolated` = 0).
 - GRACE is therefore used as an independent consistency check, not to scale the clock. The contract's "fuse" option was not used.
 
@@ -270,7 +271,7 @@ MAE / RMSE / bias (ft); model 80% interval coverage in brackets.
 
 **Evidence entries**
 - Every number quoted comes from the processed data: WIMAS, NASS CV and ratio statistics, MODIS, and the Sheridan County before/during-LEMA reported use (-13.7% in 2013-2017 vs 2008-2012, Thomas County -3.7%).
-- Literature: Steward et al. 2013 PNAS (doi:10.1073/pnas.1220351110) for the 69%-in-50-years projection, and Deines et al. 2019 ERL for the LEMA response. The Deines details are marked unverified in the card text because the paper could not be opened from this container.
+- Literature: Steward et al. 2013 PNAS (doi:10.1073/pnas.1220351110) for the 30%-pumped-by-2010 plus 39%-more-by-2060 projection, and Deines et al. 2019 ERL for the LEMA response. The Deines details are marked unverified in the card text because the paper could not be opened from this container.
 
 ## 8. Climate 2045 (`climate.json`)
 
@@ -278,7 +279,8 @@ MAE / RMSE / bias (ft); model 80% interval coverage in brackets.
 - Delta method from `cmip6_2045.json`, 5 GCMs. The April-September PM ET0 % change is applied to each county's POWER 1995-2014 April-September ET0.
 - Extra applied water = 0.36 × ΔET0 − 0.095 × ΔP (all crops). This raises the decline at every irrigated point by its county's ft_per_af_ac × extra/12.
 - **Fix pass:** the clock is recomputed per field: the field Monte Carlo is re-run with the same random draws (so the baseline is reproduced exactly and the shift carries no MC noise), then the shifted 30 ft p50s are re-aggregated with the same acre-weighted median. Before, the county shift was computed from `sat_avail = years_p50 × decline`, which for counties at the 100-year cap gave artefacts (Graham -52.6 / -65.6 years although its 86 ft of saturated thickness at 0.012 ft/yr stays above 100 years). Graham, Gove, Logan, Cheyenne, Rawlins and Meade now show 0.0; Decatur -0.1.
-- Range = min-max over the GCMs. Recharge changes are not modelled.
+- Range = min-max over the GCMs.
+- **Final fix pass, second route:** the pumping-only route leaves recharge unchanged. `clock_shift_years_total_response` applies the model's own fitted response of winter water levels to Apr-Sep weather (wells_state weather coefficients: -0.133 ft per in of ET0, +0.076 ft per in of rain; this covers pumping, recharge and ET together) as a persistent extra decline -(gE·ΔET0 + gP·ΔP), with the same common-random-number Monte Carlo. It gives 2.4-4.3x more added decline per GCM. `clock_shift_years_combined` reports both. The 2035-2055 change is applied from today over the whole horizon.
 
 **Results**
 
@@ -286,7 +288,8 @@ MAE / RMSE / bias (ft); model 80% interval coverage in brackets.
 |---|---|---|
 | ET0 change | +5.9% (2.8-10.6) | +8.3% |
 | Extra irrigation on corn | +1.2 in/acre (0.5-2.3) | +1.8 in/acre (1.4-2.1) |
-| Region clock shift | -5.4 years (-9.6 to -2.2) | -8.0 years (-9.4 to -6.3) |
+| Region clock shift, pumping only | -4.9 years (-8.8 to -2.0) | -7.2 years (-8.6 to -5.7) |
+| Region clock shift, total weather response | -17.3 years (-28.7 to -6.2) | -26.0 years (-30.2 to -22.3) |
 
 - The region value is a weighted median of field p50s, so it moves in steps; the ssp245 low end is slightly below the ssp585 low end for that reason. Largest county shifts: Morton (-11 / -16), Sherman, Stevens, Thomas, Haskell (-6 / -9).
 

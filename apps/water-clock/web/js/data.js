@@ -7,13 +7,20 @@ export const FILES = {
   counties: 'counties.geojson',
   clocks: 'county_clocks.json',
   fields: 'fields.json',
-  grid: 'grid.json',
   strategies: 'strategies.json',
   scenario: 'scenario.json',
   grace: 'grace.json',
   validation: 'validation.json',
   climate: 'climate.json',
 };
+
+// Loaded on first use (the detailed grid layer is off by default; saves ~400 KB at startup).
+export const LAZY = { grid: 'grid.json' };
+export async function loadLazy(D, key) {
+  if (D[key] !== undefined) return D[key];
+  D[key] = await loadOne(key, LAZY[key]);
+  return D[key];
+}
 
 export const mockUsed = [];
 export const missing = [];

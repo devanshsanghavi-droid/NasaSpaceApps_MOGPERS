@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T23:46:51+00:00",
+ "generated_at": "2026-11-15T01:03:10+00:00",
  "region": "Western Kansas Groundwater Management Districts 1, 3 and 4 (26 counties, High Plains / Ogallala aquifer)",
  "data_sources": [
   {
@@ -60,6 +60,13 @@
    "role": "2045 change in ET0 and rain -> clock shift",
    "status": "used",
    "url": "https://ds.nccs.nasa.gov/thredds/catalog/AMES/NEX/GDDP-CMIP6/catalog.html"
+  },
+  {
+   "name": "NASADEM (NASA SRTM reprocessed, 1 arc-second)",
+   "nasa": true,
+   "role": "Quality check of reported land altitude at wells (flags wrong well elevations)",
+   "status": "used",
+   "url": "https://planetarycomputer.microsoft.com/dataset/nasadem"
   },
   {
    "name": "OpenET (NASA-supported; not a NASA dataset)",
@@ -158,11 +165,12 @@
  ],
  "caveats": [
   "Years left are a projection of the recent (2011-2026, weather-normalised) decline rate; they are not a forecast of what farmers or water managers will do. The hindcast shows declines can speed up or slow down by decade.",
+  "The headline depends on the years used for the trend: region p50 at 30 ft is 59 years with 2001-2026, 69 with 2011-2026 (used) and 77 with 2016-2026. 2011-2013 was the pumping peak; 2016-2025 pumping averaged 28% less, so the clock may lean short if that holds.",
   "Saturated thickness at a field is uncertain by roughly +/-20-30 ft because the aquifer base map is coarse (1:1,000,000, 200-ft contours plus KGS bedrock picks).",
   "0 years means the central estimate is already below the threshold; many wells still pump below 30 ft of saturated thickness, at reduced capacity.",
   "100 means 100 years or more (flat or rising water levels).",
   "County clocks summarise the groundwater-irrigated points of diversion (WIMAS) weighted by reported acres.",
-  "GRACE sees a ~300 km footprint; its 2003-2026 storage trend is about 1/4 of the well-based trend here (Sy 0.15; larger gap with the water-balance Sy), so it is used as a timing / sign check, not to scale the clock.",
+  "GRACE sees a footprint of a few hundred kilometres; its 2003-2026 storage trend is about 1/4 of the well-based trend here (Sy 0.15), so it is used as a timing / sign check, not to scale the clock.",
   "Income uses ERS regional costs that do not separate irrigated from dryland farms and excludes pumping energy; irrigated yields after 2018 are estimated from earlier NASS ratios.",
   "Wallace County is kept in GMD4 as in the contract list, although 90% of its irrigated acres lie inside the GMD1 polygon (econ module check).",
   "This is decision support, not a replacement for your agronomist or for local water-right rules."

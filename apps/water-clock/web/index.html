@@ -34,7 +34,9 @@
         </div>
         <div class="headline-range" id="hl-range">Loading the region's clock...</div>
         <p class="headline-context" id="hl-context"></p>
+        <p class="hl-nasa" id="hl-nasa">Weather-adjusted with <a href="#data" data-goview="data">NASA POWER</a> &middot; checked against <a href="#grace" data-goview="grace">NASA GRACE/GRACE-FO</a> from orbit &middot; 2045 stress test with <a href="#data" data-goview="data">NASA NEX-GDDP-CMIP6</a></p>
       </div>
+      <div class="hl-stats" id="hl-stats" aria-live="polite"></div>
     </div>
     <nav class="tabs" role="tablist" aria-label="Views">
       <button role="tab" id="tab-farmer" aria-controls="view-farmer" aria-selected="true" data-view="farmer">My field</button>
@@ -55,7 +57,7 @@
             <datalist id="county-list"></datalist>
           </label>
           <fieldset class="seg" aria-label="Usable-water threshold">
-            <legend>Usable when aquifer is thicker than</legend>
+            <legend><span class="hide-xs">Usable when aquifer is thicker than</span><span class="show-xs">Usable above:</span></legend>
             <label><input type="radio" name="thr" value="15"> 15 ft</label>
             <label><input type="radio" name="thr" value="30" checked> 30 ft</label>
             <label><input type="radio" name="thr" value="50"> 50 ft</label>

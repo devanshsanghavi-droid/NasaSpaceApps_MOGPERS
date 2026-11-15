@@ -29,8 +29,9 @@ def cards(v):
                 dict(text=(f"NASS county yields 2000-2018: irrigated corn yields varied about {v['cv_corn_irr']*100:.0f}% "
                            f"(coefficient of variation) year to year, dryland corn about {v['cv_corn_dry']*100:.0f}%."),
                      source="USDA NASS QuickStats bulk file", url=NASS_URL),
-                dict(text=("At recent trends about 69% of Kansas High Plains aquifer storage could be used up within 50 years "
-                           "(model projection, not a measurement)."), source=STEWARD[0], url=STEWARD[1]),
+                dict(text=("Steward et al. (2013) estimated that 30% of the groundwater in the Kansas High Plains aquifer had "
+                           "been pumped by 2010 and projected that another 39% would be used by 2060 at existing trends (69% in "
+                           "total; a model projection, not a measurement)."), source=STEWARD[0], url=STEWARD[1]),
             ],
             benefits=["Highest and most stable yields in most years", "Familiar equipment, markets and crop insurance"],
             gaps=["Cost per acre uses USDA ERS Prairie Gateway averages that mix irrigated and dryland corn; pumping energy "
@@ -46,17 +47,19 @@ def cards(v):
         ),
         "S1": dict(
             why=("Rotating corn with wheat and sorghum and capping irrigation spreads the water over crops that need less "
-                 "of it. Corn is limited to about 11 in/acre, the yearly average of the Sheridan-6 local enhanced management "
-                 "area (55 in over 5 years); wheat and sorghum get what farmers here report applying to them."),
+                 "of it. Corn is capped at 11 in/acre a year, one fifth of the 55-inch, 5-year allocation set for the Sheridan-6 "
+                 "local enhanced management area (LEMA, 2013-2017); wheat and sorghum get what farmers here report applying "
+                 "to them."),
             evidence=[
                 dict(text=(f"Kansas water-use reports: Sheridan County, which holds most of the Sheridan-6 LEMA (started 2013), "
                            f"reported {v['sher_pre']:,.0f} AF/yr of irrigation in 2008-2012 and {v['sher_dur']:,.0f} AF/yr in "
                            f"2013-2017 ({v['sher_chg']:+.0f}%); neighbouring Thomas County changed {v['thomas_chg']:+.0f}%. "
                            "County totals include land outside the LEMA, and weather differs between the periods."),
                      source="Kansas WIMAS water-use reports", url=WIMAS_URL),
-                dict(text=("A satellite and statistics study of the Sheridan-6 LEMA reported that pumping fell by about a third "
-                           "with farmers shifting crops and irrigating less, at small cost to profit (unverified: we could not "
-                           "re-open the paper from the build environment)."), source=DEINES[0], url=DEINES[1]),
+                dict(text=("Deines et al. (2019) estimated the Sheridan-6 LEMA used about 31% less water in 2013-2017 than a "
+                           "modelled no-LEMA baseline, mostly by irrigating less and more efficiently, with some switching to "
+                           "crops such as sorghum (search-corroborated; the paper itself could not be opened from the build "
+                           "environment)."), source=DEINES[0], url=DEINES[1]),
                 dict(text=(f"WIMAS single-crop reports, 2011-2025 region medians: wheat {v['wheat_in']:.1f} in/acre, sorghum "
                            f"{v['sorghum_in']:.1f} in/acre."), source="Kansas WIMAS water-use reports", url=WIMAS_URL),
             ],
@@ -118,8 +121,9 @@ def cards(v):
             applies_where="Most of the region; especially fields where well capacity has fallen.",
         ),
         "S4": dict(
-            why=("Cotton is a warm-season crop that needs less irrigation than corn and is spreading into southwest Kansas. "
-                 f"Points reporting cotton used about {v['cotton_in']:.1f} in/acre."),
+            why=("Cotton is a warm-season crop that needs less irrigation than corn. It is already grown on some irrigated "
+                 f"fields in {v['n_cotton_counties']} southern counties of the region (about {v['cotton_acres_recent']:,.0f} "
+                 f"reported acres a year in 2021-2025). Points reporting cotton used about {v['cotton_in']:.1f} in/acre."),
             evidence=[
                 dict(text=(f"Kansas water-use reports: cotton reported on irrigated points in {v['n_cotton_counties']} region counties "
                            f"in at least 5 years since 2011; {v['cotton_acres_recent']:,.0f} reported acres on average in 2021-2025."),

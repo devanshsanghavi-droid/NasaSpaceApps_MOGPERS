@@ -62,21 +62,25 @@ For a real demo, all are needed:
 - `meta.json`: `region` (header subtitle), `generated_at`, `data_sources[{name,nasa,role,url,status}]`, `caveats`.
 
 ## Client-side formulas (js/scenario.js)
-- Field years at a threshold T other than 30 ft: years scale by (sat_ft - T)/(sat_ft - 30) (exact when the uncertainty is in
-  the decline rate only). If sat_ft <= T: "already below". If the field is below 30 ft but above T, only a point estimate (sat_ft - T)/decl.
+- Field years at a threshold T other than 30 ft: read from fields.json `y10_15..y90_50` (the model's Monte Carlo at 15 and 50 ft;
+  final fix pass). Fallback for older files: scale by (sat_ft - T)/(sat_ft - 30), but a capped 100+ at a stricter threshold becomes
+  min(100, (sat_ft - T)/decl) and a p10 of 0 at a looser threshold becomes unknown. If sat_ft <= T: "already below".
 - Strategies are only shown/offered where assessed: a strategy is dropped for a county when `s.counties` is a list that
   does not contain it, or when `per_county[fips]` exists but has no entry for it (S4 cotton = 7 southern counties).
 - Years gained for a strategy at a field: p = fractional pumping change vs S0 (county net pumping if present, else
   pumping_change_pct/100). The strategy-level lo/hi spread is scaled proportionally to the county estimate
   (lo_local = local * lo/est), and for a water-saving strategy the upper bound of p is clamped to <= 0, so a plan that
   pumps less never shows negative years. share = scenario `pumping_share` (else decline_from_pumping / decline; 1 if missing).
-  When the share is 1 and the model capped it (`pumping_share_capped`) or the aquifer-mean decline is <= 0, the text says
-  "treated as all from pumping (an upper bound)" instead of "attributes about 100%".
-  Y_new = Y / (1 + share * p), capped at 100; gain = Y_new - Y. Range = min/max over Y in {p10,p50,p90} x p in {lo,est,hi}.
-  The UI states that this assumes neighbours on the same part of the aquifer make the same change.
+  raw = scenario `pumping_share_raw` (uncapped; > 1 means net inflow, so the decline responds more than proportionally).
+  Computed at Y = field p50 only (final fix pass; the old p10/p90 combinations made the range an artefact of the 100-year cap):
+  est = Y/(1 + share*p_est) - Y; lo = same with the smallest cut; hi = Y/(1 + raw*p_lo) - Y. Already below / Y <= 0 -> no gain (null);
+  Y at the cap -> "already 100+". "Best fit" = top priority-weighted score among plans keeping >= (1 - priority) of S0 income,
+  normalised over the alternative plans only; no badge when no plan has a gain.
+  The UI states that this assumes all irrigated land around the field (every crop) makes the same change, unlike the corn-only slider.
 - Community slider: saved_af = X * irrigated_corn_acres * (net_S0 - net_Sk)/12; new_decline = decline -
   decline_from_pumping * saved_af / pumping_af_yr (fallback: decline - ft_per_af_ac * saved_af / irrigated_acres);
-  years = sat_avail_ft[T] / decline (cap 100); Z = years(new) - years(old). Range from decline lo/hi.
+  years = sat_avail_ft[T] / decline (cap 100); Z = years(new) - years(old). Range from decline lo/hi; the net-inflow reading
+  (decline_from_pumping_ft_yr_net_inflow) is shown as a second, higher gain. Default county: Gray (20069); slider above the table.
   If `median_below_threshold[T]` is true the slider shows `median_below_threshold_note[T]` instead of numbers; if the
   strategy is not assessed for the county, or would use more water than corn there, it shows an error, never a negative saving.
 - Already below: county clocks use `countyYears(c, thr, D)`, which sets `below` from scenario `median_below_threshold[T]`

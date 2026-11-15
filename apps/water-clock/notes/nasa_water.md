@@ -37,7 +37,7 @@ centroids from the Census cartographic boundary file https://www2.census.gov/geo
   2002-04 .. 2023-09). GWSA = GRACE TWS minus soil moisture, snow, surface water and glaciers -> a GRACE-based **groundwater**
   storage anomaly made by the GFZ team (better than our own subtraction).
 - Region mean: area-weighted over cells (weight = km2 of the cell inside the 26 counties; 17 one-degree cells touch the region,
-  12 carry >99% of the weight). GRACE's effective resolution is ~300 km, so this is a western-Kansas-scale signal with
+  12 carry >99% of the weight). GRACE's effective resolution is a few hundred kilometres, so this is a western-Kansas-scale signal with
   leakage from neighbours (incl. the Texas/Oklahoma panhandles, where the trend is stronger), not county-resolved.
 - Month assignment: two GFZ solutions fall in Oct 2011 and in Apr 2015 (none in Nov 2011 / May 2015); the later one is moved
   to the empty next month. GFZ months are joined to the GRACE-DA row of the same calendar month (`month` column); 2025-10 is a

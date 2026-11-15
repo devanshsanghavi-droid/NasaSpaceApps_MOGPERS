@@ -99,8 +99,20 @@ uncertainty and why thin-aquifer counties show wide ranges.
 | Combined with the literature prior (Sy 0.10-0.20) | Sy_app = 0.204 (80%: 0.186 to 0.226) |
 | Year-to-year, within counties | R² = 0.14 (GMD4 aggregate 0.68, GMD3 0.32, GMD1 0.04) |
 
-The long-term link is strong, so reducing pumping should slow the decline roughly in proportion. Year-to-year fits are weak because dry
-years raise pumping and cut recharge at the same time; those slopes are kept as diagnostics only. Sy_app is on a gross-pumping basis
+The long-term link is strong, so reducing pumping should slow the decline. How strongly is uncertain, so the app shows a range:
+- **Low end (proportional, used for the central number):** the pumping-attributable part of the decline shrinks in proportion to the
+  pumping saved, with the pumping share capped at 1.
+- **High end (net inflow):** in 20 of the 21 counties with a positive aquifer-mean decline, recent pumping divided by (aquifer area x
+  Sy_app) is larger than the observed decline (ratio 1.03-5.1; above 3.5 in Sheridan, Cheyenne, Rawlins, Wichita and Lane). That points
+  to water flowing back in (recharge, irrigation return flow, lateral flow), so a pumping cut should slow the decline more than in
+  proportion. The high end uses the uncapped ratio (`scenario.json` `pumping_share_raw`, `decline_from_pumping_ft_yr_net_inflow`).
+- Supporting evidence for the high end: the GMD time-series fits put zero-decline pumping at about 1.05 million AF/yr in GMD3 (recent
+  1.54 million) and at about today's level in GMD4 (411,000 vs 410,000 AF); the within-county slope (7.2 ft per ft, Sy_app 0.14) is
+  steeper than the cross-section slope used (4.74); and in the Sheridan-6 LEMA a 35% pumping cut took the decline from about 2 ft/yr to
+  about 5 in/yr (KGS 2017), far more than proportional.
+- Year-to-year fits are weak because dry years raise pumping and cut recharge at the same time; those slopes are kept as diagnostics
+  only.
+- Pumping in the scenario is the 2011-2025 mean (same years as the 2011-2026 decline window), not the lower 2016-2025 mean. Sy_app is on a gross-pumping basis
 (it absorbs return flow); a true Sy of 0.15 with about 25% return flow would give this value, which is consistent but not proven.
 
 ## 7. GRACE vs wells
@@ -116,14 +128,17 @@ region underlain by the aquifer, in cm of water. GRACE = mean of November-March 
 
 | Trend | Wells | GRACE (GFZ) |
 |---|---|---|
-| 2003-2026 | -3.96 cm/yr (range -2.64 to -5.28 for Sy 0.10-0.20); -5.38 at Sy_app 0.204 | -0.90 cm/yr (range -0.62 to -1.17) |
+| 2003-2026 | -3.96 cm/yr (range -2.64 to -5.28 for Sy 0.10-0.20) | -0.90 cm/yr (range -0.62 to -1.17) |
 | 2018-2026 (GRACE-FO era) | -3.26 cm/yr | -2.19 cm/yr |
 
-- **Timing and direction agree:** the yearly series rise and fall together (r = 0.86); both drop in drought years (GRACE annual
+- **Timing and direction agree:** the yearly series track each other (r = 0.86 for levels, 0.49 for year-to-year changes; the shared
+  long-term fall drives much of the first number); both drop in drought years (GRACE annual
   storage anomaly: 2012 -5.7 cm, 2014 -9.2 cm, 2019 +0.3 cm, 2023 -15.1 cm).
-- **Size does not agree:** the long-term well-based loss is about 4 times the GRACE trend (6 times at the water-balance Sy).
+- **Size does not agree:** the long-term well-based loss is about 4 times the GRACE trend (about 3 to 6 times over Sy 0.10-0.20). The
+  water-balance Sy_app is a gross-pumping response coefficient (it absorbs return flow and net inflow), so it is not used to convert head
+  change into stored water.
   Reported gross pumping, 2.04 million AF/yr (2016-2025), equals 4.2 cm/yr over the region, which supports the well number.
-- A likely but **untested** reason is GRACE's ~300 km footprint, which blends this concentrated loss with a larger area. That area also
+- A possible but **untested** reason is GRACE's footprint of a few hundred kilometres, which blends this concentrated loss with a larger area. That area also
   includes neighbours losing water, so footprint leakage alone may not explain the gap.
 - **Use:** GRACE is an independent check on timing and sign. It is not used to scale the clock.
 - The gap narrows after 2018 (-3.3 vs -2.2 cm/yr).
@@ -169,6 +184,19 @@ Computer IMERG V06B Zarr gave r = 0.79 (same storms, different product versions)
   polygon. Moving it to GMD1 changes GMD1 at 30 ft from 6.7 to 5.4 years and GMD4 from 98.4 to 100+.
 - **Thin-aquifer wells excluded from thickness:** wells where the USGS 2009 map shows thin or absent aquifer (65 wells) are used for decline
   rates but not for thickness. This moves Wallace from 14.6 to 3.7 years and Morton from 87 to 94.5; other counties barely change.
+- **Decline window (not in the ranges):** with the fitted slope noise near zero, the decline is close to the mean annual change over the
+  window, so the start year matters. Region p50 at 30 ft: 58.8 years (2001-2026), 68.7 (2011-2026, used), 76.8 (2016-2026); share of
+  irrigated acres under 25 years 19.6%, 15.1%, 12.8%. Counties move more: Ford 49.6 / 62.0 / 84.0, Gray 24.3 / 31.1 / 41.6, Finney
+  41.3 / 44.8 / 54.5. The 2011-2026 window opens at the 2011-2013 pumping peak (WIMAS 2.85 million AF/yr on average; 2016-2025 averaged
+  28% less), and the same method over-predicted the 2014-2024 decline about 2x in the hindcast, so the clock may lean short if recent
+  management holds (`county_clocks.json` `sensitivity.decline_window`).
+- **GMD and region decline ranges** combine the empirical-Bayes standard error of the GMD mean with the decade-to-decade term, the same
+  construction as the county ranges (an earlier version reused one county's spread by mistake and was 2-3x too narrow): GMD3 1.71
+  (0.85-2.58) ft/yr, region 1.34 (0.66-2.02).
+- **2045 climate, two routes:** the pumping-only route (extra irrigation demand, recharge unchanged) gives -4.9 years (SSP2-4.5, range
+  -2.0 to -8.8) and -7.2 (SSP5-8.5); the total-response route (the model's fitted response of water levels to Apr-Sep ET0 and rain,
+  which also includes recharge) gives -17.3 (-6.2 to -28.7) and -26.0 (-22.3 to -30.2). The 2035-2055 change is applied from today over
+  the whole horizon, which overstates the near-term effect.
 - **Monte Carlo:** 10,000 draws per point; spot checks against 200,000 draws agree within about 1.5 years.
 - **Zero-shift check:** a 0% strategy shift reproduces every county clock exactly at all three thresholds (`scenario.json: zero_shift_check = passed`).
 
@@ -177,6 +205,10 @@ Computer IMERG V06B Zarr gave r = 0.79 (same storms, different product versions)
 Shows:
 - The decline-rate model predicts 10-year water-level change about as well as, or better than, simple rules, and much better when declines
   accelerate. Its 80% ranges are reliable.
+- Which test matches which clock: the 2014 temporal headline (MAE 6.13 vs 6.25) scores the pooled per-well rate. The field and county
+  clocks krige the unpooled per-well rates to places without a monitoring well, which is what the **spatial** test measures. There,
+  for wells the model never saw, "no change" was as good or better after 2014 (5.94 vs 6.64 ft); the model was much better when declines
+  sped up (2004 fold: 7.60 vs 13.21 ft). Pooling therefore affects the county intervals, not the field numbers.
 - Our saturated thickness reproduces the published USGS surface regionally (r = 0.97).
 - Long-term decline is tightly tied to reported pumping (R² = 0.90), which supports the "pump less, clock slows" logic.
 - GRACE independently confirms the timing of storage losses.
@@ -185,8 +217,10 @@ Shows:
 Does not show:
 - **That the years-left numbers will come true.** No hindcast can test a 30-100 year projection. Ten-year tests show the rate itself shifts
   by about a third between decades.
-- **That a strategy change will deliver the computed years gained.** The scenario uses the cross-county pumping-decline relationship; it has
-  not been tested on a real before/after case in this project (the Sheridan-6 LEMA is cited as outside evidence, see CLAIMS.md).
+- **That a strategy change will deliver the computed years gained.** The scenario uses the cross-county pumping-decline relationship, shown
+  as a range from proportional (central) to net-inflow (high); it has not been tested on a real before/after case in this project (the
+  Sheridan-6 LEMA is cited as outside evidence that the response can be more than proportional, see CLAIMS.md).
+- **Which decline window is right.** The 2011-2026 window used is one defensible choice; 2001-2026 and 2016-2026 give 59 and 77 years.
 - **Field-level accuracy where the aquifer is thin.** Thickness errors of about 18-25 ft dominate there.
 - **That GRACE confirms the size of the loss.** It does not; it shows about a quarter of the well-based trend.
 - **Income accuracy.** Income estimates were not validated against farm records.

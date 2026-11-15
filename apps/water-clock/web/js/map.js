@@ -1,6 +1,7 @@
 // MapLibre map: counties coloured by years left, optional detailed grid, clickable fields.
 import { yearStepExpr, YEAR_BINS, esc, yrs, isNum } from './util.js';
 import { fieldYears, countyYears } from './scenario.js';
+import { loadLazy } from './data.js';
 
 const POSITRON = 'https://tiles.openfreemap.org/styles/positron';
 const BBOX = [[-102.06, 36.99], [-99.55, 40.01]];
@@ -76,10 +77,13 @@ function bboxOf(fc) {
 }
 
 export function renderLegend(elm, thr) {
-  elm.innerHTML = `<div class="lg-title">Years of irrigation water left<br><span>(middle estimate, ${thr} ft threshold)</span></div>` +
+  // collapsible: open on wide screens, closed on phones so it does not cover the map; keeps the user's choice
+  const prev = elm.querySelector('details');
+  const open = prev ? prev.open : !window.matchMedia('(max-width: 640px)').matches;
+  elm.innerHTML = `<details ${open ? 'open' : ''}><summary class="lg-title">Years of water left <span>(${thr} ft)</span></summary>` +
     YEAR_BINS.map(b => `<div class="lg-row"><span class="sw" style="background:${b.color}"></span>${b.label}</div>`).join('') +
     `<div class="lg-row"><span class="sw" style="background:#9aa0a6"></span>no estimate (outside mapped aquifer)</div>` +
-    `<div class="lg-row"><span class="sw dot"></span>irrigation well (click)</div>`;
+    `<div class="lg-row"><span class="sw dot"></span>irrigation well (click)</div><div class="lg-row lg-mid">middle estimate</div></details>`;
 }
 
 export async function initMap(data, h, thr) {
@@ -100,7 +104,7 @@ export async function initMap(data, h, thr) {
     container: 'map',
     style: style || FALLBACK_STYLE,
     bounds: bboxOf(D.counties) || BBOX,
-    fitBoundsOptions: { padding: 20 },
+    fitBoundsOptions: { padding: window.matchMedia('(min-width: 900px)').matches ? { top: 20, right: 20, bottom: 20, left: 150 } : 20 },
     attributionControl: { compact: true },
     cooperativeGestures: false,
   });
@@ -173,8 +177,12 @@ export function setThreshold(thr) {
   map.getSource('fields').setData(fieldsFC(thr));
 }
 
-export function showGrid(on) {
+export async function showGrid(on) {
   if (!map?.getLayer('grid-fill')) return;
+  if (on && D.grid === undefined) {
+    await loadLazy(D, 'grid');
+    map.getSource('grid')?.setData(gridFC());
+  }
   map.setLayoutProperty('grid-fill', 'visibility', on ? 'visible' : 'none');
   map.setPaintProperty('county-fill', 'fill-opacity', on ? 0 : (usingBasemap ? 0.55 : 0.75));
 }
@@ -195,4 +203,4 @@ export function selectCounty(fips, fly = true) {
 }
 
 export function resize() { map?.resize(); }
-export function hasGrid() { return (D?.grid?.rows || []).length > 0; }
+export function hasGrid() { return D?.grid === undefined || (D?.grid?.rows || []).length > 0; }

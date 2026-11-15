@@ -7,7 +7,8 @@ NASA Space Apps 2026, challenge "Field Shift: Adapting Farms with NASA Data". Te
 ## What it shows
 
 Western Kansas irrigates about 1.4 million acres (Census of Agriculture 2022) from the Ogallala / High Plains aquifer, pumping about
-2 million acre-feet a year (state water-use reports, 2016-2025). The aquifer is falling. Water Clock turns 40+ years of well measurements, reported pumping and NASA satellite data into one number per field:
+2 million acre-feet a year (state water-use reports, 2016-2025). The aquifer is falling. Water Clock turns decades of well measurements (KGS WIZARD 1940-2026; rates fitted on 2011-2026), reported
+pumping and NASA satellite data into one number per field:
 **years until the aquifer under it is thinner than 30 ft**, the level the Kansas Geological Survey uses as a rough lower limit for
 large-volume irrigation.
 
@@ -22,13 +23,19 @@ Results for the 26 counties of Groundwater Management Districts (GMD) 1, 3 and 4
 
 - **15% of irrigated acres have fewer than 25 years left.** Wichita (0), Hamilton (2), Wallace (4), Greeley (9) and Lane (13) are the
   shortest county clocks. Eight counties are at 100+ years.
+- **The headline depends on the years used for the trend.** Fitted on 2001-2026 the region clock is 59 years; on 2011-2026 (used) 69;
+  on 2016-2026 77. Our window starts at the 2011-2013 pumping peak, and reported pumping in 2016-2025 was about 28% lower, so the clock
+  may lean short if recent management holds (`county_clocks.json` `sensitivity.decline_window`).
 - **Rotations buy back years, but slowly.** If every irrigated corn acre in Gray County moved to a corn-wheat-sorghum rotation with
-  limited irrigation, the county clock would go from 31 to 36 years (gain range 3.5 to 11). Going dryland on those acres gives 52 years.
-- **Climate makes it shorter.** With NASA NEX-GDDP-CMIP6 projections for 2045, higher crop water demand takes about 5 years off the
-  region clock (SSP2-4.5, range 2 to 10) or 8 years (SSP5-8.5, range 6 to 9).
-- **GRACE sees it from space.** GRACE/GRACE-FO water storage over the region fell from +5 cm (2003 average) to -19 cm (2026, Jan-Aug).
-  Its yearly ups and downs match the wells (r = 0.86), but its long-term trend is about 4 times smaller than the well-based estimate
-  (see [VALIDATION.md](VALIDATION.md)).
+  limited irrigation, the county clock would go from 31 to 36 years (gain +4.7, range +3.1 to +9.5). Going dryland on those acres gives
+  49 years. These gains assume the decline shrinks only in proportion to pumping; the water balance shows water flowing back in, so they
+  are likely conservative (Gray limited irrigation: +5.6 years with that counted).
+- **Climate makes it shorter.** With NASA NEX-GDDP-CMIP6 projections for 2045 the region clock loses about 5 to 17 years (SSP2-4.5) or
+  7 to 26 years (SSP5-8.5). The low end counts only extra irrigation demand; the high end uses the model's fitted response of water
+  levels to weather, which also counts lower recharge.
+- **GRACE sees it from space.** GRACE/GRACE-FO water storage over the region was about 24 cm lower in January-August 2026 than in 2003.
+  Its yearly values track the wells (r = 0.86 for annual levels; 0.49 for year-to-year changes), but its long-term trend is about 4 times
+  smaller than the well-based estimate (see [VALIDATION.md](VALIDATION.md)).
 
 Every number above comes from `web/data/*.json` and is listed in [CLAIMS.md](CLAIMS.md).
 
@@ -87,7 +94,7 @@ python3 pipeline/econ_nass_process.py
 python3 pipeline/econ_costs.py
 python3 pipeline/econ_boundaries.py
 python3 pipeline/econ_context.py
-# 6. Model: writes all ten web/data files (about 2 minutes)
+# 6. Model: writes all ten web/data files (about 4 minutes, includes the trend-window sensitivity)
 cd model && python3 run_all.py
 ```
 
@@ -132,9 +139,13 @@ NASA data first. Status: used, partial (used with a gap) or blocked (see [BLOCKE
    gives an apparent specific yield of 0.20 (80% range 0.19 to 0.23): about 5 ft of decline per foot of water pumped over the aquifer area.
 5. **Strategies.** Water use per crop comes from what farmers report to the state (WIMAS): corn 14.6 in/acre, sorghum 10.3, wheat 8.9.
    Pumping saved = acres switched x (old water use - new water use). Less pumping lowers the pumping part of the decline rate in
-   proportion, and the clock is recomputed. Income = NASS county yield x Kansas price - ERS operating cost, 2016-2025.
+   proportion (the conservative reading), and the clock is recomputed. In 20 of 26 counties the water balance says recent pumping alone
+   would cause more decline than observed (net inflow from recharge and return flow), so the top of each gain range lets the decline
+   respond more than in proportion. Income = NASS county yield x Kansas price - ERS operating cost, 2016-2025.
 6. **Climate 2045.** CMIP6 changes in reference ET and rain change irrigation demand by the response measured in WIMAS
-   (0.36 in more water per extra inch of reference ET), which raises the decline rate.
+   (0.36 in more water per extra inch of reference ET), which raises the decline rate (low end). The high end applies the model's own
+   fitted response of winter water levels to growing-season weather (-0.13 ft per inch of reference ET, +0.08 ft per inch of rain),
+   which also includes recharge.
 
 Details and all settings: [notes/model.md](notes/model.md). Per-source details: `notes/*.md`.
 
@@ -146,15 +157,19 @@ Full results: [VALIDATION.md](VALIDATION.md).
   and the model predicted about twice the decline that happened.
 - **Trained through 2004, when declines sped up:** the model roughly halves the error of "no change" (6.6 vs 12.2 ft) and beats every
   simple baseline.
-- **80% ranges contained the truth 87-93% of the time**, so the ranges are honest, slightly wide.
+- **80% ranges contained the truth 83-93% of the time** (87-91% for 10-year change), so the ranges are honest, slightly wide.
+- **The field clock corresponds to the spatial test** (kriged rates at places without a monitoring well). There, after 2014, "no change"
+  was as good as the model; the model was much better when declines sped up (2004 fold: 7.6 vs 13.2 ft).
 - **Saturated thickness** rebuilt for 2009 matches the published USGS 2009 map with r = 0.97 and an average error of 18 ft.
-- **GRACE** agrees with the wells on timing (r = 0.86) but shows a 4x smaller long-term loss.
+- **GRACE** agrees with the wells on timing (r = 0.86 for yearly levels, 0.49 for year-to-year changes) but shows a 4x smaller
+  long-term loss.
 - **HLS** dry-spell greenness separates irrigated from dryland corn with 92% accuracy (kappa 0.83) on a balanced test set.
 
 ## Limitations
 
 - **The clock extrapolates the 2011-2026 rate.** It is not a forecast of what farmers or water managers will do. Rates have changed by
-  about a third between decades. The ranges include that, but not a policy change.
+  about a third between decades. The ranges include that, but not a policy change, and not the choice of trend window (59 to 77 years
+  for the region; Ford 50 to 84, Gray 24 to 42).
 - **Saturated thickness is uncertain by about 20-30 ft at a field** because the aquifer-base map is coarse (200 ft contours plus KGS picks).
   The more detailed KGS section database was on a blocked host.
 - **Thin-aquifer counties** (GMD1, Hamilton, Wallace) show 0 to a few years at 30 ft. Many wells there still pump below 30 ft at
