@@ -180,7 +180,12 @@ function yearFacts(y = YEAR) {
   const omF = fact(`plant_om_cost_${y}_usd`);
   const c0 = th.cost_per_plant_day;
   const cpd = c0 && isNum(c0.lo) && isNum(c0.hi) ? { lo: c0.lo, hi: c0.hi, mid: (c0.lo + c0.hi) / 2 } : band(c0);
-  const est = !costF && isNum(plantDays) && cpd ? { lo: plantDays * cpd.lo, hi: plantDays * cpd.hi } : null;
+  // Lower daily rate: CIWW's Q1-2026 O&M per run day (fact plant_cost_per_day_2026_q1_usd, or the scenario export's
+  // cost_per_plant_day_q1_2026). Upper: ~$16k/day at full capacity. Used only for years with no published cost.
+  const q1F = fact("plant_cost_per_day_2026_q1_usd");
+  const q1Rate = q1F?.value ?? (isNum(th.cost_per_plant_day_q1_2026?.value) ? th.cost_per_plant_day_q1_2026.value : null);
+  const estLo = isNum(q1Rate) ? q1Rate : cpd?.lo;
+  const est = !costF && isNum(plantDays) && cpd && isNum(estLo) ? { lo: plantDays * estLo, hi: plantDays * cpd.hi, rateLo: estLo, q1: isNum(q1Rate), q1F } : null;
   const banF = fact(`ban_days_${y}`);
   const banDays = banF?.value ?? (isNum(obs.ban_days) ? obs.ban_days : null);
   // homes were released earlier than businesses/government: fact range lo (or observed.ban_days_homes)
@@ -190,7 +195,22 @@ function yearFacts(y = YEAR) {
   const banBiz = isNum(banDays) && new RegExp(`\\b${banDays} days for business`, "i").test(banF?.label || "");
   const people = fact("people_served");
   const peopleTxt = people ? `${fmtInt(people.value)}${/more than|over/i.test(`${people.label} ${people.quote || ""}`) ? "+" : ""}` : null;
-  return { yb, obs, th, plantF, plantDays, record, costF, omF, cpd, est, banF, banDays, banHomes, banBiz, people, peopleTxt };
+  // partial year: name the months the plant ran ("Jan–Jul") from the plant fact's dates
+  const span = obs.partial_year_through ? runSpan(plantF?.label) : "";
+  return { yb, obs, th, plantF, plantDays, record, prior, span, costF, omF, cpd, est, banF, banDays, banHomes, banBiz, people, peopleTxt };
+}
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function runSpan(label) {
+  const m = [...String(label || "").matchAll(/\b\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*/g)].map((x) => x[1]);
+  return m.length >= 2 && m[0] !== m[m.length - 1] ? `${m[0]}–${m[m.length - 1]}` : "";
+}
+// "up to 56 days (homes: 40)" (2025) / "23 days for homes, 42 for businesses" (2026), from the ban fact
+function banWords(yf, strong = (t) => t) {
+  if (!isNum(yf.banDays)) return "";
+  const homes = isNum(yf.banHomes) && yf.banHomes < yf.banDays;
+  if (!homes) return strong(`${fmtInt(yf.banDays)} days`);
+  return yf.banBiz ? `${strong(`${fmtInt(yf.banHomes)} days for homes`)}, ${fmtInt(yf.banDays)} for businesses`
+    : `${strong(`up to ${fmtInt(yf.banDays)} days`)} (homes: ${fmtInt(yf.banHomes)})`;
 }
 
 function renderHero() {
@@ -199,18 +219,18 @@ function renderHero() {
   if (!yf.yb) { h.textContent = "Scenario data is not available yet."; return; }
   // Numbers from facts.json (via aliases) or the scenario's observed block; cost and the second ban figure live in the
   // KPI strip below so the headline reads in one breath.
-  const plant = isNum(yf.plantDays) ? `${yf.record ? "a record " : ""}<strong>${fmtInt(yf.plantDays)} ${plural(yf.plantDays, "day")}</strong> of nitrate treatment` : "";
-  let ban = "";
-  if (isNum(yf.banDays)) {
-    const homes = isNum(yf.banHomes) && yf.banHomes < yf.banDays;
-    ban = !homes ? `a lawn&#8209;watering ban of <strong class="red">${fmtInt(yf.banDays)} days</strong>`
-      : yf.banBiz ? `a lawn&#8209;watering ban of <strong class="red">${fmtInt(yf.banHomes)} days for homes</strong> <span class="hero-cost">(${fmtInt(yf.banDays)} for businesses)</span>`
-      : `a lawn&#8209;watering ban of <strong class="red">up to ${fmtInt(yf.banDays)} days</strong>`;
-  }
+  // "Mostly farmland" is the statewide INRS share of stream nitrogen from nonpoint sources, not a Des Moines attribution.
+  const plant = isNum(yf.plantDays) ? `run its nitrate-removal plant ${yf.record ? "a record " : ""}<strong>${fmtInt(yf.plantDays)} ${plural(yf.plantDays, "day")}</strong>${yf.span ? ` (${yf.span})` : ""}` : "";
+  const banW = banWords(yf, (t) => `<strong class="red">${t}</strong>`);
+  const ban = banW ? `impose a lawn&#8209;watering ban of ${banW}` : "";
   const what = [plant, ban].filter(Boolean).join(" and ");
   h.innerHTML = what
-    ? `<span class="hero-main">Bare farm fields upstream cost Des Moines ${what} in <span class="hero-year">${YEAR}</span>.</span> <span class="hero-sub">NASA satellites show which fields sit bare on wet soil — and when.</span>`
+    ? `<span class="hero-main">Nitrate from upstream — mostly farmland — forced Des Moines to ${what}${yf.banBiz ? "," : ""} in <span class="hero-year">${YEAR}</span>.</span> <span class="hero-sub">NASA satellites show which fields sit bare on wet soil — and when.</span>`
     : `NASA satellites show which fields upstream of Des Moines sit bare on wet soil — and when.`;
+  const np = fact("inrs_nonpoint_share_pct");
+  document.getElementById("city-h-src").innerHTML = np
+    ? `Why “mostly farmland”: statewide, ${Math.round(np.value)}% of the nitrogen entering Iowa streams comes from nonpoint sources, mostly farmland (${link(np.url, "Iowa Nutrient Reduction Strategy")}; fact ${link("data/facts.json", np.id || "inrs_nonpoint_share_pct")}). Not measured for Des Moines alone.`
+    : "";
 }
 
 // "~3 weeks" / "5 days": ban changes in a unit that cannot be confused with plant days
@@ -241,11 +261,12 @@ function renderImpact() {
   const banTip = `Ban days come from a proxy rule (the utility's rules are not public)${th.ban_rule ? `: ${esc(th.ban_rule)}` : ""}. Fitted on 2025, tested on 2026${banTest ? `: ${fmtInt(banTest.pred_days)} proxy days vs ${fmtInt(banTest.true_days)} real` : ""}. Demand and treatment capacity also drive bans, so treat this as indicative.`;
   const banLabel = `<span class="muted">${tip("indicative (proxy rule)", banTip)}</span>`;
   const km = fmtMass(kept?.mid), bs = banSpan(ban?.mid);
+  const costQ1 = avoided(lvl, "cost_usd_q1_2026_rate"); // same days at CIWW's Q1-2026 O&M per run day (lower check)
   if (lvl.x === 0) {
     text.innerHTML = `Move the slider: what if more upstream corn and soy acres kept living roots over winter?`;
   } else {
     const pdN = Math.round(pd?.mid ?? 0);
-    text.innerHTML = `If cover went on <strong>${shareAsFreq(lvl.x)}</strong> of all upstream corn and soy acres${today != null ? ` (beyond today's ~${today}%)` : ""}: about <strong>${km.n} ${km.u} of nitrogen</strong> stays on the fields, <strong>${fmtInt(pdN)} fewer plant ${plural(pdN, "day")}</strong>${pd && rangeTxt(pd) ? ` (${rangeTxt(pd)})` : ""}, a watering ban <strong>${bs.n} ${bs.u} shorter</strong> <span class="muted">(${tip("indicative, proxy rule", banTip)})</span>, and <strong>~${usd(cost?.mid)}</strong> operating cost avoided (estimate).`;
+    text.innerHTML = `If cover went on <strong>${shareAsFreq(lvl.x)}</strong> of all upstream corn and soy acres${today != null ? ` (beyond today's ~${today}%)` : ""}: about <strong>${km.n} ${km.u} of nitrogen</strong> kept out of the rivers (measured at the gauges), <strong>${fmtInt(pdN)} fewer plant ${plural(pdN, "day")}</strong>${pd && rangeTxt(pd) ? ` (${rangeTxt(pd)})` : ""}, a watering ban <strong>${bs.n} ${bs.u} shorter</strong> <span class="muted">(${tip("indicative, proxy rule", banTip)})</span>, and <strong>up to ~${usd(cost?.mid)}</strong> operating cost avoided (estimate; avoided days are often lower-output days${costQ1 ? `; ~${usd(costQ1.mid)} at the Q1-2026 rate` : ""}).`;
   }
   const lbRange = (b) => (b && Math.round(b.lo) !== Math.round(b.hi) ? `range ${fmtLbRange(b.lo, b.hi)}` : "");
   const toTxt = {
@@ -255,10 +276,10 @@ function renderImpact() {
     cost_usd: (b) => usd(b.mid),
   };
   const t = [
-    { k: "lbN_kept", b: kept, v: `${km.n}<span class="itile-u"> ${km.u}</span>`, l: "of nitrogen kept on upstream fields instead of reaching the river", r: lbRange(kept) },
+    { k: "lbN_kept", b: kept, v: `${km.n}<span class="itile-u"> ${km.u}</span>`, l: "of nitrogen kept out of the rivers (measured at the gauges)", r: lbRange(kept) },
     { k: "plant_days", b: pd, v: `${fmtInt(pd?.mid)}<span class="itile-u"> fewer plant ${plural(pd?.mid ?? 0, "day")}</span>`, l: "the city's nitrate-removal plant runs less", r: rangeTxt(pd) ? `${rangeTxt(pd)} days` : "" },
     { k: "ban_days", b: ban, v: `${bs.n}<span class="itile-u"> ${bs.u} shorter</span>`, l: `lawn-watering ban ${banLabel}`, r: rangeTxt(ban) ? `${rangeTxt(ban)} days` : "" },
-    { k: "cost_usd", b: cost, v: `${usd(cost?.mid)}`, l: `operating cost avoided <span class="muted">(estimate)</span>`, r: cost ? rangeTxt(cost, usd) : "" },
+    { k: "cost_usd", b: cost, v: lvl.x > 0 ? `<span class="itile-u">up to </span>~${usd(cost?.mid)}` : usd(cost?.mid), l: `operating cost avoided <span class="muted">(upper estimate: avoided days are often lower-output days${costQ1 && lvl.x > 0 ? `; ~${usd(costQ1.mid)} at the Q1-2026 rate` : ""})</span>`, r: cost ? rangeTxt(cost, usd) : "" },
   ];
   const zero = lvl.x === 0;
   tiles.innerHTML = t.map((x) => {
@@ -274,7 +295,7 @@ function renderImpact() {
   fine.innerHTML = [
     xd ? `<strong>What the slider means:</strong> ${esc(xd)}${/[.!?]$/.test(xd.trim()) ? "" : "."}` : "",
     `Ranges: 8 in 10${isNum(nDraws) ? ` of ${fmtInt(nDraws)}` : ""} simulations${anyTrials ? "; “trials only” = Iowa field-trial evidence alone, without our satellite-trained river model" : ""}.`,
-    `$ = operating cost only${cpd ? ` (plant days × ${usd(cpd.lo)}–${usd(cpd.hi)} a day)` : ""}; capital is not avoided.`,
+    `$ = operating cost only${cpd ? ` (plant days × ~${usd(cpd.lo)}–${usd(cpd.hi)} a day: 2025 O&M per run day to full capacity)` : ""}, an upper estimate because the days avoided are often partial-output days${th.cost_per_plant_day_q1_2026?.value ? ` (CIWW's Q1-2026 average was ~${usd(th.cost_per_plant_day_q1_2026.value)} a day)` : ""}; capital is not avoided.`,
     cover ? `Today about ${Math.round(cover.value)}% of Iowa corn and soy acres have cover (${link(cover.url, cover.source || "source")}).` : "",
     `NASA HLS sees winter cover on only ~${Math.round(hs.lo) === Math.round(hs.hi) ? fmtInt(hs.lo) : `${fmtInt(hs.lo)}–${fmtInt(hs.hi)}`}% of focus-area fields: a lower bound, because small or late-planted covers aren't visible from space.`,
     "The river may take more than one season to respond (nitrate stored in soils).",
@@ -295,26 +316,30 @@ function renderKpis() {
     costL = `spent removing nitrate, <strong>incl. capital</strong>${yf.omF ? ` (${usd(yf.omF.value)} operating + ${usd(capital)} capital)` : ""}`;
     costS = link(yf.costF.url, yf.costF.source || "source");
   } else if (yf.est) {
-    costV = `~${usdRange(yf.est.lo, yf.est.hi)}`;
-    costL = `removal cost, <strong>estimate</strong>: ${fmtInt(yf.plantDays)} days × ${usd(yf.cpd.lo)}–${usd(yf.cpd.hi)}/day, operating only (no full-year figure published)`;
-    const src = (th.sources || []).find((s) => /cost_per_day|om_cost/.test(s.id));
-    costS = src ? link(src.url, "CIWW cost per day") : "";
+    costV = `${usdRange(yf.est.lo, yf.est.hi)}`;
+    costL = `removal cost <strong>(estimate)</strong>: ${fmtInt(yf.plantDays)} days × ~${usd(yf.est.rateLo)}/day${yf.est.q1 ? " (Q1-2026 average)" : ""} to ~${usd(yf.cpd.hi)}/day (full capacity), operating only; no full-year figure published`;
+    const src = yf.est.q1F || (th.sources || []).find((s) => /cost_per_day|om_cost/.test(s.id));
+    costS = src ? link(src.url, "CIWW costs") : "";
   }
-  const banHomesTxt = isNum(yf.banHomes) && yf.banHomes < yf.banDays ? (yf.banBiz ? ` for businesses and government; <strong>${fmtInt(yf.banHomes)} days for homes</strong>` : `, all customers; <strong>${fmtInt(yf.banHomes)} days for homes</strong>`) : "";
+  const homesLess = isNum(yf.banHomes) && yf.banHomes < yf.banDays;
+  const banV = !homesLess ? fmtInt(yf.banDays) : yf.banBiz ? fmtInt(yf.banHomes) : `<span class="kpi-pre">up to</span> ${fmtInt(yf.banDays)}`;
+  const banL = !homesLess ? "days of lawn-watering ban" : yf.banBiz ? `days of lawn-watering ban for homes, <strong>${fmtInt(yf.banDays)} for businesses</strong>` : `days of lawn-watering ban (homes: <strong>${fmtInt(yf.banHomes)}</strong>)`;
+  const gauge = shortSite(siteName(site));
+  const priorTxt = yf.record && yf.prior ? ` — longest run on record (previous most: ${fmtInt(yf.prior.value)} days in ${yf.prior.year}, ${link(yf.prior.url, yf.prior.source || "source")})` : "";
   // ban dates are derived by us from the utility's (CIWW) releases: name the utility, not ourselves
   const banSrc = yf.banF ? (/field to faucet|derived/i.test(yf.banF.source || "") ? `${/CIWW|Central Iowa Water Works/i.test(`${yf.banF.source_title} ${yf.banF.url}`) ? "CIWW" : "utility"} releases: ban dates` : `${yf.banF.source || "source"}: ban dates`) : "";
   const tiles = [
-    { v: fmtInt(obs.days_over10), red: true, l: `days the Raccoon River intake was above the 10 mg/L limit${isNum(measured) ? ` (of ${fmtInt(measured)} measured)` : ""}`, s: srcLine(link(nwisUrl(site), `USGS ${site}`), chipSc) },
-    { v: fmtInt(yf.plantDays), l: `days the nitrate-removal plant ran${yf.record ? " — a record" : ""}`, s: srcLine(yf.plantF ? link(yf.plantF.url, yf.plantF.source || "source") : "", yf.plantF ? chipF : chipSc) },
+    { v: fmtInt(obs.days_over10), red: true, l: `days the ${esc(gauge)} (upstream of the intake) was above the 10 mg/L drinking-water limit${isNum(measured) ? ` (of ${fmtInt(measured)} measured)` : ""}`, s: srcLine(link(nwisUrl(site), `USGS ${site}`), chipSc) },
+    { v: fmtInt(yf.plantDays), l: `days the nitrate-removal plant ran${yf.span ? ` (${yf.span})` : ""}${priorTxt}`, s: srcLine(yf.plantF ? link(yf.plantF.url, yf.plantF.source || "source") : "", yf.plantF ? chipF : chipSc) },
     { v: costV, l: costL, s: srcLine(costS, chipF) },
-    { v: fmtInt(yf.banDays), l: `days of lawn-watering ban${banHomesTxt}`, s: srcLine(yf.banF ? link(yf.banF.url, banSrc) : "", chipF) },
+    { v: banV, l: banL, s: srcLine(yf.banF ? link(yf.banF.url, banSrc) : "", chipF) },
     { v: yf.people ? (yf.people.value >= 1e5 ? `${Math.round(yf.people.value / 1000)}k${yf.peopleTxt?.endsWith("+") ? "+" : ""}` : fmtInt(yf.people.value)) : "–", l: "people drink this water", s: srcLine(yf.people ? link(yf.people.url, yf.people.source || "source") : "", chipF) },
   ];
   document.getElementById("city-kpis").innerHTML = tiles.map((t) => `<div class="kpi"><div class="kpi-value ${t.red ? "red" : ""}">${t.v}</div><div class="kpi-label">${t.l}</div><div class="kpi-src">${t.s || ""}</div></div>`).join("");
   const lede = document.getElementById("city-lede");
   const partial = obs.partial_year_through ? ` ${YEAR} is a partial year (data through ${fmtDate(parseDate(obs.partial_year_through))}).` : "";
   lede.innerHTML = isNum(obs.days_over10) && isNum(measured)
-    ? `In ${YEAR} the Raccoon River at the intake was above the federal nitrate limit on ${fmtInt(obs.days_over10)} of ${fmtInt(measured)} measured days, ${naturalFreq(obs.days_over10, measured)}.${partial} NASA satellites show when upstream fields sit bare on wet soil — when nitrate can wash out.`
+    ? `In ${YEAR} the ${esc(gauge)} (upstream of the intake) was above the 10 mg/L drinking-water limit on ${fmtInt(obs.days_over10)} of ${fmtInt(measured)} measured days, ${naturalFreq(obs.days_over10, measured)}. That limit applies to drinking water: the utility treated the water so the tap met the standard.${partial} NASA satellites show when upstream fields sit bare on wet soil — when nitrate can wash out.`
     : "";
 }
 
@@ -407,8 +432,7 @@ function renderDeltas(lvl, rp) {
     return `<div class="delta"><div class="delta-num ${b.mid === 0 ? "zero" : ""}">${t.f(b.mid)}</div><div class="delta-lab">${t.lab}</div><div class="delta-rng">${lvl.x === 0 ? "&nbsp;" : rangeTxt(b, t.f)}</div></div>`;
   }).join("");
   const kept = avoided(lvl, "lbN_kept");
-  const fert = fact("fert_price_usd_lb_N");
-  const keptTxt = kept && lvl.x > 0 ? `<p class="fine" style="grid-column:1/-1">That is about <strong>${fmtLb(kept.mid)}</strong> of nitrogen (range ${fmtLbRange(kept.lo, kept.hi)}) staying upstream instead of reaching the intakes: fertilizer farmers already paid for${fert ? ` (at ${link(fert.url, `$${fert.value.toFixed(2)}/lb N`)}, an upper bound)` : ""}.</p>` : "";
+  const keptTxt = kept && lvl.x > 0 ? `<p class="fine" style="grid-column:1/-1">That is about <strong>${fmtLb(kept.mid)}</strong> of nitrogen (range ${fmtLbRange(kept.lo, kept.hi)}) kept out of the two rivers, measured at the gauges: nitrogen that would otherwise leave the fields (part fertilizer, part soil N).</p>` : "";
   document.getElementById("replay-deltas").innerHTML = html + keptTxt;
 }
 const fmtLbRange = (a, b) => (isNum(b) && b >= 1e6 && a >= 1e5 ? `${(a / 1e6).toFixed(1)}–${(b / 1e6).toFixed(1)} million lb` : `${fmtLb(a)}–${fmtLb(b)}`);

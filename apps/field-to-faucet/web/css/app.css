@@ -267,6 +267,9 @@ table.data tr.best td { font-weight: 700; color: var(--ink); }
 .nasa-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 16px 0 0; font-size: 0.98rem; color: var(--ink); max-width: 70rem; }
 .nasa-line .nasa { flex: none; position: relative; top: -1px; }
 .hero-cost { font-size: 0.8em; color: var(--ink-2); white-space: nowrap; }
+.hero-src { margin: 8px 0 0; max-width: 58rem; font-size: 0.82rem; line-height: 1.45; color: var(--ink-2); }
+.hero-src:empty { display: none; }
+.kpi-pre { font-size: 0.55em; font-weight: 600; color: var(--ink-2); margin-right: 2px; }
 .impact { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: var(--radius); padding: 16px 18px 14px; max-width: 70rem; }
 .impact-label { display: block; font-weight: 650; color: var(--ink); font-size: 0.98rem; }
 .impact-label #adopt-hero-frac { color: var(--accent); font-size: 1.12em; }

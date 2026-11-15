@@ -103,13 +103,13 @@ export function addSites(map, sites) {
   const fc = { type: "FeatureCollection", features: sites.filter((s) => isNum(s.lon) && isNum(s.lat)).map((s) => ({ type: "Feature", properties: { site: s.site, name: s.name }, geometry: { type: "Point", coordinates: [s.lon, s.lat] } })) };
   map.addSource("sites", { type: "geojson", data: fc });
   map.addLayer({ id: "sites-c", type: "circle", source: "sites", paint: { "circle-radius": 6, "circle-color": cssVar("--ink"), "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
-  // The two intakes are ~30 km apart: put the western label to the left of its dot and the eastern one to the right.
+  // The two river gauges (upstream of the intakes) are ~30 km apart: put the western label to the left of its dot and the eastern one to the right.
   const lons = fc.features.map((f) => f.geometry.coordinates[0]);
   const mid = (Math.min(...lons) + Math.max(...lons)) / 2;
   for (const s of fc.features) {
     const river = String(s.properties.name).split(",")[0].replace(/ at .*/, "");
     const west = fc.features.length > 1 && s.geometry.coordinates[0] < mid;
-    addLabel(map, s.geometry.coordinates, `${river} intake`, "site", west ? "right" : "left");
+    addLabel(map, s.geometry.coordinates, `${river} gauge`, "site", west ? "right" : "left");
   }
 }
 

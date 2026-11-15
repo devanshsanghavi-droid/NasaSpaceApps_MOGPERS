@@ -15,7 +15,7 @@ Where a module note (`notes/*.md`) disagrees with these files, the files win. Kn
 **Short version.**
 1. The pre-registered model (v1) beats climatology and a conceptual model on 2023-2025, years it never saw (NSE 0.62
    and 0.56 against 0.30 and 0.27), but it badly misses the 2025 crisis (6 modelled days above 10 mg/L against 115
-   measured at the Raccoon intake).
+   measured on the Raccoon River at Van Meter, upstream of the intake).
 2. A second model (v2) built after that miss recovers most of 2025 at the Raccoon (83 of 115 days) and passes a blind
    2013 check, but it does not help at the Des Moines River, and its test scores are post-hoc.
 3. Because of (1), the app never uses a modelled absolute level for impact numbers. Scenarios apply a relative change to
@@ -376,7 +376,9 @@ The utility's operating rules are not public, so the scenarios use proxies.
 - Scenario numbers changed on 2026-11-15 (review fixes). `web/data/scenarios.json` now gives, at 25%, 2025 mixture:
   Raccoon days 7 (2-16), Des Moines days 21 (5-36), plant days 16 (3-34), $234k ($47k-507k), ban days 23 (9-31); trials
   only: 9 (1-21), 13 (2-28), 10 (2-36), $157k ($29k-534k), 17 (2-28). 2026 mixture: 5 (4-22), 30 (11-56), 14 (4-29),
-  $209k ($64k-444k), 16 (1-26); trials only: 12 (1-30), 21 (7-71), 14 (2-37), $218k ($29k-564k), 12 (0-29). The earlier
+  $209k ($64k-444k), 16 (1-26); trials only: 12 (1-30), 21 (7-71), 14 (2-37), $218k ($29k-564k), 12 (0-29). Nitrogen
+  kept at the gauges, 2025 at 25%: 6.5 million lb (2.1-9.9 million) mixture, 4.8 million lb (1.1-10.5 million) trials
+  only. Cost at the Q1-2026 daily rate: $134k ($25k-284k). The earlier
   run (proxy-on plant days) gave 2025 plant days 23 (5-41), $350k. `notes/scenarios.md` §4 was regenerated from the JSON.
 - `facts.json → plant_cost_per_day_usd.range.lo` = $4,000 has no quote behind it (the CIWW page gives only the $16,000
   full-capacity figure). The scenarios do not use it; cost per day stays U[$14,286, $16,000].

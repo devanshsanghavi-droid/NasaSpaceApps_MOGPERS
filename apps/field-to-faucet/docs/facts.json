@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-11-14T00:00:00Z",
+  "generated_at": "2026-11-15T00:00:00Z",
   "module": "facts",
-  "method_note": "First pass (2026-11-14) used web-search snippets only. Verification pass (2026-11-14): pages on ciww.gov, kcci.com, iowapublicradio.org, nutrientstrategy.iastate.edu, ars.usda.gov, iowaagriculture.gov, extension.iastate.edu and waterservices.usgs.gov were fetched and read; 'primary' means the number was read on the fetched page and the quote is copied from it (PDF table rows are flattened text). nrcs.usda.gov and mymarketnews.ams.usda.gov dropped connections, and other hosts were blocked, so those facts stay 'secondary'. extra_quotes holds supporting quotes; inrs_2024_update holds the INRS Science Team's March 2024 revised efficiencies.",
+  "method_note": "First pass (2026-11-14) used web-search snippets only. Verification pass (2026-11-14): pages on ciww.gov, kcci.com, iowapublicradio.org, nutrientstrategy.iastate.edu, ars.usda.gov, iowaagriculture.gov, extension.iastate.edu and waterservices.usgs.gov were fetched and read; 'primary' means the number was read on the fetched page and the quote is copied from it (PDF table rows are flattened text). nrcs.usda.gov and mymarketnews.ams.usda.gov dropped connections, and other hosts were blocked, so those facts stay 'secondary'. extra_quotes holds supporting quotes; inrs_2024_update holds the INRS Science Team's March 2024 revised efficiencies. Wording pass (2026-11-15): the CIWW cost page, the IPR 2025-06-20 ban story, the CIWW 193-day release, IPR 2026-06-09 and the INRS 2024 update PDF were re-fetched with curl and the quotes re-checked; www.epa.gov, littlevillagemag.com and bluewaterhealthyliving.com were blocked by the session proxy.",
   "verification_levels": {
     "primary": "number read by us on the fetched original page on 2026-11-14; quote copied from it",
     "derived": "our arithmetic from primary-verified inputs (e.g. day counts between verified dates)",
@@ -116,10 +116,7 @@
       "claim": "At full capacity (7 vessels) the facility costs about $16,000 a day to run; partial operation costs less.",
       "value": 16000,
       "unit": "USD/day",
-      "range": {
-        "lo": 4000,
-        "hi": 16000
-      },
+      "range": null,
       "year": 2026,
       "source_title": "What is the Nitrate Removal Facility?",
       "publisher": "Central Iowa Water Works",
@@ -128,14 +125,14 @@
       "quote": "When operating at full capacity (seven vessels), the Nitrate Removal Facility costs approximately $16,000 per day to run.",
       "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Upper bound, not average. Our arithmetic: 2025 O&M $1.6M / 112 operating days = about $14,300 per operating day. Axios 'about $11,000' and older '$10,000/day' figures were not rechecked; do not use.",
+      "notes": "Upper bound, not average. Our arithmetic: 2025 O&M $1.6M / 112 operating days = about $14,300 per operating day. Axios 'about $11,000' and older '$10,000/day' figures were not rechecked; do not use. FLAG (2026-11-15): an earlier draft gave a $4,000/day low end (range lo); it is not on the CIWW page (re-fetched 2026-11-15) or any opened source, so the range was removed. Lower daily rates: 2025 O&M per run day (~$14k, our arithmetic) and Q1-2026 O&M per run day (~$8.4k, fact plant_cost_per_day_2026_q1_usd).",
       "extra_quotes": [
         {
           "url": "https://www.iowapublicradio.org/environment/2026-06-09/central-iowa-water-works-nitrate-lawn-watering-ban-drinking-water",
           "quote": "Operating the nitrate removal facility at Fleur Drive can cost $16,000 per day when operating at full capacity."
         }
       ],
-      "checked_at": "2026-11-14"
+      "checked_at": "2026-11-15"
     },
     {
       "id": "plant_om_cost_2026_q1_usd",
@@ -151,8 +148,25 @@
       "quote": "In the first quarter of 2026, operations and maintenance costs were approximately $660,000. The 2026 capital costs will be calculated in early 2027.",
       "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "CORRECTED wording: CIWW says the 2026 *capital* costs come in early 2027 (earlier draft said 'full 2026 costs'). No full-year 2026 O&M figure published as of 2026-11-14.",
-      "checked_at": "2026-11-14"
+      "notes": "CORRECTED wording: CIWW says the 2026 *capital* costs come in early 2027 (earlier draft said 'full 2026 costs'). No full-year 2026 O&M figure published as of 2026-11-14. Quote re-verified with curl on 2026-11-15. Per run day: see fact plant_cost_per_day_2026_q1_usd.",
+      "checked_at": "2026-11-15"
+    },
+    {
+      "id": "plant_cost_per_day_2026_q1_usd",
+      "claim": "In Q1 2026 the nitrate removal facility's O&M cost averaged about $8,400 per run day: about $660,000 over 79 run days (6 Jan - 2 Mar and 9 - 31 Mar 2026).",
+      "value": 8354,
+      "unit": "USD/day",
+      "range": null,
+      "year": 2026,
+      "source_title": "What is the Nitrate Removal Facility? (cost) + KCCI run dates",
+      "publisher": "Field to Faucet (derived)",
+      "url": "https://ciww.gov/what-is-the-nitrate-removal-facility/",
+      "date_published": null,
+      "quote": "In the first quarter of 2026, operations and maintenance costs were approximately $660,000.",
+      "verification": "derived",
+      "source_kind": "derived",
+      "notes": "Our arithmetic: $660,000 / 79 = $8,354 per run day. Run days: 6 Jan - 2 Mar = 56, 9 - 31 Mar = 23 (KCCI 2026: 'It ran Jan. 6 through March 2. Operating resumed March 9'; see plant_days_2026 extra_quotes). Winter, partial operation: use as a lower daily rate (e.g. 2026 estimate 193 days x $8.4k-16k = $1.6-3.1M). Cost quote re-fetched with curl 2026-11-15.",
+      "checked_at": "2026-11-15"
     },
     {
       "id": "plant_days_2026",
@@ -168,7 +182,7 @@
       "quote": "The decision follows the conclusion of operations at the Nitrate Removal Facility, which ran for 193 days during the 2026 season before being taken offline on Thursday, July 23, 2026.",
       "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "Our check: 6 Jan - 2 Mar = 56 days, 9 Mar - 23 Jul = 137 days, total 193. So it was NOT continuous: KCCI (2026-07-28) says '193 straight days', which conflicts with KCCI's own March reports of a one-week stop. Say '193 days', not '193 straight days'. WeAreIowa's 192 is an outlier. No fall-2026 restart found as of 2026-11-14.",
+      "notes": "Our check: 6 Jan - 2 Mar = 56 days, 9 Mar - 23 Jul = 137 days, total 193. So it was NOT continuous: KCCI (2026-07-28) says '193 straight days', which conflicts with KCCI's own March reports of a one-week stop. Say '193 days', not '193 straight days'. WeAreIowa's 192 is an outlier. No fall-2026 restart found as of 2026-11-14. 'Record' (2026-11-15 check): the CIWW 193-day release (re-fetched) does not use the word 'record'. 'Longest run on record' is our comparison with fact plant_days_record_prior (177 days in 2015: KCCI 2025-08-12 and IPR 2026-06-09, 'The record was set in 2015 with 177 days', re-fetched). Search snippets show the Des Moines Register and Little Village calling 193 days 'record-setting', but those pages were blocked and not opened. App label: '193 days (Jan-Jul)', longest on record (previous most: 177 days in 2015).",
       "extra_quotes": [
         {
           "url": "https://www.kcci.com/article/kcci-investigates-central-iowa-water-works-nitrate-levels-2026/71182189",
@@ -179,7 +193,7 @@
           "quote": "As of Monday, Kahler said the Fleur Drive nitrate removal facility had run for 148 days in 2026, representing about 95% of the year so far."
         }
       ],
-      "checked_at": "2026-11-14"
+      "checked_at": "2026-11-15"
     },
     {
       "id": "plant_days_record_prior",
@@ -218,7 +232,7 @@
       "quote": "commercial irrigation and lawn watering can resume on Wednesday, July 30, as part of the phased exit from the Stage III lawn watering ban initiated on June 12.",
       "verification": "primary",
       "source_kind": "primary_publisher",
-      "notes": "The ban release itself (ciww.gov/?p=48) shows no date on the page; its WordPress post date (2025-06-06) is a site-migration artifact. Date confirmed by CIWW 29 Jul 2025 release, IPR and KCCI. Run-up: voluntary 25% cut from 30 May 2025, 50% request 11 Jun (KCCI 2025-08-15).",
+      "notes": "The ban release itself (ciww.gov/?p=48) shows no date on the page; its WordPress post date (2025-06-06) is a site-migration artifact. Date confirmed by CIWW 29 Jul 2025 release, IPR and KCCI. Run-up: voluntary 25% cut from 30 May 2025, 50% request 11 Jun (KCCI 2025-08-15). 'First-ever': IPR 2025-06-20 (quote in extra_quotes, fetched 2026-11-15); see fact ban_2025_first_ever.",
       "extra_quotes": [
         {
           "url": "https://ciww.gov/ciww-issues-lawn-watering-ban-effective-immediately/",
@@ -231,9 +245,30 @@
         {
           "url": "https://www.iowapublicradio.org/ipr-news/2025-06-25/nitrate-levels-central-iowa-water-des-moines",
           "quote": "Central Iowa Water Works issued a lawn watering ban June 12"
+        },
+        {
+          "url": "https://www.iowapublicradio.org/ipr-news/2025-06-20/des-moines-lawn-watering-ban-central-iowa",
+          "quote": "The Des Moines area’s first-ever lawn watering ban has been in effect for over a week ."
         }
       ],
-      "checked_at": "2026-11-14"
+      "checked_at": "2026-11-15"
+    },
+    {
+      "id": "ban_2025_first_ever",
+      "claim": "The June 2025 Stage III ban was the Des Moines area's first-ever lawn-watering ban; compliance cut demand by more than 30%, letting CIWW keep pace with nitrate removal and meet federal standards.",
+      "value": null,
+      "unit": "text",
+      "range": null,
+      "year": 2025,
+      "source_title": "Des Moines lawn watering ban (Iowa Public Radio, 2025-06-20)",
+      "publisher": "Iowa Public Radio",
+      "url": "https://www.iowapublicradio.org/ipr-news/2025-06-20/des-moines-lawn-watering-ban-central-iowa",
+      "date_published": "2025-06-20",
+      "quote": "The Des Moines area’s first-ever lawn watering ban has been in effect for over a week . Central Iowa Water Works (CIWW) said compliance reduced demand by over 30%, allowing the regional utility to keep pace with nitrate removal and meet federal standards.",
+      "verification": "primary",
+      "source_kind": "news",
+      "notes": "Fetched with curl 2026-11-15; quote copied from the page text (the stray space before the full stop is a link boundary on the page). Also supports 'the tap water met the standard' for 2025.",
+      "checked_at": "2026-11-15"
     },
     {
       "id": "ban_2025_residential_eased",
@@ -646,7 +681,8 @@
         "sd": 26,
         "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
         "table": "Table 1, p. 3",
-        "quote": "Rye - Rotational average 28 (26)"
+        "quote": "Rye - Rotational average 28 (26)",
+        "quote_verified_at": "2026-11-15"
       },
       "checked_at": "2026-11-14"
     },
@@ -670,6 +706,40 @@
         "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf"
       },
       "checked_at": "2026-11-14"
+    },
+    {
+      "id": "inrs_rye_soy_year_pct",
+      "claim": "INRS 2024 update: in a corn-soybean rotation, a cereal rye cover crop cuts the flow-weighted nitrate-N concentration in tile drainage by 30% (SD 27) in the soybean year; 28% (SD 26) averaged across the rotation; 27% (SD 30) in the corn year.",
+      "value": 30,
+      "unit": "% reduction flow-weighted NO3-N concentration",
+      "range": null,
+      "year": 2024,
+      "source_title": "INRS Science Team: Updated nitrogen practice efficiencies (Mar 2024), Table 1",
+      "publisher": "Iowa Nutrient Reduction Strategy Science Team (Iowa State Univ.)",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
+      "date_published": "2024-03-18",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "checked_at": "2026-11-15",
+      "quote": "Rye - C/S Soybean year 30 (27) 27",
+      "notes": "Table 1, p. 3 of the PDF (fetched with curl and converted with pdftotext 2026-11-15); columns: updated mean (SD), site years n = 27. Same table: 'Rye - Rotational average 28 (26) 37*' and 'Rye - C/S Corn year 27 (30) 27'. The table measures flow-weighted nitrate concentration (FWNC), not load or N lost per acre."
+    },
+    {
+      "id": "inrs_rye_soy_year_sd",
+      "claim": "Standard deviation of the INRS 2024 rye soybean-year nitrate concentration reduction: 27 percentage points.",
+      "value": 27,
+      "unit": "percentage points",
+      "range": null,
+      "year": 2024,
+      "source_title": "INRS Science Team: Updated nitrogen practice efficiencies (Mar 2024), Table 1",
+      "publisher": "Iowa Nutrient Reduction Strategy Science Team (Iowa State Univ.)",
+      "url": "https://www.nutrientstrategy.iastate.edu/sites/default/files/documents/INRS_2024_PracticeEffienciesNitrogen_U20240319.pdf",
+      "date_published": "2024-03-18",
+      "verification": "primary",
+      "source_kind": "primary_publisher",
+      "checked_at": "2026-11-15",
+      "quote": "Rye - C/S Soybean year 30 (27) 27",
+      "notes": "Table 1, p. 3; 'Standard deviations are in parentheses following the average efficiencies' (p. 2)."
     },
     {
       "id": "inrs_cover_oat_pct",
@@ -1096,14 +1166,14 @@
       "quote": "The U.S. Environmental Protection Agency (EPA) set the legal limit of nitrate in public drinking water at 10 mg/L to protect against “blue baby syndrome,” a potentially fatal condition for infants.",
       "verification": "primary",
       "source_kind": "news",
-      "notes": "'As nitrogen' is the convention (USGS 99133 units 'milligrams per liter as nitrogen'); ~45 mg/L as nitrate ion. CDC/ATSDR page not opened (host blocked).",
+      "notes": "'As nitrogen' is the convention (USGS 99133 units 'milligrams per liter as nitrogen'); ~45 mg/L as nitrate ion. CDC/ATSDR page not opened (host blocked). EPA primary page (https://www.epa.gov/ground-water-and-drinking-water/national-primary-drinking-water-regulations) could not be opened on 2026-11-15 (proxy 403); existing IPR source kept. The 10 mg/L standard applies to treated drinking water; river values are compared with it only as a benchmark.",
       "extra_quotes": [
         {
           "url": "https://www.kcci.com/article/kcci-investigates-central-iowa-water-works-nitrate-levels-2026/71182189",
           "quote": "The EPA set the standard in 1991. It has not set a timeline for revisiting the topic."
         }
       ],
-      "checked_at": "2026-11-14"
+      "checked_at": "2026-11-15"
     },
     {
       "id": "health_cancer_iwhs",

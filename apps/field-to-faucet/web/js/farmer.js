@@ -393,11 +393,23 @@ function costShare(s) {
   const items = [];
   for (const w of progs) {
     const f = Object.entries(F).find(([id, x]) => x && x.url === w.url && isNum(x.value) && /cost_?share|eqip/i.test(id) && /usd/i.test(x.unit || ""));
-    if (f && !items.some((i) => i.url === f[1].url)) items.push({ name: shortProgram(w.program), url: f[1].url, value: f[1].value, verified: f[1].verified !== false });
+    if (f && !items.some((i) => i.url === f[1].url)) {
+      const x = f[1];
+      // range.lo = lower rate (e.g. IDALS returning users $20); third-party = figure not read on the agency's own page
+      const lo = isNum(x.range?.lo) && x.range.lo <= x.value ? x.range.lo : x.value;
+      const third = /third/i.test(`${x.source_kind || ""} ${x.source || ""}`);
+      const name = shortProgram(w.program);
+      items.push({ name, id: x.alias_of || x.id || f[0], url: x.url, lo, hi: x.value, value: x.value, verified: x.verified !== false, third, federal: name === "EQIP" });
+    }
   }
   if (!items.length) return progs.length ? { listed: true } : null;
-  const vals = items.map((i) => i.value);
-  return { lo: Math.min(...vals), hi: Math.max(...vals), items };
+  const state = items.filter((i) => !i.federal);
+  const agency = items.filter((i) => !i.third && i.verified);
+  return {
+    lo: Math.min(...items.map((i) => i.lo)), hi: Math.max(...items.map((i) => i.hi)), items,
+    state: state.length ? { lo: Math.min(...state.map((i) => i.lo)), hi: Math.max(...state.map((i) => i.hi)) } : null,
+    agencyHi: agency.length ? Math.max(...agency.map((i) => i.hi)) : null,
+  };
 }
 function shortProgram(p) {
   const t = String(p || "program").replace(/\s*\(.*$/, "");
@@ -505,16 +517,35 @@ function list(items, fn = (t) => esc(t)) {
 }
 const fold = (title, body) => `<details class="card-sec card-more"><summary>${title}</summary>${body}</details>`;
 
-// "Costs $12–28/acre a year ($24–55 each time it is planted); cost-share of $25–74/acre can cover it."
+// "Costs $12–$28/acre a year ($24–$55 each time it is planted); cost-share of $20–$74/acre (state $20–$30; EQIP ~$74,
+// third-party figure) can cover much of it." The verdict uses only rates read on the agencies' own pages.
 function moneyLine(s, m) {
   const c = s.cost_usd_ac;
   if (!m.cost || !m.share?.items || m.cost.hi === 0) return "";
   const pp = c?.per_planting && isNum(c.per_planting.lo) && isNum(c.per_planting.hi) ? c.per_planting : null;
   const need = pp ? pp.hi : m.cost.hi, needLo = pp ? pp.lo : m.cost.lo;
-  const verdict = m.share.hi >= need ? "can cover it" : m.share.hi >= needLo ? "can cover much of it" : "covers part of it";
-  const srcs = m.share.items.map((i) => `${link(i.url, `${i.name} $${Math.round(i.value)}`)}${i.verified ? "" : " (unverified)"}`).join(", ");
-  return `<p class="money">Costs <strong>${usdRng(m.cost.lo, m.cost.hi)}/acre</strong> a year${pp ? ` (${usdRng(pp.lo, pp.hi)} each time it is planted)` : ""}; cost-share of <strong>${usdRng(m.share.lo, m.share.hi)}/acre</strong> ${verdict}.
+  const hi = isNum(m.share.agencyHi) ? m.share.agencyHi : m.share.hi;
+  const verdict = hi >= need ? "can cover it" : hi >= needLo ? "can cover much of it" : "covers part of it";
+  const fed = m.share.items.filter((i) => i.federal);
+  const parts = [
+    m.share.state ? `state ${usdRng(m.share.state.lo, m.share.state.hi)}` : "",
+    ...fed.map((i) => `${esc(i.name)} ~${usd0(i.value)}${i.third ? ", third-party figure" : i.verified ? "" : ", unverified"}`),
+  ].filter(Boolean);
+  const srcs = m.share.items.map((i) => `${link(i.url, `${i.name} ${usdRng(i.lo, i.hi)}`)} <span class="muted">(fact ${esc(i.id)}${i.third ? "; third-party guide, agency page not opened" : i.verified ? "" : "; unverified"})</span>`).join(", ");
+  return `<p class="money">Costs <strong>${usdRng(m.cost.lo, m.cost.hi)}/acre</strong> a year${pp ? ` (${usdRng(pp.lo, pp.hi)} each time it is planted)` : ""}; cost-share of <strong>${usdRng(m.share.lo, m.share.hi)}/acre</strong>${parts.length > 1 ? ` (${parts.join("; ")})` : ""} ${verdict}.
     <span class="money-src">Cost: ${link(c.url, c.source ? String(c.source).replace(/\s*\(.*$/, "") : "source")}. Cost-share: ${srcs}.</span></p>`;
+}
+
+// INRS 2024 update (Table 1): rye cuts the flow-weighted nitrate CONCENTRATION in tile drainage by 28% (SD 26) as a
+// corn-soy rotation average and by 30% (SD 27) in the soybean year (facts inrs_cover_rye_pct.inrs_2024_update,
+// inrs_rye_soy_year_pct/_sd). Not a cut in load or in nitrogen lost per acre.
+const rye = (s) => /rye/i.test(`${s.id === "S1" ? "rye" : ""} ${s.name || ""}`);
+function ryeTrialText(nr) {
+  const F = factsMap(S.data.facts);
+  const up = F.inrs_cover_rye_pct?.inrs_2024_update;
+  const soy = F.inrs_rye_soy_year_pct, soySd = F.inrs_rye_soy_year_sd;
+  const avg = isNum(up?.value) ? `${up.value}%${isNum(up.sd) ? ` (SD ${up.sd})` : ""}` : pct(nr.mean);
+  return `Trials (INRS 2024 update): rye cuts the nitrate concentration in tile-drainage water by <strong>${avg}</strong> averaged across the corn-soy rotation${isNum(soy?.value) ? `, and by <strong>${soy.value}%</strong>${isNum(soySd?.value) ? ` (SD ${soySd.value})` : ""} in the soybean year` : ""}`;
 }
 
 function cardHTML(x, i, axisMax) {
@@ -525,7 +556,7 @@ function cardHTML(x, i, axisMax) {
   const bar = kept && kept.hi > 0 ? `<div class="ibar" aria-hidden="true"><div class="axis"></div><div class="rng" style="left:${pos(kept.lo)};width:calc(${pos(kept.hi)} - ${pos(kept.lo)})"></div><div class="mid" style="left:calc(${pos(kept.mid)} - 1px)"></div></div>` : "";
   const nr = s.n_loss_reduction;
   const trialUrl = (s.evidence || []).find((e) => e && e.url && /INRS|nutrientstrategy/i.test(`${e.source} ${e.url}`))?.url;
-  const trial = nr && isNum(nr.mean) && nr.mean !== 0 ? `<p>Trials: cuts nitrate in drainage by about <strong>${pct(nr.mean)}</strong>${isNum(nr.lo) && isNum(nr.hi) ? ` (8 in 10: ${pct(nr.lo)}–${pct(nr.hi)})` : ""}${nr.source ? ` · <span title="${esc(nr.source)}">${trialUrl ? link(trialUrl, "INRS 2024") : esc(nr.source)}</span>` : ""}</p>` : "";
+  const trial = nr && isNum(nr.mean) && nr.mean !== 0 ? `<p>${rye(s) ? ryeTrialText(nr) : `Trials: cuts the nitrate concentration in drainage water by about <strong>${pct(nr.mean)}</strong>`}${isNum(nr.lo) && isNum(nr.hi) ? ` (our 8-in-10 range: ${pct(nr.lo)}–${pct(nr.hi)})` : ""}${nr.source ? ` · <span title="${esc(nr.source)}">${trialUrl ? link(trialUrl, "INRS 2024") : esc(nr.source)}</span>` : ""}</p>` : "";
   const yl = m.yl;
   const c = s.cost_usd_ac;
   const costTxt = m.cost
@@ -544,7 +575,7 @@ function cardHTML(x, i, axisMax) {
     <div class="nkept">
       <div class="nkept-v ${!kept || kept.mid === 0 ? "zero" : ""}">${kept ? fmtLbAc(kept.mid) : "–"} <span class="nkept-u">lb N/acre/yr kept</span></div>
       ${bar}
-      <div class="nkept-l">${isCurrent ? "Reference: nothing changes." : kept ? `Long-run average (modelled). In 8 of 10 years: ${fmtLbAc(kept.lo)}–${fmtLbAc(kept.hi)} lb/acre stays in your field instead of the river.${kept.derived ? " (from trials × your field's leak)" : ""}` : "Not estimated for this field."}</div>
+      <div class="nkept-l">${isCurrent ? "Reference: nothing changes." : kept ? `Long-run average (modelled). In 8 of 10 years: ${fmtLbAc(kept.lo)}–${fmtLbAc(kept.hi)} lb/acre less nitrate leaving your field for the river.${kept.derived ? " (from trials × your field's leak)" : ""}` : "Not estimated for this field."}</div>
       ${wetTxt}
       ${m.note ? `<p class="fine">${esc(m.note)}</p>` : ""}
     </div>

@@ -228,7 +228,7 @@ def export_validation(metrics, dm, scen):
     cr, crd = r.get("crisis_2025", {}).get("gbm", {}), d.get("crisis_2025", {}).get("gbm", {})
     lines = [
         (f"Fair test: {'the first version of the model (v1)' if 'v2' in dm.values() else 'the model'} learned from 2016-2022 and was scored on 2023-2025, years it never saw. It captures about "
-         f"{tr['gbm']['NSE']:.0%} of the day-to-day ups and downs of nitrate at the Raccoon intake (NSE {tr['gbm']['NSE']:.2f}) and "
+         f"{tr['gbm']['NSE']:.0%} of the day-to-day ups and downs of nitrate at the Raccoon River gauge at Van Meter, upstream of the intake (NSE {tr['gbm']['NSE']:.2f}) and "
          f"{td['gbm']['NSE']:.0%} at the Des Moines River (NSE {td['gbm']['NSE']:.2f}), against {tr['climatology']['NSE']:.2f} and "
          f"{td['climatology']['NSE']:.2f} for 'the usual level for that date'."),
         (f"It never sees measured nitrate, only NASA weather and soil wetness, satellite cover, crops and river flow. "
@@ -308,7 +308,8 @@ def export_facts():
         rec = dict(value=f.get("value"), unit=f.get("unit"), label=f.get("claim"),
                    source=f.get("publisher") or f.get("source_title"), source_title=f.get("source_title"),
                    url=f.get("url"), verification=f.get("verification"),
-                   verified=f.get("verification") in ("primary", "derived"), range=f.get("range"), year=f.get("year"),
+                   verified=f.get("verification") in ("primary", "derived"), source_kind=f.get("source_kind"),
+                   range=f.get("range"), year=f.get("year"),
                    date_published=f.get("date_published"), quote=f.get("quote"), id=f["id"])
         if "inrs_2024_update" in f:
             rec["inrs_2024_update"] = f["inrs_2024_update"]

@@ -87,9 +87,15 @@ async function run(width, height, tag, dsf) {
   const impact = await impactText();
   const kpis = await page.textContent("#city-kpis");
   if (!hero || /Loading/.test(hero)) problems.push(`[${tag}] hero not rendered: ${hero}`);
-  if (!/Bare farm fields upstream cost Des Moines/.test(hero) || !/NASA satellites show which fields sit bare on wet soil/.test(hero)) problems.push(`[${tag}] hero wording: ${hero}`);
+  if (!/Nitrate from upstream — mostly farmland — forced Des Moines to run its nitrate-removal plant/.test(hero) || !/NASA satellites show which fields sit bare on wet soil/.test(hero)) problems.push(`[${tag}] hero wording: ${hero}`);
+  if (!/up to 56 days \(homes: 40\)/.test(hero)) problems.push(`[${tag}] 2025 hero ban should read "up to 56 days (homes: 40)": ${hero}`);
+  const heroSrc = await page.textContent("#city-h-src");
+  if (!/92% of the nitrogen entering Iowa streams/.test(heroSrc) || !/inrs_nonpoint_share_pct/.test(heroSrc)) problems.push(`[${tag}] hero source note (INRS 92% nonpoint + fact id) missing: ${heroSrc}`);
+  const cityTxt = await page.textContent("#view-city");
+  if (/\bat the intake\b|River intake was|kept on upstream fields|stays on the fields|already paid for/.test(cityTxt)) problems.push(`[${tag}] old wording (intake / kept on fields / already paid) still on the city view`);
+  if (!/Van Meter \(upstream of the intake\)/.test(cityTxt)) problems.push(`[${tag}] gauge should be named "Raccoon River at Van Meter (upstream of the intake)"`);
   if (!/incl\. capital/.test(kpis)) problems.push(`[${tag}] 2025 KPI cost should say "incl. capital": ${kpis}`);
-  if (!/days for homes/.test(kpis)) problems.push(`[${tag}] ban KPI should give the homes figure`);
+  if (!/homes: 40/.test(kpis)) problems.push(`[${tag}] ban KPI should give the homes figure`);
   if (!/nitrogen/.test(impact) || !/fewer plant day/.test(impact) || !/shorter/.test(impact) || !/operating cost avoided/.test(impact) || !/indicative/.test(impact)) problems.push(`[${tag}] impact sentence incomplete: ${impact}`);
   if (!/Seen from space/.test(await page.textContent("#view-city .hero"))) problems.push(`[${tag}] NASA one-liner above the slider missing`);
   const tileOrder = await page.$$eval("#impact-tiles .itile-l", (els) => els.map((e) => e.textContent));
@@ -149,6 +155,8 @@ async function run(width, height, tag, dsf) {
     const kpi26 = await page.textContent("#city-kpis");
     if (hero26 === hero) problems.push(`[${tag}] hero did not change with the replay year`);
     if (/2026/.test(hero26) && !/estimate/.test(kpi26)) problems.push(`[${tag}] 2026 days × $/day cost must say "estimate": ${kpi26}`);
+    if (!/23 days for homes, 42 for businesses/.test(hero26) || !/a record 193 days \(Jan–Jul\)/.test(hero26)) problems.push(`[${tag}] 2026 hero wording: ${hero26}`);
+    if (!/\$1\.6–3\.1M/.test(kpi26) || !/longest run on record \(previous most: 177 days in 2015/.test(kpi26)) problems.push(`[${tag}] 2026 KPI cost/record wording: ${kpi26}`);
     if (tag === "1280") info.push(`HERO 2026: ${hero26}`, `IMPACT 2026 @25%: ${impact26.replace(/\s+/g, " ")}`);
     await noBadText("city 2026");
     if (EXTRA && tag === "1280") await page.screenshot({ path: path.join(EXTRA, `city-hero-2026-${tag}.png`) });
@@ -208,6 +216,8 @@ async function run(width, height, tag, dsf) {
   if (!/not verified/i.test(panel)) problems.push(`[${tag}] unknown cost should read "not verified"`);
   if (!/Leak, lb N\/acre/.test(panel)) problems.push(`[${tag}] leak calendar lacks the lb N/acre row`);
   if (!/cost-share of \$\d+–\$\d+\/acre/.test(panel)) problems.push(`[${tag}] rye money line (cost vs cost-share) missing`);
+  if (!/cost-share of \$20–\$74\/acre \(state \$20–\$30; EQIP ~\$74, third-party figure\)/.test(panel)) problems.push(`[${tag}] cost-share wording should be "$20–$74/acre (state $20–$30; EQIP ~$74, third-party figure)"`);
+  if (!/28% \(SD 26\)[^.]*averaged across the corn-soy rotation, and by 30% \(SD 27\) in the soybean year/.test(panel)) problems.push(`[${tag}] rye trial wording (28% rotation avg, 30% SD 27 soybean year) missing`);
   if (await page.$("#prio-formula")) problems.push(`[${tag}] score formula box should be gone from the sidebar`);
   const openDetails = await page.$$eval(".card details[open]", (els) => els.length);
   if (openDetails) problems.push(`[${tag}] card details should start closed (${openDetails} open)`);

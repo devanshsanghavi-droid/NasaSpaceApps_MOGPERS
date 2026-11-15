@@ -13,15 +13,21 @@ Deliverables in this folder: [`PITCH.md`](PITCH.md) (7 slides + 30-second video)
 
 ## Why it matters
 
-- In 2025 the Raccoon River intake was above the 10 mg/L nitrate limit on **115 of 356 measured days** (USGS 05484500).
+- In 2025 the Raccoon River at Van Meter (USGS 05484500, upstream of the Raccoon intake) was above the 10 mg/L
+  drinking-water level on **115 of 356 measured days**. The utility treated the water to meet the standard.
 - Des Moines' nitrate-removal plant ran **112 days** in 2025 (about **$2.2M** including capital) and a record **193
-  days** in 2026.
-- Central Iowa Water Works imposed lawn-watering bans in both summers: **56 days** for all customers in 2025 and **42 days**
-  for businesses and governments (23 days for homes) in 2026.
-- Replaying 2025 with cover on 25% more of all upstream corn/soy acres (about 17% → 42%) gives about **16 fewer plant
-  days (3-34)**, counted only on days the plant really ran, about **$234k** less operating cost ($47k-507k) and about
-  **23 fewer ban days (9-31, indicative)**. On Iowa trial evidence alone: 10 plant days (2-36), $157k ($29k-534k), 17
-  ban days (2-28).
+  days** between January and July 2026.
+- Central Iowa Water Works imposed lawn-watering bans in both summers, the first ever in 2025. The 2025 ban lasted
+  **up to 56 days (homes: 40)**. The 2026 ban lasted **23 days for homes and 42 for businesses and governments**.
+- Statewide, 92% of the nitrogen in Iowa streams comes from nonpoint sources, mostly farmland.
+- We replayed 2025 with cover added on 25% of all upstream corn/soy acres (about 17% → 42%). Results, with 8-in-10
+  ranges:
+  - about **6.5 million lb of nitrogen** (2.1-9.9 million) kept out of the rivers, measured at the gauges;
+  - about **16 fewer plant days** (3-34), counted only on days the plant really ran;
+  - **about $234k** of operating cost avoided ($47k-507k; ~$134k at the Q1-2026 daily cost);
+  - a ban about **23 days shorter** (9-31, indicative);
+  - **7 fewer** days above 10 mg/L at the Raccoon gauge (2-16).
+- On Iowa trial evidence alone: 10 plant days (2-36), $157k ($29k-534k), 17 ban days (2-28), 4.8 million lb.
 
 Sources and status for each number: [`CLAIMS.md`](CLAIMS.md).
 
@@ -52,7 +58,7 @@ cd apps/field-to-faucet/web && python3 -m http.server 8000
 - **Replay** of the measured river with more living cover, and the nitrate kept out of the river.
 - **River record** 2016-2026 with the model's 8-in-10 band, shaded training, test and live periods.
 - **Hotspot map** of the 290 upstream sub-watersheds (HUC-12s), shaded by share of the modelled leak.
-- **14-day outlook** for the intake, with the chance of exceeding 10 mg/L on each day and the drivers behind it.
+- **14-day outlook** for the two river gauges upstream of the intakes, with the chance of exceeding 10 mg/L on each day and the drivers behind it.
 
 **Farmer (`#farmer`)**
 - Map of 1,769 forty-acre fields in a 10-HUC-12 focus area on the North Raccoon (Sac and Calhoun counties area),
@@ -182,8 +188,8 @@ rasterio, pystac-client, planetary-computer, xarray, zarr, geopandas, shapely, p
   error by only 0.002-0.005, and it drives most of the plant-day effect. The 50/50 mixture is the headline and a
   **trials-only** result is shown next to it.
 - Plant and ban days come from proxy rules fitted to 2025 and tested on 2026. In 2025 and 2026 a plant day counts only
-  if the plant really ran that day. Cost = plant days × $14,286-16,000 (operating only; no source gives a
-  partial-operation cost).
+  if the plant really ran that day. Cost = plant days × ~$14k-16k (2025 O&M per run day to full capacity; operating
+  only, an upper estimate). The lower check is the Q1-2026 average of ~$8.4k per run day ($660k / 79 days).
 - Results are p50 and the 10th-90th percentile.
 
 **Strategy cards.** Practice efficiency (INRS 2024, truncated normal) × the field's own modelled leak distribution ×

@@ -37,6 +37,7 @@
             <div class="seg seg-year" role="group" aria-label="Replay year" id="year-switch"></div>
           </div>
           <h1 id="city-h" class="hero-h">Loading the river record…</h1>
+          <p class="hero-src" id="city-h-src"></p>
           <p class="nasa-line"><span class="nasa">NASA</span> <span><strong>Seen from space:</strong> bare soil <span class="muted">(NASA HLS: Landsat + Sentinel-2)</span> + wet soil <span class="muted">(NASA POWER)</span> = when nitrate leaks.</span></p>
           <div class="impact" id="impact">
             <div class="impact-control">
@@ -81,7 +82,7 @@
       <div class="wrap section" id="sec-river">
         <div class="section-head">
           <h2>The river record and our model</h2>
-          <p class="sub">Daily nitrate at the city's intake gauges, measured by USGS sensors, against a model that only sees NASA weather, soil wetness and satellite cover (never the river's nitrate).</p>
+          <p class="sub">Daily nitrate at the two river gauges upstream of the city's intakes, measured by USGS sensors, against a model that only sees NASA weather, soil wetness and satellite cover (never the river's nitrate).</p>
         </div>
         <p class="honest" id="river-honest"></p>
         <div class="chart-card">
@@ -108,7 +109,7 @@
             </div>
             <div id="city-map" class="map" role="region" aria-label="Map of upstream sub-watersheds"></div>
             <div class="legend-ramp" id="city-map-legend"></div>
-            <p class="cap">Data: bare-soil share from NASA MODIS (250 m, every 8 days) and NASA HLS; wet-soil drainage from NASA POWER rain and root-zone wetness; soils USDA SSURGO; crops USDA CDL; outlines USGS WBD. Calibrated so all sub-watersheds add up to the load USGS measured at the intakes.</p>
+            <p class="cap">Data: bare-soil share from NASA MODIS (250 m, every 8 days) and NASA HLS; wet-soil drainage from NASA POWER rain and root-zone wetness; soils USDA SSURGO; crops USDA CDL; outlines USGS WBD. Calibrated so all sub-watersheds add up to the load USGS measured at the two river gauges.</p>
           </div>
           <aside class="hotspots">
             <h3>Top hotspots <span class="muted" id="hotspot-basin"></span></h3>
