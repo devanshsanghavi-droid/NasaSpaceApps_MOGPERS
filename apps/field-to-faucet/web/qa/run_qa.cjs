@@ -292,7 +292,7 @@ async function run(width, height, tag, dsf) {
   await noMock("method");
   await noBadText("method");
   if (tag === "1280") {
-    const h = await page.evaluate(() => document.getElementById("outlook-val").getBoundingClientRect().top + window.scrollY - 20);
+    const h = await page.evaluate(() => document.getElementById("outlook-val").parentElement.getBoundingClientRect().top + window.scrollY - 30);
     await page.screenshot({ path: save("method-1280.png"), fullPage: true, clip: { x: 0, y: 0, width, height: h } });
   }
   await noHScroll("method");
