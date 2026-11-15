@@ -1,7 +1,7 @@
 // City / tap-water view: impact hero (plant days, $, ban days and what living cover would avoid), KPI strip with
 // sources, replay of the measured river with an adoption slider, river model chart, hotspot map, 14-day outlook.
 /* global maplibregl */
-import { esc, fmt, fmtDate, fmtInt, isNum, link, naturalFreq, pct, segmented, shareAsFreq, usd, LEAK_RAMP, parseDate, band } from "./util.js";
+import { esc, fmt, fmtDate, fmtInt, isNum, link, naturalFreq, pct, plural, segmented, shareAsFreq, usd, LEAK_RAMP, parseDate, band } from "./util.js";
 import { colors, legendHTML, timeChart, toXY } from "./charts.js";
 import { addContext, addPlaces, addRivers, addSites, bboxOf, createMap, quantileBreaks, rampLegend, stepExpr } from "./map.js";
 import { ensure, factsMap, mockChip, nasaStrip } from "./data.js";
@@ -25,6 +25,10 @@ export function renderCity(store) {
   initYearSwitch(ys);
   initSliders();
   renderYear();
+}
+
+// River chart + outlook: drawn once river_series / validation / outlook have loaded (after the hero).
+export function renderCityRiver() {
   renderRiver();
   renderOutlook();
 }
@@ -63,6 +67,36 @@ function avoided(lvl, key, y = YEAR) {
   const sign = key === "lbN_kept" ? -1 : 1;
   const a = sign * (b0.mid - bx.hi), b = sign * (b0.mid - bx.lo);
   return { mid: Math.max(0, sign * (b0.mid - bx.mid)), lo: Math.max(0, Math.min(a, b)), hi: Math.max(0, Math.max(a, b)) };
+}
+// Trial-evidence-only result for the same level (scenarios.json levels[].trials_only), when the export has it.
+function trialsOnly(lvl, key) {
+  const t = lvl?.trials_only;
+  if (!t) return null;
+  const b = band(t.avoided?.[key] ?? t[key]);
+  return b ? { mid: b.mid, lo: Math.min(b.lo, b.hi), hi: Math.max(b.lo, b.hi) } : null;
+}
+// Plain-language definition of the slider's X (scenarios.json x_definition, string or {text|label}).
+function xDefinition() {
+  const d = S.data.scenarios?.x_definition;
+  if (!d) return "";
+  return typeof d === "string" ? d : d.text || d.label || d.short || "";
+}
+// Share of focus-area fields where NASA HLS sees winter living cover (a lower bound on cover-crop use).
+// From the export when present (scenarios.hls_winter_cover_pct / x_definition / facts); otherwise the fields module's
+// published detection rate (notes/fields.md: 0.5-4.2% of fields per winter, 2020-26).
+const HLS_SEEN_FALLBACK = { lo: 1, hi: 4 };
+function hlsSeen() {
+  const sc = S.data.scenarios || {};
+  const xd = typeof sc.x_definition === "object" ? sc.x_definition : null;
+  const f = F.hls_winter_cover_pct;
+  const c = sc.hls_winter_cover_pct ?? xd?.hls_winter_cover_pct ?? xd?.hls_seen_pct ?? (f ? (f.range || f.value) : null);
+  if (isNum(c)) return { lo: c, hi: c };
+  if (c && isNum(c.lo) && isNum(c.hi)) return { lo: c.lo, hi: c.hi };
+  return HLS_SEEN_FALLBACK;
+}
+function coverToday() {
+  const c = fact("iowa_cover_share_pct");
+  return c ? Math.round(c.value) : null;
 }
 function siteName(site) {
   const rs = S.data.river_series?.sites?.[site];
@@ -119,6 +153,10 @@ function setLevel(x) {
   renderImpact();
   updateReplay();
 }
+function sliderText(x) {
+  const today = coverToday();
+  return x > 0 ? `${x}%: cover on ${shareAsFreq(x)} of all upstream corn and soy acres${today != null ? `, beyond the ${today}% already covered` : ""}` : "0%: no added cover";
+}
 
 function renderYear() {
   document.querySelectorAll(".js-replay-year").forEach((e) => (e.textContent = YEAR));
@@ -159,53 +197,86 @@ function renderHero() {
   const h = document.getElementById("city-h");
   const yf = yearFacts();
   if (!yf.yb) { h.textContent = "Scenario data is not available yet."; return; }
-  const costTxt = yf.costF ? `~${usd(yf.costF.value)} incl. capital` : yf.est ? `~${usdRange(yf.est.lo, yf.est.hi)} operating cost, estimate` : null;
-  const parts = [];
-  if (isNum(yf.plantDays)) parts.push(`Des Moines' nitrate removal plant ran ${yf.record ? "a record " : ""}<strong>${fmtInt(yf.plantDays)} days</strong>${costTxt ? ` <span class="hero-cost">(${costTxt})</span>` : ""}`);
+  // Numbers from facts.json (via aliases) or the scenario's observed block; cost and the second ban figure live in the
+  // KPI strip below so the headline reads in one breath.
+  const plant = isNum(yf.plantDays) ? `${yf.record ? "a record " : ""}<strong>${fmtInt(yf.plantDays)} ${plural(yf.plantDays, "day")}</strong> of nitrate treatment` : "";
+  let ban = "";
   if (isNum(yf.banDays)) {
-    const who = `<strong>${yf.peopleTxt || "central Iowa's"} people</strong> faced a lawn&#8209;watering ban`;
     const homes = isNum(yf.banHomes) && yf.banHomes < yf.banDays;
-    parts.push(!homes ? `${who} of <strong class="red">${fmtInt(yf.banDays)} days</strong>`
-      : yf.banBiz ? `${who} <span class="hero-cost">(<strong class="red">${fmtInt(yf.banHomes)} days for homes</strong>, ${fmtInt(yf.banDays)} for businesses)</span>`
-      : `${who} of <strong class="red">up to ${fmtInt(yf.banDays)} days</strong> <span class="hero-cost">(${fmtInt(yf.banHomes)} for homes)</span>`);
+    ban = !homes ? `a lawn&#8209;watering ban of <strong class="red">${fmtInt(yf.banDays)} days</strong>`
+      : yf.banBiz ? `a lawn&#8209;watering ban of <strong class="red">${fmtInt(yf.banHomes)} days for homes</strong> <span class="hero-cost">(${fmtInt(yf.banDays)} for businesses)</span>`
+      : `a lawn&#8209;watering ban of <strong class="red">up to ${fmtInt(yf.banDays)} days</strong>`;
   }
-  h.innerHTML = `<span class="hero-year">${YEAR}:</span> ${parts.join("; ")}.`;
+  const what = [plant, ban].filter(Boolean).join(" and ");
+  h.innerHTML = what
+    ? `<span class="hero-main">Bare farm fields upstream cost Des Moines ${what} in <span class="hero-year">${YEAR}</span>.</span> <span class="hero-sub">NASA satellites show which fields sit bare on wet soil — and when.</span>`
+    : `NASA satellites show which fields upstream of Des Moines sit bare on wet soil — and when.`;
 }
+
+// "~3 weeks" / "5 days": ban changes in a unit that cannot be confused with plant days
+function banSpan(d) {
+  if (!isNum(d)) return { n: "–", u: "" };
+  if (d >= 10.5) { const w = Math.round(d / 7); return { n: `~${w}`, u: plural(w, "week") }; }
+  const n = Math.round(d);
+  return { n: `~${n}`, u: plural(n, "day") };
+}
+const fmtMass = (v) => (!isNum(v) ? { n: "–", u: "" } : v >= 1e6 ? { n: (v / 1e6).toFixed(1), u: "million lb" } : v >= 1e3 ? { n: fmtInt(v / 1e3), u: "thousand lb" } : { n: fmtInt(v), u: "lb" });
 
 function renderImpact() {
   const lvl = levelAt(LEVEL);
   const text = document.getElementById("impact-text");
   const tiles = document.getElementById("impact-tiles");
   const fine = document.getElementById("impact-fine");
-  document.getElementById("adopt-hero-frac").textContent = LEVEL > 0 ? shareAsFreq(LEVEL) : "No";
+  const today = coverToday();
+  document.getElementById("adopt-hero-frac").textContent = LEVEL > 0 ? shareAsFreq(LEVEL) : "none";
   document.getElementById("adopt-hero-pct").textContent = `${LEVEL}%`;
+  document.getElementById("adopt-hero-today").textContent = today != null ? `, beyond the ~${today}% already covered` : "";
+  document.querySelectorAll(".js-adopt").forEach((el) => el.setAttribute("aria-valuetext", sliderText(LEVEL)));
   if (!lvl) { text.textContent = "Scenario results are not available yet."; tiles.innerHTML = ""; return; }
   const yf = yearFacts();
   const th = yf.th;
   const sc = S.data.scenarios;
-  const pd = avoided(lvl, "plant_days"), cost = avoided(lvl, "cost_usd"), ban = avoided(lvl, "ban_days");
+  const kept = avoided(lvl, "lbN_kept"), pd = avoided(lvl, "plant_days"), ban = avoided(lvl, "ban_days"), cost = avoided(lvl, "cost_usd");
   const banTest = th.calibration?.ban?.test_2026;
   const banTip = `Ban days come from a proxy rule (the utility's rules are not public)${th.ban_rule ? `: ${esc(th.ban_rule)}` : ""}. Fitted on 2025, tested on 2026${banTest ? `: ${fmtInt(banTest.pred_days)} proxy days vs ${fmtInt(banTest.true_days)} real` : ""}. Demand and treatment capacity also drive bans, so treat this as indicative.`;
-  const banLabel = tip("indicative (proxy rule)", banTip);
-  const estimate = "estimate";
+  const banLabel = `<span class="muted">${tip("indicative (proxy rule)", banTip)}</span>`;
+  const km = fmtMass(kept?.mid), bs = banSpan(ban?.mid);
   if (lvl.x === 0) {
-    text.innerHTML = `Move the slider: what if more upstream fields kept living roots over winter?`;
+    text.innerHTML = `Move the slider: what if more upstream corn and soy acres kept living roots over winter?`;
   } else {
-    text.innerHTML = `If <strong>${shareAsFreq(lvl.x)}</strong> more upstream fields kept living roots over winter: about <strong>${fmtInt(pd?.mid)} fewer plant days</strong>${pd && rangeTxt(pd) ? ` (${rangeTxt(pd)})` : ""}, <strong>~${usd(cost?.mid)}</strong> operating cost avoided, <strong>~${fmtInt(ban?.mid)} fewer ban days</strong> <span class="muted">${banLabel}</span>.`;
+    const pdN = Math.round(pd?.mid ?? 0);
+    text.innerHTML = `If cover went on <strong>${shareAsFreq(lvl.x)}</strong> of all upstream corn and soy acres${today != null ? ` (beyond today's ~${today}%)` : ""}: about <strong>${km.n} ${km.u} of nitrogen</strong> stays on the fields, <strong>${fmtInt(pdN)} fewer plant ${plural(pdN, "day")}</strong>${pd && rangeTxt(pd) ? ` (${rangeTxt(pd)})` : ""}, a watering ban <strong>${bs.n} ${bs.u} shorter</strong> <span class="muted">(${tip("indicative, proxy rule", banTip)})</span>, and <strong>~${usd(cost?.mid)}</strong> operating cost avoided (estimate).`;
   }
+  const lbRange = (b) => (b && Math.round(b.lo) !== Math.round(b.hi) ? `range ${fmtLbRange(b.lo, b.hi)}` : "");
+  const toTxt = {
+    lbN_kept: (b) => { const m = fmtMass(b.mid); return `${m.n} ${m.u}`; },
+    plant_days: (b) => `${fmtInt(b.mid)} fewer plant ${plural(b.mid, "day")}`,
+    ban_days: (b) => { const x = banSpan(b.mid); return `ban ${x.n} ${x.u} shorter`; },
+    cost_usd: (b) => usd(b.mid),
+  };
   const t = [
-    { v: fmtInt(pd?.mid), l: "fewer days the removal plant runs", r: rangeTxt(pd) },
-    { v: usd(cost?.mid), l: `operating cost avoided <span class="muted">(${estimate})</span>`, r: cost ? rangeTxt(cost, usd) : "" },
-    { v: fmtInt(ban?.mid), l: `fewer watering-ban days <span class="muted">· ${banLabel}</span>`, r: rangeTxt(ban) },
+    { k: "lbN_kept", b: kept, v: `${km.n}<span class="itile-u"> ${km.u}</span>`, l: "of nitrogen kept on upstream fields instead of reaching the river", r: lbRange(kept) },
+    { k: "plant_days", b: pd, v: `${fmtInt(pd?.mid)}<span class="itile-u"> fewer plant ${plural(pd?.mid ?? 0, "day")}</span>`, l: "the city's nitrate-removal plant runs less", r: rangeTxt(pd) ? `${rangeTxt(pd)} days` : "" },
+    { k: "ban_days", b: ban, v: `${bs.n}<span class="itile-u"> ${bs.u} shorter</span>`, l: `lawn-watering ban ${banLabel}`, r: rangeTxt(ban) ? `${rangeTxt(ban)} days` : "" },
+    { k: "cost_usd", b: cost, v: `${usd(cost?.mid)}`, l: `operating cost avoided <span class="muted">(estimate)</span>`, r: cost ? rangeTxt(cost, usd) : "" },
   ];
-  tiles.innerHTML = t.map((x) => `<div class="itile"><div class="itile-v ${lvl.x === 0 ? "zero" : ""}">${x.v}</div><div class="itile-l">${x.l}</div><div class="itile-r">${lvl.x === 0 ? "&nbsp;" : x.r}</div></div>`).join("") + mockChip(S.source, "scenarios");
+  const zero = lvl.x === 0;
+  tiles.innerHTML = t.map((x) => {
+    const tr = zero ? null : trialsOnly(lvl, x.k);
+    return `<div class="itile"><div class="itile-v ${zero ? "zero" : ""}">${x.v}</div><div class="itile-l">${x.l}</div><div class="itile-r">${zero ? "&nbsp;" : x.r || "&nbsp;"}</div>${tr ? `<div class="itile-t">trials only: ${toTxt[x.k](tr)}</div>` : ""}</div>`;
+  }).join("") + mockChip(S.source, "scenarios");
   const cpd = yf.cpd;
   const nDraws = sc?.method_detail?.n_draws;
   const cover = fact("iowa_cover_share_pct");
+  const hs = hlsSeen();
+  const xd = xDefinition();
+  const anyTrials = levelsFor().some((l) => l.trials_only);
   fine.innerHTML = [
-    `Ranges: 8 in 10${isNum(nDraws) ? ` of ${fmtInt(nDraws)}` : ""} simulations.`,
+    xd ? `<strong>What the slider means:</strong> ${esc(xd)}${/[.!?]$/.test(xd.trim()) ? "" : "."}` : "",
+    `Ranges: 8 in 10${isNum(nDraws) ? ` of ${fmtInt(nDraws)}` : ""} simulations${anyTrials ? "; “trials only” = Iowa field-trial evidence alone, without our satellite-trained river model" : ""}.`,
     `$ = operating cost only${cpd ? ` (plant days × ${usd(cpd.lo)}–${usd(cpd.hi)} a day)` : ""}; capital is not avoided.`,
-    cover ? `Added on top of today's cover (about ${Math.round(cover.value)}% of Iowa corn and soy acres, ${link(cover.url, cover.source || "source")}).` : "",
+    cover ? `Today about ${Math.round(cover.value)}% of Iowa corn and soy acres have cover (${link(cover.url, cover.source || "source")}).` : "",
+    `NASA HLS sees winter cover on only ~${Math.round(hs.lo) === Math.round(hs.hi) ? fmtInt(hs.lo) : `${fmtInt(hs.lo)}–${fmtInt(hs.hi)}`}% of focus-area fields: a lower bound, because small or late-planted covers aren't visible from space.`,
     "The river may take more than one season to respond (nitrate stored in soils).",
   ].filter(Boolean).join(" ");
 }
@@ -229,19 +300,21 @@ function renderKpis() {
     const src = (th.sources || []).find((s) => /cost_per_day|om_cost/.test(s.id));
     costS = src ? link(src.url, "CIWW cost per day") : "";
   }
-  const banHomesTxt = isNum(yf.banHomes) && yf.banHomes < yf.banDays ? (yf.banBiz ? ` for businesses and government (homes: ${fmtInt(yf.banHomes)})` : `, all customers (homes: ${fmtInt(yf.banHomes)})`) : "";
+  const banHomesTxt = isNum(yf.banHomes) && yf.banHomes < yf.banDays ? (yf.banBiz ? ` for businesses and government; <strong>${fmtInt(yf.banHomes)} days for homes</strong>` : `, all customers; <strong>${fmtInt(yf.banHomes)} days for homes</strong>`) : "";
+  // ban dates are derived by us from the utility's (CIWW) releases: name the utility, not ourselves
+  const banSrc = yf.banF ? (/field to faucet|derived/i.test(yf.banF.source || "") ? `${/CIWW|Central Iowa Water Works/i.test(`${yf.banF.source_title} ${yf.banF.url}`) ? "CIWW" : "utility"} releases: ban dates` : `${yf.banF.source || "source"}: ban dates`) : "";
   const tiles = [
     { v: fmtInt(obs.days_over10), red: true, l: `days the Raccoon River intake was above the 10 mg/L limit${isNum(measured) ? ` (of ${fmtInt(measured)} measured)` : ""}`, s: srcLine(link(nwisUrl(site), `USGS ${site}`), chipSc) },
     { v: fmtInt(yf.plantDays), l: `days the nitrate-removal plant ran${yf.record ? " — a record" : ""}`, s: srcLine(yf.plantF ? link(yf.plantF.url, yf.plantF.source || "source") : "", yf.plantF ? chipF : chipSc) },
     { v: costV, l: costL, s: srcLine(costS, chipF) },
-    { v: fmtInt(yf.banDays), l: `days of lawn-watering ban${banHomesTxt}`, s: srcLine(yf.banF ? link(yf.banF.url, `${yf.banF.source || "source"}: ban dates`) : "", chipF) },
+    { v: fmtInt(yf.banDays), l: `days of lawn-watering ban${banHomesTxt}`, s: srcLine(yf.banF ? link(yf.banF.url, banSrc) : "", chipF) },
     { v: yf.people ? (yf.people.value >= 1e5 ? `${Math.round(yf.people.value / 1000)}k${yf.peopleTxt?.endsWith("+") ? "+" : ""}` : fmtInt(yf.people.value)) : "–", l: "people drink this water", s: srcLine(yf.people ? link(yf.people.url, yf.people.source || "source") : "", chipF) },
   ];
   document.getElementById("city-kpis").innerHTML = tiles.map((t) => `<div class="kpi"><div class="kpi-value ${t.red ? "red" : ""}">${t.v}</div><div class="kpi-label">${t.l}</div><div class="kpi-src">${t.s || ""}</div></div>`).join("");
   const lede = document.getElementById("city-lede");
   const partial = obs.partial_year_through ? ` ${YEAR} is a partial year (data through ${fmtDate(parseDate(obs.partial_year_through))}).` : "";
   lede.innerHTML = isNum(obs.days_over10) && isNum(measured)
-    ? `In ${YEAR} the Raccoon River at the intake was above the federal nitrate limit on ${fmtInt(obs.days_over10)} of ${fmtInt(measured)} measured days, ${naturalFreq(obs.days_over10, measured)}.${partial} NASA satellites show why: upstream fields sat bare while storms soaked the soil.`
+    ? `In ${YEAR} the Raccoon River at the intake was above the federal nitrate limit on ${fmtInt(obs.days_over10)} of ${fmtInt(measured)} measured days, ${naturalFreq(obs.days_over10, measured)}.${partial} NASA satellites show when upstream fields sit bare on wet soil — when nitrate can wash out.`
     : "";
 }
 
@@ -264,18 +337,17 @@ function buildReplay() {
     { label: "With more living cover", data: measured.map((p) => ({ ...p })), color: c.accent, width: 2, order: 0 },
   ];
   if (!baseObserved && rp.base_p50) series.push({ label: "Model, today's fields", data: toXY(dates, rp.base_p50), color: c.base, width: 1.4, dash: [4, 3], order: 2 });
+  replayCtx = { rp, baseObserved };
   replayChart = timeChart(box, { xMin: dates[0], xMax: dates[dates.length - 1], threshold: { value: S.data.river_series?.mcl ?? 10, label: "EPA limit 10 mg/L" }, series, bandLabel: "Scenario 8-in-10 range" });
   // shade between measured and scenario = nitrate kept out of the river
-  const ds = replayChart.data.datasets[3];
-  ds.fill = { target: 2, above: "transparent", below: "rgba(11,95,102,0.45)" };
-  replayCtx = { rp, baseObserved };
+  if (replayChart) replayChart.data.datasets[3].fill = { target: 2, above: "transparent", below: "rgba(11,95,102,0.45)" };
   const site = rp.site || PRIMARY;
   document.getElementById("replay-cap").innerHTML = `Data: measured daily nitrate from the USGS sensor on the ${esc(riverOnly(rp.name || siteName(site)))} (${link(nwisUrl(site), site)}). Scenario = measured × (1 − daily cut); the cut blends Iowa cereal-rye trials (INRS 2024) with our river model's response to less bare soil (NASA MODIS/HLS cover, NASA POWER rain and soil wetness).`;
   document.getElementById("replay-note").innerHTML = `${esc(S.data.scenarios?.method || "")} ${mockChip(S.source, "scenarios")}`;
 }
 
 function updateReplay() {
-  if (!replayChart || !replayCtx) return;
+  if (!replayCtx) return;
   const { rp, baseObserved } = replayCtx;
   const lvl = levelAt(LEVEL);
   if (!lvl) return;
@@ -283,20 +355,25 @@ function updateReplay() {
   const k = String(lvl.x);
   const pick = (o) => o?.[k] ?? o?.[lvl.x];
   const mid = pick(rp.by_level), lo = pick(rp.by_level_lo), hi = pick(rp.by_level_hi);
-  const ds = replayChart.data.datasets;
-  ds[3].data = mid ? toXY(replayDates, mid) : ds[2].data;
-  ds[3].label = `With ${lvl.x}% more living cover`;
-  ds[3].hidden = lvl.x === 0;
-  const showBand = document.getElementById("replay-band").checked && lo && hi && lvl.x > 0;
-  ds[0].data = lo ? toXY(replayDates, lo) : ds[2].data;
-  ds[1].data = hi ? toXY(replayDates, hi) : ds[2].data;
-  ds[0].hidden = ds[1].hidden = !showBand;
-  replayChart.update("none");
+  const showBand = !!(document.getElementById("replay-band").checked && lo && hi && lvl.x > 0);
+  if (replayChart) {
+    const ds = replayChart.data.datasets;
+    ds[3].data = mid ? toXY(replayDates, mid) : ds[2].data;
+    ds[3].label = `With cover on ${lvl.x}% more corn/soy acres`;
+    ds[3].hidden = lvl.x === 0;
+    ds[0].data = lo ? toXY(replayDates, lo) : ds[2].data;
+    ds[1].data = hi ? toXY(replayDates, hi) : ds[2].data;
+    ds[0].hidden = ds[1].hidden = !showBand;
+    replayChart.update("none");
+  }
   document.getElementById("adopt-val").textContent = `${lvl.x}%`;
+  document.querySelectorAll(".js-adopt").forEach((el) => el.setAttribute("aria-valuetext", sliderText(lvl.x)));
   const items = [
     { label: baseObserved ? "Measured, today's fields (USGS)" : "Measured (USGS)", color: c.obs },
-    { label: `With ${lvl.x}% more living cover`, color: c.accent },
-    { label: "Nitrate kept out of the river", color: "rgba(11,95,102,0.5)", kind: "band" },
+    ...(lvl.x > 0 ? [
+      { label: `With cover on ${lvl.x}% more corn/soy acres`, color: c.accent },
+      { label: "Nitrate kept out of the river", color: "rgba(11,95,102,0.5)", kind: "band" },
+    ] : []),
     ...(showBand ? [{ label: "Scenario 8-in-10 range", color: c.accent, kind: "band" }] : []),
     ...(!baseObserved ? [{ label: "Model, today's fields", color: c.base, kind: "dash" }] : []),
     { label: "EPA limit 10 mg/L", color: c.nitrate, kind: "dash" },
@@ -314,10 +391,10 @@ function renderDeltas(lvl, rp) {
   const freq = document.getElementById("replay-freq");
   const river = riverOnly(rp.name || siteName(rp.site || PRIMARY));
   if (lvl.x === 0) {
-    freq.innerHTML = `Measured in ${YEAR}: the ${esc(river)} was above the limit on <strong>${fmtInt(obs.days_over10)} of ${fmtInt(measured)}</strong> measured days (${naturalFreq(obs.days_over10, measured)}). Move the slider to add living cover.`;
+    freq.innerHTML = `Measured in ${YEAR}: the ${esc(river)} was above the limit on <strong>${fmtInt(obs.days_over10)} of ${fmtInt(measured)}</strong> measured days (${naturalFreq(obs.days_over10, measured)}). Move the slider to add cover.`;
   } else if (dd && isNum(obs.days_over10)) {
     const n = Math.max(0, obs.days_over10 - dd.mid), lo = Math.max(0, obs.days_over10 - dd.hi), hi = Math.max(0, obs.days_over10 - dd.lo);
-    freq.innerHTML = `Measured: the ${esc(river)} was above the limit on <strong>${fmtInt(obs.days_over10)}</strong> days. With ${lvl.x}% more living cover: about <strong>${fmtInt(n)} days</strong> (range ${fmtInt(lo)}–${fmtInt(hi)}). It sat far above 10 mg/L for weeks, so a few-percent cut flips few days; the plant and ban rules respond more.`;
+    freq.innerHTML = `Measured: the ${esc(river)} was above the limit on <strong>${fmtInt(obs.days_over10)}</strong> days. With cover on ${lvl.x}% more corn/soy acres: about <strong>${fmtInt(n)} days</strong> (range ${fmtInt(lo)}–${fmtInt(hi)}). It sat far above 10 mg/L for weeks, so a few-percent cut flips few days; the plant and ban rules respond more.`;
   }
   const tiles = [
     { k: "days_over10", lab: `fewer days above 10 mg/L, ${esc(river)}`, f: fmtInt },
@@ -354,7 +431,7 @@ export function honestLine(validation) {
   const nseTxt = `~${(nse.reduce((a, b) => a + b, 0) / nse.length).toFixed(1)}`;
   const lo = Math.min(...ratios), hi = Math.max(...ratios);
   const rTxt = ratios.length ? (hi - lo < 0.15 ? `about ${hi.toFixed(1)}×` : `about ${lo.toFixed(1)}–${hi.toFixed(1)}×`) : "a lot";
-  return `The weather-and-cover model explains normal years (test NSE ${nseTxt}) but under-predicted 2025-26 by ${rTxt} — likely nitrate left over after the 2020-23 drought (a hypothesis). That's why impact numbers replay the measured river with relative changes.`;
+  return `The weather-and-cover model explains normal years (test NSE ${nseTxt}) but under-predicted 2025-26 by ${rTxt} — one hypothesis: nitrate left over after the 2020-23 drought. That's why impact numbers replay the measured river with relative changes.`;
 }
 
 let riverChart, riverSite = PRIMARY, riverRange = "test", redrawRiver, setRange;
@@ -406,7 +483,7 @@ function renderRiver() {
       { label: `${mName}`, data: toXY(dates, s.p50), color: c.accent, width: 1.6, order: 1 },
       { label: "Measured", data: toXY(dates, s.obs), color: c.obs, width: 1.4, order: 0 },
     ];
-    if (riverChart) riverChart.destroy();
+    riverChart?.destroy();
     riverChart = timeChart(box, { series, xMin, xMax, spans, threshold: { value: rs.mcl ?? 10, label: "EPA limit 10 mg/L" } });
     const inRange = s.obs.filter((val, i) => isNum(val) && dates[i] >= xMin && dates[i] <= xMax);
     const over = inRange.filter((val) => val > (rs.mcl ?? 10)).length;
@@ -490,7 +567,7 @@ function hucPopupHTML(p) {
   const n = (k) => (p[k] == null ? null : Number(p[k]));
   return `<h4>${esc(p.name || "Sub-watershed")}</h4><div class="fine" style="margin:0 0 4px">HUC-12 ${esc(p.huc12)} · ${basinName} basin${mockChip(S.source, "huc12")}</div>
   <table class="pop-table">
-    ${isNum(n("lbN_ac_yr")) ? row("Nitrate leak", `${fmt(n("lbN_ac_yr"), 1)} lb N/acre/yr`) : ""}
+    ${isNum(n("lbN_ac_yr")) ? row("Modelled leak", `${fmt(n("lbN_ac_yr"), 1)} lb N/ac/yr`) : ""}
     ${row("Share of basin leak", pct(n("share_of_basin_leak"), 1))}
     ${row("Rank in basin", isNum(n("rank")) ? `${fmtInt(n("rank"))} of ${isNum(n("n_in_basin")) ? n("n_in_basin") : basinCount(p.basin)}` : "–")}
     ${row("Row-crop share", pct(n("row_crop_share")))}
@@ -499,10 +576,10 @@ function hucPopupHTML(p) {
   </table>`;
 }
 
-function openHucPopup(p, lngLat) {
+function openHucPopup(p, lngLat, anchor) {
   if (!cityMap) return;
   cityPopup?.remove();
-  cityPopup = new maplibregl.Popup({ maxWidth: "280px" }).setLngLat(lngLat).setHTML(hucPopupHTML(p)).addTo(cityMap);
+  cityPopup = new maplibregl.Popup({ maxWidth: "min(280px, 80vw)", ...(anchor ? { anchor } : {}) }).setLngLat(lngLat).setHTML(hucPopupHTML(p)).addTo(cityMap);
 }
 
 let hotspotBound = false;
@@ -518,7 +595,7 @@ function renderHotspotList() {
   const areaAll = all.reduce((s, f) => s + (f.properties.area_km2 || 0), 0);
   const areaTop = top.reduce((s, f) => s + (f.properties.area_km2 || 0), 0);
   const shareTop = top.reduce((s, f) => s + (f.properties.share_of_basin_leak || 0), 0);
-  note.innerHTML = `These ${top.length} sub-watersheds cover ${pct(areaTop / areaAll)} of the Raccoon basin but send about <strong>${pct(shareTop)}</strong> of its nitrate leak, mostly because their cropland sits bare on more wet days. ${mockChip(S.source, "huc12")}`;
+  note.innerHTML = `These ${top.length} sub-watersheds cover ${pct(areaTop / areaAll)} of the Raccoon basin but account for about <strong>${pct(shareTop)}</strong> of the modelled leak index (not measured), mostly because their cropland sits bare on more wet days. ${mockChip(S.source, "huc12")}`;
   if (hotspotBound) return;
   hotspotBound = true;
   list.addEventListener("click", (e) => {
@@ -528,7 +605,9 @@ function renderHotspotList() {
     if (!f || !cityMap) return;
     const bb = bboxOf([f]);
     cityMap.fitBounds(bb, { padding: 60, maxZoom: 10, duration: 600 });
-    openHucPopup(f.properties, [(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2]);
+    // wide maps: popup beside the sub-watershed's centre so it is never cut off at the bottom
+    const wide = document.getElementById("city-map").clientWidth >= 600;
+    openHucPopup(f.properties, [(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2], wide ? "left" : undefined);
     document.getElementById("city-map").scrollIntoView({ behavior: "smooth", block: "center" });
   });
 }
@@ -548,10 +627,13 @@ function outlookSkill(site) {
   const os = outlookFor(site)?.skill || {};
   const h = (n) => vs?.[`h${n}`]?.gbm;
   const mse7 = h(7)?.skill_vs_persistence_mse ?? os.test_2023_2025_h7;
+  // typical error (RMSE) vs persistence; from the two RMSEs, else from the squared-error skill (RMSE ratio = sqrt(1 - skill))
+  const pr = vs?.h7?.persistence?.RMSE, gr = h(7)?.RMSE;
+  const rmse7 = isNum(pr) && isNum(gr) && pr > 0 ? 1 - gr / pr : isNum(mse7) && mse7 < 1 ? 1 - Math.sqrt(1 - mse7) : null;
   const bss14 = h(14)?.brier_skill_vs_persistence ?? os.brier_skill_vs_prob_persistence_h14;
   let probDays = null; // last lead with a useful probability skill (Brier skill >= 0.05 vs persistence at every lead up to it)
   if (vs) { probDays = 0; for (let n = 1; n <= 14; n++) { const b = h(n)?.brier_skill_vs_persistence; if (isNum(b) && b >= 0.05) probDays = n; else break; } }
-  return { mse7, bss14, probDays };
+  return { mse7, rmse7, bss14, probDays };
 }
 
 function renderOutlook() {
@@ -585,7 +667,7 @@ function drawOutlook() {
   const fan = (arr) => [...anchor, ...toXY(fd, arr)];
   const xMin = recent.length ? recent[0].x : fd[0];
   const xMax = fd[fd.length - 1];
-  if (outlookChart) outlookChart.destroy();
+  outlookChart?.destroy();
   outlookChart = timeChart(document.getElementById("outlook-chart"), {
     xMin, xMax, threshold: { value: S.data.river_series?.mcl ?? 10, label: "EPA limit 10 mg/L" },
     spans: [{ from: fd[0], to: xMax, label: "Outlook", fill: "rgba(11,95,102,0.06)" }],
@@ -626,7 +708,9 @@ function drawOutlook() {
   document.getElementById("outlook-drivers").innerHTML = items.map((t) => `<li>${t}</li>`).join("");
   const parts = [];
   if (o.weather_forecast_used === false) parts.push(`<strong>No weather forecast used</strong>: a big storm can push nitrate outside this range.`);
-  if (isNum(sk.mse7)) parts.push(`Tested on 2023–25: at 7 days its error was ${Math.round(sk.mse7 * 100)}% smaller than assuming "no change" (persistence).`);
+  if (isNum(sk.mse7)) parts.push(isNum(sk.rmse7)
+    ? `Tested on 2023–25: at 7 days its typical error was ${Math.round(sk.rmse7 * 100)}% smaller than assuming "no change" (squared error ${Math.round(sk.mse7 * 100)}% smaller).`
+    : `Tested on 2023–25: at 7 days its squared error was ${Math.round(sk.mse7 * 100)}% smaller than assuming "no change" (persistence).`);
   if (isNum(sk.bss14)) parts.push(sk.bss14 < 0.05 ? `At 14 days the chance above 10 mg/L has no probability skill over "no change" (Brier skill ${Math.round(sk.bss14 * 100)}%), so read the late days as a rough guide.` : `At 14 days the chance above 10 mg/L beats "no change" by ${Math.round(sk.bss14 * 100)}% (Brier skill).`);
   document.getElementById("outlook-skill").innerHTML = parts.join(" ");
   document.getElementById("outlook-text").textContent = o.text || "";

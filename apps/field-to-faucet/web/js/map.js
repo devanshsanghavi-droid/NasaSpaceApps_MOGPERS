@@ -21,17 +21,25 @@ export function bboxOf(features) {
 // Returns a promise of a loaded map, or null (with a message in the container) if WebGL is unavailable.
 export function createMap(container, { bounds, attribution }) {
   return new Promise((resolve) => {
+    if (typeof maplibregl === "undefined") {
+      container.innerHTML = `<div class="map-msg">The map library did not load, so the map cannot be drawn. Reload the page to try again.</div>`;
+      resolve(null);
+      return;
+    }
+    // Touch screens: one finger scrolls the page, two fingers move the map (no accidental map capture while scrolling).
+    const coarse = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
     let map;
     try {
       map = new maplibregl.Map({
         container,
         style: BLANK_STYLE(),
         bounds: bounds || [[-96, 41], [-93, 44]],
-        fitBoundsOptions: { padding: 20 },
+        // extra bottom padding keeps south-edge features clear of the attribution button
+        fitBoundsOptions: { padding: { top: 20, right: 20, bottom: 40, left: 20 } },
         attributionControl: { compact: true, customAttribution: attribution || "Boundaries: USGS WBD" },
         dragRotate: false,
         pitchWithRotate: false,
-        cooperativeGestures: false,
+        cooperativeGestures: coarse,
         maxZoom: 15,
       });
     } catch (e) {
@@ -41,7 +49,13 @@ export function createMap(container, { bounds, attribution }) {
     }
     map.touchZoomRotate.disableRotation();
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.on("load", () => resolve(map));
+    map.on("load", () => {
+      // start with the attribution collapsed to its (i) button so it does not cover fields on the south edge
+      const attrib = container.querySelector(".maplibregl-ctrl-attrib");
+      attrib?.classList.remove("maplibregl-compact-show");
+      attrib?.removeAttribute("open");
+      resolve(map);
+    });
     map.on("error", (e) => {
       // Never let a map problem reach the console as an uncaught error; show it in the UI instead.
       const msg = e?.error?.message || "map error";

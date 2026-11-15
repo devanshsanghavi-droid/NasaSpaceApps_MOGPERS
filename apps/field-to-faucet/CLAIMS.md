@@ -29,7 +29,7 @@ can link each tile to its source.
 | 2025 nitrate-removal plant run | 112 days (10-18 Apr and 28 Apr-8 Aug 2025) | KPI, P2, P5 | https://www.kcci.com/article/central-iowa-water-works-lifts-lawn-watering-restrictions-water-quality-nitrates/65789527 (`plant_days_2025`) | primary | CIWW's "102 days through 29 Jul" agrees |
 | 2025 cost of removing nitrate | $2.2M ($1.6M operations and maintenance + $0.6M capital) | KPI, P2 | https://ciww.gov/what-is-the-nitrate-removal-facility/ (`plant_cost_2025_usd`) | primary | |
 | 2025 plant O&M cost | $1.6M | Replay cost note, P5 note | same page (`plant_om_cost_2025_usd`) | primary | low end of cost per day |
-| Plant cost per operating day | $14,286-16,000 per day | Replay (cost range basis), Method | low = $1.6M / 112 days (derived); high = "about $16,000 a day" at full capacity (`plant_cost_per_day_usd`, primary) | derived / primary | partial operation can cost as little as about $4,000/day (same page); avoided days are shoulder days, so the $ range may be high |
+| Plant cost per operating day | $14,286-16,000 per day | Replay (cost range basis), Method | low = $1.6M / 112 days (derived); high = "about $16,000 a day" at full capacity (`plant_cost_per_day_usd`, primary) | derived / primary | partial operation costs less, but no source gives a figure (the CIWW page has only the $16k full-capacity cost; the $4k range.lo in facts.json is unquoted and unused). Sensitivity: Q1-2026 O&M $660k / 79 run days ≈ $8.4k per run day (`avoided.cost_usd_q1_2026_rate`); avoided days are shoulder days, so the $ range may be high |
 | 2026 plant run (record) | 193 days (6 Jan-2 Mar and 9 Mar-23 Jul 2026) | KPI (2026 replay), P2, Method | CIWW URL above (`plant_days_2026`) | primary | not continuous; never say "193 straight days" |
 | Previous record run | 177 days, 2015 | P2 speaker note | https://www.kcci.com/article/central-iowa-water-works-nitrate-removal-facility-turns-off-running-for-112-days-so-far-this-year/65670201 (`plant_days_record_prior`) | primary | 2026 set a record for **duration**, not concentration |
 | 2026 cost if replay year = 2026 | $2.8M-3.1M (193 days × $14,286-16,000) | KPI (2026 replay) | arithmetic in `web/js/city.js` | derived | no full-year 2026 cost has been published; Q1 2026 O&M was about $660k (`plant_om_cost_2026_q1_usd`) |
@@ -104,26 +104,29 @@ River at Van Meter) and 05482000 (Des Moines River at 2nd Ave). Fetched by `pipe
 
 ## 4. Scenario results (2025 replay unless stated)
 
-Source for all rows: `web/data/scenarios.json → by_year.<year>.levels[x].avoided` (p50 and 10th-90th percentile of 4,000
-draws), written by `model/m07_scenarios.py`. Lever: X% **additional** upstream row-crop acres with a cereal-rye-type
-living cover Oct-May, on top of today's adoption, in both intake basins. Impact basis: each day's **measured** nitrate
-cut by a fraction that mixes half trial prior and half learned river response. Status for all: **derived-from-our-model
+Source for all rows: `web/data/scenarios.json → by_year.<year>.levels[x].avoided` (headline mixture) and
+`levels[x].trials_only.avoided` (trials only), p50 and 10th-90th percentile of 4,000 draws, written by
+`model/m07_scenarios.py` (run 2026-11-15, after the science review). Lever (`x_definition`): **X% of all upstream
+corn/soy acres add cover, beyond the ~17% already covered statewide** (X = 25: about 17% → 42%), cereal-rye-type living
+cover Oct-May, both intake basins. Impact basis: each day's **measured** nitrate cut by a fraction drawn half from the
+Iowa trial prior and half from a river-model sensitivity whose bare-soil features add no tested skill. Plant days count
+only days the plant really ran (2025 and 2026 reported run windows). Status for all: **derived-from-our-model
 (counterfactual, not validated)**.
 
-| claim | value (range) | where shown | notes |
-|---|---|---|---|
-| Removal-plant days avoided, 25% | **23 (5-41)** | Hero, Replay, P5, V | proxy baseline 120 (106-134) days vs 112 reported |
-| Operating cost avoided, 25% | **$350k ($73k-620k)** | Hero, Replay, P5 | O&M only; capital not avoided |
-| Ban days avoided, 25% | **23 (9-31), indicative** | Hero, Replay, P5 | ban proxy 68 days vs 56 reported; least certain |
-| Raccoon days above 10 avoided, 25% | 8 (2-16); "about 107 days (99-113) instead of 115" | Replay, P5 | the Raccoon sat far above 10, so few days flip |
-| Des Moines River days above 10 avoided, 25% | 19 (5-36) | Replay (other site), P5 note | |
-| Nitrogen kept out of the rivers, 25% | 6.5 million lb (2.1-10.0 million) | Replay sentence, P5 | nitrate that would have reached the two gauges; field-edge retention larger |
-| Load cut at the gauges, 25% | 2,930 t N (940-4,550) of 55,300 | Replay (data), P5 note | |
-| 10% adoption, 2025 | plant days 7 (2-16); $105k ($29k-237k); ban days 9 (1-13); Raccoon days 2 (0-4) | Replay slider | |
-| 50% adoption, 2025 | plant days 46 (11-72); $690k ($159k-1.08M); ban days 32 (13-46); Raccoon days 16 (5-45) | Replay slider | 50% additional ≈ two-thirds of acres covered |
-| 2026 replay, 25% (partial year) | Raccoon days 5 (3-22); Des Moines days 29 (11-57); plant days 19 (7-51); $282k ($110k-768k); ban days 15 (1-26) | Replay (2026) | 2026 data partly provisional |
-| Path-only results, 2025, 25% (Raccoon days above 10) | trials only 9 (1-21); learned model only 7 (3-11) | Method / P5 speaker note | `method_detail.path_only_avoided` |
-| Plain-language slider label | "1 in 4 more upstream fields" = 25% | Hero, P5, V | |
+| claim | mixture (headline) | trials only | where shown | notes |
+|---|---|---|---|---|
+| Removal-plant days avoided, 25% | **16 (3-34)** | 10 (2-36) | Hero, Replay, P5, V | real run days only; baseline 106 (102-112) proxy days inside the real run vs 112 reported. Proxy-only count (diagnostic): 24 (5-40) |
+| Operating cost avoided, 25% | **$234k ($47k-507k)** | $157k ($29k-534k) | Hero, Replay, P5 | O&M only, U[$14.3k, $16k]/day; at the Q1-2026 rate ($8.4k/day): $134k ($25k-284k); capital not avoided |
+| Ban days avoided, 25% | **23 (9-31), indicative** | 17 (2-28) | Hero, Replay, P5 | ban proxy 68 days vs 56 reported; least certain |
+| Raccoon days above 10 avoided, 25% | 7 (2-16); "about 108 days (99-113) instead of 115" | 9 (1-21) | Replay, P5 | the Raccoon sat far above 10, so few days flip |
+| Des Moines River days above 10 avoided, 25% | 21 (5-36) | 13 (2-28) | Replay (other site), P5 note | the river-model path drives this site |
+| Nitrogen kept out of the rivers, 25% | 6.5 million lb (2.1-9.9 million) | 4.8 million lb (1.1-10.5 million) | Replay sentence, P5 | nitrate that would have reached the two gauges; field-edge retention larger |
+| Load cut at the gauges, 25% | 2,970 t N (950-4,510) of 55,300 | 2,190 t N (490-4,770) | Replay (data), P5 note | |
+| 10% adoption, 2025 | plant days 3 (1-10); $48k ($15k-154k); ban days 9 (1-13); Raccoon days 2 (0-4) | plant days 4 (0-10); $59k; ban 9 (0-13); Raccoon 2 (0-5) | Replay slider | |
+| 50% adoption, 2025 | plant days 35 (9-60); $528k ($134k-918k); ban days 32 (13-44); Raccoon days 16 (5-43) | plant days 31 (4-68); $470k; ban 28 (9-50); Raccoon 18 (2-60) | Replay slider | 50% additional ≈ two-thirds of acres covered |
+| 2026 replay, 25% (partial year) | Raccoon days 5 (4-22); Des Moines days 30 (11-56); plant days 14 (4-29); $209k ($64k-444k); ban days 16 (1-26) | Raccoon 12 (1-30); Des Moines 21 (7-71); plant 14 (2-37); $218k ($29k-564k); ban 12 (0-29) | Replay (2026) | 2026 plant days stop at the 23 Jul shutdown; data partly provisional |
+| River-model-only results, 2025, 25% | Raccoon days 7 (3-9); plant days 17 (7-33) | | Method / P5 speaker note | `method_detail.path_only_avoided.2025.learned`; the mixture's plant days lean on this unvalidated path |
+| Plain-language slider label | "1 in 4 more upstream fields" = 25% | | Hero, P5, V | means 25% of ALL upstream corn/soy acres added on top of ~17% today (→ ~42%), not a 25% increase in cover |
 
 ## 5. Agronomy and trial priors
 
@@ -167,7 +170,7 @@ cut by a fraction that mixes half trial prior and half learned river response. S
 | Extended-rotation cost | not quantified | Cards (S2) | Marsden profit similar or greater | – | not ranked as $0 |
 | Nitrogen price | $0.53-0.70 per lb N (central $0.67) | Cards (fertilizer value) | low: ISU A1-88 July 2026 budget (primary); central/high: USDA AMS Iowa anhydrous $1,096/ton, https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/2863/2026-04-27/1321477/ams_2863_00161.pdf (`fert_price_usd_lbN`, secondary) | primary / secondary | |
 | Fertilizer value of N kept, median field | S1 $1.02, S2 $2.28, S3 $0.72 per acre per year | Cards, P4 | `field_detail → strategies.<S>.fert_value_usd_ac.mean` | derived-from-our-model | upper bound; N kept ahead of soybean has little value to that soybean crop |
-| Scenario cost per plant day | $14,286-16,000 | Replay | see section 1 | derived / primary | |
+| Scenario cost per plant day | $14,286-16,000 | Replay | see section 1 | derived / primary | no sourced partial-operation cost; Q1-2026 ≈ $8.4k/run day as a sensitivity |
 
 ---
 

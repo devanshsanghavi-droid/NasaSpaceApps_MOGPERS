@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T23:33:22.548871+00:00",
+ "generated_at": "2026-11-15T00:35:50.977394+00:00",
  "perturbation": {
   "variable": "daily causal MODIS bare share of persistent row-crop land (living = 1 - bare)",
   "window": "Oct 15 - May 31 every year",
@@ -19,9 +19,9 @@
   ],
   "api": "model/river.py: perturb_cover(features_df, frac, months)"
  },
- "uncertainty": "30 refits of the median GBM on bootstrap-resampled training years (2016-2022, whole years drawn with replacement) -> 5-95% range; plus the effect seen by the p10 and p90 quantile models; plus the conceptual reservoir model as a structurally different estimate.",
+ "uncertainty": "30 Bayesian-bootstrap refits of the median GBM over its training years (05482000: 2016-2022; 05484500: 2016-2022): each refit draws Dirichlet(1) weights per year and passes them as LightGBM row weights (no row duplication, so min_child_samples keeps counting distinct days) -> 5-95% range; plus the effect seen by the p10 and p90 quantile models; plus the conceptual reservoir model as a structurally different estimate.",
  "flow_conditioning": "All effects are changes in CONCENTRATION conditional on the observed streamflow: discharge features are model inputs and are held fixed in the counterfactual (they carry a large share of the GBM gain; see diagnostics.gain_share). Cover crops can also reduce drainage volume, so these are not load changes and a load estimate needs a separate flow assumption.",
- "central_value_note": "'central' = the saved (deployed) models; 'bootstrap' = 30 refits on resampled training years. Both use training-period behaviour, so the effect sizes are mostly in-sample, not validated out of sample.",
+ "central_value_note": "'central' = the saved (deployed) models; 'bootstrap' = 30 Bayesian-bootstrap refits over training years. Both use training-period behaviour, so the effect sizes are mostly in-sample, not validated out of sample.",
  "identification_caveat": "Historical bare-share variation is overwhelmingly seasonal (bare in winter/spring, green in summer) and its year-to-year differences are driven by weather (planting/green-up timing, harvest date), not by cover-crop adoption, which stayed at single-digit % of cropland. The model therefore never saw a watershed with much more winter living cover, so the learned sensitivity is weakly identified: the monotone constraint fixes its sign (less bare soil never raises nitrate), but its size is uncertain and a 50% cut takes winter bare share far outside the training range, where trees extrapolate flat (the effect saturates). This is why the scenario engine blends it with field-trial priors.",
  "sites": {
   "05482000": {
@@ -103,43 +103,61 @@
       },
       "elasticity_dlnC_dbare": 0.47480849163243183
      },
+     "seed_spread_all_years": {
+      "seeds": [
+       100,
+       101,
+       102,
+       103,
+       104
+      ],
+      "pct_change_window": [
+       -4.04,
+       -5.12,
+       -5.11,
+       -3.92,
+       -5.5
+      ],
+      "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+     },
      "bootstrap": {
       "pct_change_window": {
-       "p50": -6.221143898047027,
-       "lo": -9.305819714233074,
-       "hi": -3.742958459101719,
+       "p50": -5.468303421112191,
+       "lo": -7.580963390880782,
+       "hi": -4.00358758877001,
        "n": 30
       },
       "pct_change_aprjul": {
-       "p50": -5.511078007823156,
-       "lo": -8.563867787025838,
-       "hi": -2.669135232615911,
+       "p50": -5.018515513857181,
+       "lo": -7.749431402924344,
+       "hi": -3.2125241628003858,
        "n": 30
       },
       "pct_change_year": {
-       "p50": -5.288817457094607,
-       "lo": -7.369914961735659,
-       "hi": -3.08007324808457,
+       "p50": -4.486898885160562,
+       "lo": -6.767506333437188,
+       "hi": -3.26814206608446,
        "n": 30
       },
       "days_avoided_per_year_mean_2016_2025": {
-       "p50": 5.7,
-       "lo": 3.3,
-       "hi": 9.449999999999998,
+       "p50": 6.1,
+       "lo": 3.445,
+       "hi": 8.794999999999998,
        "n": 30
       },
       "days_avoided_2025": {
-       "p50": 13.0,
-       "lo": 6.45,
-       "hi": 25.749999999999986,
+       "p50": 11.0,
+       "lo": 6.0,
+       "hi": 20.549999999999997,
        "n": 30
       },
       "elasticity_dlnC_dbare": {
-       "p50": 0.6611520005126099,
-       "lo": 0.41212409440924375,
-       "hi": 0.9978016419611151,
+       "p50": 0.5795858575987205,
+       "lo": 0.42908325406493525,
+       "hi": 0.7713067209307397,
        "n": 30
-      }
+      },
+      "central_inside_5_95": true
      }
     },
     "0.25": {
@@ -219,43 +237,61 @@
       },
       "elasticity_dlnC_dbare": 0.3093339093303281
      },
+     "seed_spread_all_years": {
+      "seeds": [
+       100,
+       101,
+       102,
+       103,
+       104
+      ],
+      "pct_change_window": [
+       -7.87,
+       -9.21,
+       -9.26,
+       -7.02,
+       -9.83
+      ],
+      "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+     },
      "bootstrap": {
       "pct_change_window": {
-       "p50": -10.122689492759047,
-       "lo": -15.261051760100223,
-       "hi": -6.657399411623109,
+       "p50": -9.40548355721863,
+       "lo": -13.932814737758775,
+       "hi": -7.188241653342963,
        "n": 30
       },
       "pct_change_aprjul": {
-       "p50": -10.345513757021902,
-       "lo": -18.72221612472084,
-       "hi": -5.921784444596939,
+       "p50": -10.584756280348644,
+       "lo": -17.038784940012803,
+       "hi": -6.4529035465944125,
        "n": 30
       },
       "pct_change_year": {
-       "p50": -8.680731421999639,
-       "lo": -14.067139061785003,
-       "hi": -5.932022467665122,
+       "p50": -8.602732994919716,
+       "lo": -13.076249493916464,
+       "hi": -6.367340110994578,
        "n": 30
       },
       "days_avoided_per_year_mean_2016_2025": {
-       "p50": 10.5,
-       "lo": 6.735,
-       "hi": 18.939999999999987,
+       "p50": 11.4,
+       "lo": 6.58,
+       "hi": 18.454999999999995,
        "n": 30
       },
       "days_avoided_2025": {
-       "p50": 29.0,
-       "lo": 14.350000000000001,
-       "hi": 53.099999999999994,
+       "p50": 25.5,
+       "lo": 13.45,
+       "hi": 39.64999999999999,
        "n": 30
       },
       "elasticity_dlnC_dbare": {
-       "p50": 0.43396835674480627,
-       "lo": 0.28477626077599627,
-       "hi": 0.6219260131611528,
+       "p50": 0.3955157301206861,
+       "lo": 0.3036286857743576,
+       "hi": 0.5482389069046826,
        "n": 30
-      }
+      },
+      "central_inside_5_95": true
      }
     },
     "0.5": {
@@ -335,43 +371,61 @@
       },
       "elasticity_dlnC_dbare": 0.2624103540071823
      },
+     "seed_spread_all_years": {
+      "seeds": [
+       100,
+       101,
+       102,
+       103,
+       104
+      ],
+      "pct_change_window": [
+       -13.58,
+       -14.5,
+       -15.01,
+       -12.53,
+       -14.76
+      ],
+      "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+     },
      "bootstrap": {
       "pct_change_window": {
-       "p50": -16.14307939655642,
-       "lo": -23.420980549894608,
-       "hi": -11.288764464884238,
+       "p50": -15.690412804896404,
+       "lo": -21.18551426003746,
+       "hi": -11.66167687573137,
        "n": 30
       },
       "pct_change_aprjul": {
-       "p50": -18.15979941017796,
-       "lo": -34.265914676308704,
-       "hi": -10.512759134580598,
+       "p50": -20.223481961972528,
+       "lo": -26.903593730968034,
+       "hi": -12.257105393677985,
        "n": 30
       },
       "pct_change_year": {
-       "p50": -15.162867927489764,
-       "lo": -24.28169442120734,
-       "hi": -10.356254270306433,
+       "p50": -15.196880937891503,
+       "lo": -20.475601853354096,
+       "hi": -11.486558113777338,
        "n": 30
       },
       "days_avoided_per_year_mean_2016_2025": {
-       "p50": 18.549999999999997,
-       "lo": 11.49,
-       "hi": 30.119999999999997,
+       "p50": 20.15,
+       "lo": 12.195,
+       "hi": 26.744999999999994,
        "n": 30
       },
       "days_avoided_2025": {
-       "p50": 54.0,
-       "lo": 28.45,
-       "hi": 95.55,
+       "p50": 55.0,
+       "lo": 28.8,
+       "hi": 79.94999999999997,
        "n": 30
       },
       "elasticity_dlnC_dbare": {
-       "p50": 0.3645577101958931,
-       "lo": 0.24237932343076765,
-       "hi": 0.4996977926914188,
+       "p50": 0.3167498981278547,
+       "lo": 0.2543881017098926,
+       "hi": 0.4433492487216637,
        "n": 30
-      }
+      },
+      "central_inside_5_95": true
      }
     }
    },
@@ -780,43 +834,61 @@
       },
       "elasticity_dlnC_dbare": 0.3656201485397079
      },
+     "seed_spread_all_years": {
+      "seeds": [
+       100,
+       101,
+       102,
+       103,
+       104
+      ],
+      "pct_change_window": [
+       -2.67,
+       -2.82,
+       -2.87,
+       -2.65,
+       -2.95
+      ],
+      "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+     },
      "bootstrap": {
       "pct_change_window": {
-       "p50": -2.7047659378578337,
-       "lo": -3.941747849110263,
-       "hi": -1.4048949439403535,
+       "p50": -2.658629416312419,
+       "lo": -3.224564418533744,
+       "hi": -1.5350252377996043,
        "n": 30
       },
       "pct_change_aprjul": {
-       "p50": -1.5874547588219101,
-       "lo": -2.7532969171725985,
-       "hi": -0.7326324230129778,
+       "p50": -1.6461047283913177,
+       "lo": -2.7740243867389096,
+       "hi": -0.7863335841810185,
        "n": 30
       },
       "pct_change_year": {
-       "p50": -2.0397201151136803,
-       "lo": -2.962619314859451,
-       "hi": -1.2836064781592966,
+       "p50": -2.0109787779901964,
+       "lo": -2.6528225566410133,
+       "hi": -1.3054758635849706,
        "n": 30
       },
       "days_avoided_per_year_mean_2016_2025": {
-       "p50": 2.0,
-       "lo": 0.34500000000000003,
-       "hi": 4.264999999999999,
+       "p50": 2.2,
+       "lo": 0.7250000000000001,
+       "hi": 3.7649999999999992,
        "n": 30
       },
       "days_avoided_2025": {
-       "p50": 2.5,
+       "p50": 3.0,
        "lo": 1.0,
-       "hi": 7.0,
+       "hi": 5.549999999999997,
        "n": 30
       },
       "elasticity_dlnC_dbare": {
-       "p50": 0.33038321735034315,
-       "lo": 0.14923286944446038,
-       "hi": 0.486622494250813,
+       "p50": 0.3206272417419871,
+       "lo": 0.17535748112888713,
+       "hi": 0.4347090844112708,
        "n": 30
-      }
+      },
+      "central_inside_5_95": true
      }
     },
     "0.25": {
@@ -896,43 +968,61 @@
       },
       "elasticity_dlnC_dbare": 0.2201207467646927
      },
+     "seed_spread_all_years": {
+      "seeds": [
+       100,
+       101,
+       102,
+       103,
+       104
+      ],
+      "pct_change_window": [
+       -4.32,
+       -4.39,
+       -4.67,
+       -4.43,
+       -4.76
+      ],
+      "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+     },
      "bootstrap": {
       "pct_change_window": {
-       "p50": -4.327644635988359,
-       "lo": -6.279325176438648,
-       "hi": -2.5455857778987423,
+       "p50": -4.6023773518742095,
+       "lo": -5.889524143716573,
+       "hi": -2.915712669290038,
        "n": 30
       },
       "pct_change_aprjul": {
-       "p50": -3.7469842499786687,
-       "lo": -7.2261182465634475,
-       "hi": -1.9096219264638041,
+       "p50": -4.093868191301997,
+       "lo": -7.387304376342819,
+       "hi": -2.0773936957627352,
        "n": 30
       },
       "pct_change_year": {
-       "p50": -3.724552138619802,
-       "lo": -5.621242120885489,
-       "hi": -2.2772782244490037,
+       "p50": -3.8250238880408904,
+       "lo": -5.703876068652716,
+       "hi": -2.5920120222528835,
        "n": 30
       },
       "days_avoided_per_year_mean_2016_2025": {
-       "p50": 4.550000000000001,
-       "lo": 1.59,
-       "hi": 9.91,
+       "p50": 5.6,
+       "lo": 2.48,
+       "hi": 10.955,
        "n": 30
       },
       "days_avoided_2025": {
-       "p50": 7.0,
-       "lo": 2.0,
-       "hi": 21.19999999999999,
+       "p50": 7.5,
+       "lo": 2.9000000000000004,
+       "hi": 18.099999999999994,
        "n": 30
       },
       "elasticity_dlnC_dbare": {
-       "p50": 0.20497203016917928,
-       "lo": 0.10317128069153347,
-       "hi": 0.30316857474105235,
+       "p50": 0.22102800919479887,
+       "lo": 0.13269164853231732,
+       "hi": 0.27886561822710165,
        "n": 30
-      }
+      },
+      "central_inside_5_95": true
      }
     },
     "0.5": {
@@ -1012,43 +1102,61 @@
       },
       "elasticity_dlnC_dbare": 0.187605696235447
      },
+     "seed_spread_all_years": {
+      "seeds": [
+       100,
+       101,
+       102,
+       103,
+       104
+      ],
+      "pct_change_window": [
+       -7.76,
+       -7.33,
+       -8.3,
+       -8.05,
+       -8.69
+      ],
+      "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+     },
      "bootstrap": {
       "pct_change_window": {
-       "p50": -7.222504217445258,
-       "lo": -11.292629308299334,
-       "hi": -4.094277746226555,
+       "p50": -7.68226232425544,
+       "lo": -11.17854210213103,
+       "hi": -5.1084567981089615,
        "n": 30
       },
       "pct_change_aprjul": {
-       "p50": -7.77539141596365,
-       "lo": -15.80123946332063,
-       "hi": -4.984642095703731,
+       "p50": -9.577956632135804,
+       "lo": -15.204162691308337,
+       "hi": -5.416855324187525,
        "n": 30
       },
       "pct_change_year": {
-       "p50": -6.381524730066262,
-       "lo": -10.989411171593735,
-       "hi": -3.9997531157858623,
+       "p50": -7.42887621184053,
+       "lo": -10.797001447805483,
+       "hi": -4.864333688104304,
        "n": 30
       },
       "days_avoided_per_year_mean_2016_2025": {
-       "p50": 11.5,
-       "lo": 5.680000000000001,
-       "hi": 24.02,
+       "p50": 14.8,
+       "lo": 7.4,
+       "hi": 23.54,
        "n": 30
       },
       "days_avoided_2025": {
-       "p50": 10.5,
-       "lo": 3.45,
-       "hi": 38.49999999999997,
+       "p50": 13.5,
+       "lo": 6.45,
+       "hi": 43.949999999999974,
        "n": 30
       },
       "elasticity_dlnC_dbare": {
-       "p50": 0.16312275571228596,
-       "lo": 0.08571304948947842,
-       "hi": 0.2552458267676552,
+       "p50": 0.17481538916778794,
+       "lo": 0.12149118731256259,
+       "hi": 0.24912230270210048,
        "n": 30
-      }
+      },
+      "central_inside_5_95": true
      }
     }
    },
@@ -1379,8 +1487,34 @@
    }
   }
  },
+ "bootstrap_method": {
+  "kind": "bayesian_bootstrap_over_years",
+  "weights": "Dirichlet(1) per training year, scaled to mean 1",
+  "n": 30,
+  "train_years": {
+   "05482000": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022
+   ],
+   "05484500": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022
+   ]
+  },
+  "replaces": "row-duplicating year bootstrap (a repeated year counted twice against min_child_samples)"
+ },
  "v2": {
-  "generated_at": "2026-11-14T23:49:29.392890+00:00",
+  "generated_at": "2026-11-15T00:33:50.315051+00:00",
   "perturbation": {
    "variable": "daily causal MODIS bare share of persistent row-crop land (living = 1 - bare)",
    "window": "Oct 15 - May 31 every year",
@@ -1400,9 +1534,9 @@
    ],
    "api": "model/river.py: perturb_cover(features_df, frac, months)"
   },
-  "uncertainty": "30 refits of the median GBM on bootstrap-resampled training years (2016-2022, whole years drawn with replacement) -> 5-95% range; plus the effect seen by the p10 and p90 quantile models; plus the conceptual reservoir model as a structurally different estimate.",
+  "uncertainty": "30 Bayesian-bootstrap refits of the median GBM over its training years (05482000: 2016-2022; 05484500: 2012-2022): each refit draws Dirichlet(1) weights per year and passes them as LightGBM row weights (no row duplication, so min_child_samples keeps counting distinct days) -> 5-95% range; plus the effect seen by the p10 and p90 quantile models; plus the conceptual reservoir model as a structurally different estimate.",
   "flow_conditioning": "All effects are changes in CONCENTRATION conditional on the observed streamflow: discharge features are model inputs and are held fixed in the counterfactual (they carry a large share of the GBM gain; see diagnostics.gain_share). Cover crops can also reduce drainage volume, so these are not load changes and a load estimate needs a separate flow assumption.",
-  "central_value_note": "'central' = the saved (deployed) models; 'bootstrap' = 30 refits on resampled training years. Both use training-period behaviour, so the effect sizes are mostly in-sample, not validated out of sample.",
+  "central_value_note": "'central' = the saved (deployed) models; 'bootstrap' = 30 Bayesian-bootstrap refits over training years. Both use training-period behaviour, so the effect sizes are mostly in-sample, not validated out of sample.",
   "identification_caveat": "Historical bare-share variation is overwhelmingly seasonal (bare in winter/spring, green in summer) and its year-to-year differences are driven by weather (planting/green-up timing, harvest date), not by cover-crop adoption, which stayed at single-digit % of cropland. The model therefore never saw a watershed with much more winter living cover, so the learned sensitivity is weakly identified: the monotone constraint fixes its sign (less bare soil never raises nitrate), but its size is uncertain and a 50% cut takes winter bare share far outside the training range, where trees extrapolate flat (the effect saturates). This is why the scenario engine blends it with field-trial priors.",
   "sites": {
    "05482000": {
@@ -1484,43 +1618,61 @@
        },
        "elasticity_dlnC_dbare": 0.4324232311417957
       },
+      "seed_spread_all_years": {
+       "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104
+       ],
+       "pct_change_window": [
+        -5.59,
+        -4.72,
+        -5.16,
+        -3.61,
+        -4.18
+       ],
+       "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+      },
       "bootstrap": {
        "pct_change_window": {
-        "p50": -6.6976892044125,
-        "lo": -9.859049877806576,
-        "hi": -3.357983773958765,
+        "p50": -5.650381098202528,
+        "lo": -8.311350300237779,
+        "hi": -3.877329911656994,
         "n": 30
        },
        "pct_change_aprjul": {
-        "p50": -4.313356411971359,
-        "lo": -7.374218763236571,
-        "hi": -2.348970965947577,
+        "p50": -4.164095688462688,
+        "lo": -5.847656259758937,
+        "hi": -2.4042148187331365,
         "n": 30
        },
        "pct_change_year": {
-        "p50": -5.032499728653006,
-        "lo": -7.370761008828716,
-        "hi": -2.577245396693842,
+        "p50": -4.3177591166774,
+        "lo": -6.211801280985219,
+        "hi": -2.9639712684836397,
         "n": 30
        },
        "days_avoided_per_year_mean_2016_2025": {
-        "p50": 5.3,
+        "p50": 5.35,
         "lo": 2.335,
-        "hi": 7.81,
+        "hi": 7.209999999999999,
         "n": 30
        },
        "days_avoided_2025": {
-        "p50": 15.0,
-        "lo": 4.45,
-        "hi": 26.099999999999994,
+        "p50": 13.0,
+        "lo": 6.9,
+        "hi": 21.099999999999994,
         "n": 30
        },
        "elasticity_dlnC_dbare": {
-        "p50": 0.7386333314943296,
-        "lo": 0.43041550310265175,
-        "hi": 1.0516763754994973,
+        "p50": 0.6730806102893572,
+        "lo": 0.4798606628876317,
+        "hi": 0.9401208321560447,
         "n": 30
-       }
+       },
+       "central_inside_5_95": false
       }
      },
      "0.25": {
@@ -1600,43 +1752,61 @@
        },
        "elasticity_dlnC_dbare": 0.2523151905233342
       },
+      "seed_spread_all_years": {
+       "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104
+       ],
+       "pct_change_window": [
+        -8.06,
+        -7.1,
+        -7.54,
+        -5.75,
+        -6.62
+       ],
+       "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+      },
       "bootstrap": {
        "pct_change_window": {
-        "p50": -9.737907937262179,
-        "lo": -14.742394366962001,
-        "hi": -5.109474001476842,
+        "p50": -8.706003085322507,
+        "lo": -12.42103074043579,
+        "hi": -6.168658535333198,
         "n": 30
        },
        "pct_change_aprjul": {
-        "p50": -6.766118762638406,
-        "lo": -13.97591498009383,
-        "hi": -4.0173950132280165,
+        "p50": -7.242623487635441,
+        "lo": -11.756002352447759,
+        "hi": -3.902553805811977,
         "n": 30
        },
        "pct_change_year": {
-        "p50": -7.583384542666239,
-        "lo": -12.13266634183418,
-        "hi": -4.168501869490669,
+        "p50": -6.9908265937432095,
+        "lo": -10.779959853191054,
+        "hi": -4.869907337971841,
         "n": 30
        },
        "days_avoided_per_year_mean_2016_2025": {
-        "p50": 8.1,
-        "lo": 4.205,
-        "hi": 13.959999999999997,
+        "p50": 8.5,
+        "lo": 4.28,
+        "hi": 12.02,
         "n": 30
        },
        "days_avoided_2025": {
-        "p50": 25.5,
-        "lo": 11.8,
-        "hi": 49.29999999999998,
+        "p50": 24.0,
+        "lo": 10.45,
+        "hi": 38.64999999999999,
         "n": 30
        },
        "elasticity_dlnC_dbare": {
-        "p50": 0.4571947144431875,
-        "lo": 0.2599506051888749,
-        "hi": 0.5990713124739724,
+        "p50": 0.3747351067026017,
+        "lo": 0.30210437905287824,
+        "hi": 0.5306472768042682,
         "n": 30
-       }
+       },
+       "central_inside_5_95": false
       }
      },
      "0.5": {
@@ -1716,43 +1886,61 @@
        },
        "elasticity_dlnC_dbare": 0.17765756816534745
       },
+      "seed_spread_all_years": {
+       "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104
+       ],
+       "pct_change_window": [
+        -10.59,
+        -10.18,
+        -9.59,
+        -8.05,
+        -9.6
+       ],
+       "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+      },
       "bootstrap": {
        "pct_change_window": {
-        "p50": -14.062394329117616,
-        "lo": -21.881897235768957,
-        "hi": -7.986079369975596,
+        "p50": -12.531687651002633,
+        "lo": -17.88601653332189,
+        "hi": -9.16705192482599,
         "n": 30
        },
        "pct_change_aprjul": {
-        "p50": -12.196802481346992,
-        "lo": -27.953281936564913,
-        "hi": -6.741697840541974,
+        "p50": -13.578654264414968,
+        "lo": -21.28695262192429,
+        "hi": -7.290537011952933,
         "n": 30
        },
        "pct_change_year": {
-        "p50": -11.679541763610507,
-        "lo": -21.03125990075536,
-        "hi": -7.182378409306754,
+        "p50": -11.95259079271203,
+        "lo": -17.138730838962637,
+        "hi": -8.154940121087854,
         "n": 30
        },
        "days_avoided_per_year_mean_2016_2025": {
-        "p50": 12.5,
-        "lo": 7.075000000000001,
-        "hi": 26.365,
+        "p50": 13.7,
+        "lo": 7.8149999999999995,
+        "hi": 19.265,
         "n": 30
        },
        "days_avoided_2025": {
-        "p50": 38.5,
-        "lo": 21.25,
-        "hi": 93.55,
+        "p50": 39.0,
+        "lo": 21.0,
+        "hi": 67.74999999999999,
         "n": 30
        },
        "elasticity_dlnC_dbare": {
-        "p50": 0.3184213053451459,
-        "lo": 0.19749400627554373,
-        "hi": 0.4544877535021194,
+        "p50": 0.2721741937850135,
+        "lo": 0.2205067785423293,
+        "hi": 0.3698385878819605,
         "n": 30
-       }
+       },
+       "central_inside_5_95": false
       }
      }
     },
@@ -2162,43 +2350,61 @@
        },
        "elasticity_dlnC_dbare": 0.6778349336106245
       },
+      "seed_spread_all_years": {
+       "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104
+       ],
+       "pct_change_window": [
+        -6.22,
+        -6.27,
+        -6.25,
+        -5.79,
+        -5.73
+       ],
+       "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+      },
       "bootstrap": {
        "pct_change_window": {
-        "p50": -8.79081059905225,
-        "lo": -11.994846881090343,
-        "hi": -6.639746774520517,
+        "p50": -7.0594340806514335,
+        "lo": -9.977263945522715,
+        "hi": -5.4000248224271274,
         "n": 30
        },
        "pct_change_aprjul": {
-        "p50": -6.413193556259461,
-        "lo": -8.468976222827678,
-        "hi": -4.490004454667758,
+        "p50": -5.36675196418786,
+        "lo": -7.238734918249544,
+        "hi": -4.049484229483248,
         "n": 30
        },
        "pct_change_year": {
-        "p50": -6.770095334118603,
-        "lo": -9.032044092067146,
-        "hi": -5.100533022463388,
+        "p50": -5.306210012068929,
+        "lo": -7.693237417759674,
+        "hi": -4.166806490998636,
         "n": 30
        },
        "days_avoided_per_year_mean_2016_2025": {
-        "p50": 8.3,
-        "lo": 6.025,
-        "hi": 11.709999999999999,
+        "p50": 6.85,
+        "lo": 4.645,
+        "hi": 10.094999999999997,
         "n": 30
        },
        "days_avoided_2025": {
-        "p50": 11.0,
+        "p50": 10.0,
         "lo": 7.45,
-        "hi": 17.0,
+        "hi": 13.0,
         "n": 30
        },
        "elasticity_dlnC_dbare": {
-        "p50": 1.0424245115021906,
-        "lo": 0.7550038332798773,
-        "hi": 1.4656289198238224,
+        "p50": 0.8319697408916923,
+        "lo": 0.6395797381590478,
+        "hi": 1.293333307503665,
         "n": 30
-       }
+       },
+       "central_inside_5_95": true
       }
      },
      "0.25": {
@@ -2278,43 +2484,61 @@
        },
        "elasticity_dlnC_dbare": 0.4594712377972617
       },
+      "seed_spread_all_years": {
+       "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104
+       ],
+       "pct_change_window": [
+        -10.51,
+        -10.36,
+        -10.02,
+        -9.84,
+        -10.48
+       ],
+       "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+      },
       "bootstrap": {
        "pct_change_window": {
-        "p50": -13.643765783101209,
-        "lo": -17.971655690956318,
-        "hi": -10.62539257484178,
+        "p50": -11.647416030819425,
+        "lo": -15.379093765278775,
+        "hi": -9.656227104807815,
         "n": 30
        },
        "pct_change_aprjul": {
-        "p50": -12.47778035313966,
-        "lo": -15.749103637777592,
-        "hi": -7.9408284341547155,
+        "p50": -10.454196779407626,
+        "lo": -13.974742917960548,
+        "hi": -8.298353830434392,
         "n": 30
        },
        "pct_change_year": {
-        "p50": -11.399781080107513,
-        "lo": -14.731049246388933,
-        "hi": -8.558824356795235,
+        "p50": -9.60550027314807,
+        "lo": -12.821005626780726,
+        "hi": -8.099609338321143,
         "n": 30
        },
        "days_avoided_per_year_mean_2016_2025": {
-        "p50": 17.4,
-        "lo": 10.575000000000001,
-        "hi": 23.034999999999997,
+        "p50": 15.149999999999999,
+        "lo": 11.735,
+        "hi": 21.1,
         "n": 30
        },
        "days_avoided_2025": {
-        "p50": 22.5,
-        "lo": 12.45,
-        "hi": 43.19999999999999,
+        "p50": 22.0,
+        "lo": 15.0,
+        "hi": 32.64999999999999,
         "n": 30
        },
        "elasticity_dlnC_dbare": {
-        "p50": 0.6382091037717468,
-        "lo": 0.4958272558161983,
-        "hi": 0.8836752952018998,
+        "p50": 0.5462907286702321,
+        "lo": 0.44937546592451894,
+        "hi": 0.7423292550389475,
         "n": 30
-       }
+       },
+       "central_inside_5_95": false
       }
      },
      "0.5": {
@@ -2394,43 +2618,61 @@
        },
        "elasticity_dlnC_dbare": 0.33993586167733786
       },
+      "seed_spread_all_years": {
+       "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104
+       ],
+       "pct_change_window": [
+        -15.33,
+        -15.14,
+        -14.17,
+        -15.36,
+        -15.85
+       ],
+       "note": "equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7"
+      },
       "bootstrap": {
        "pct_change_window": {
-        "p50": -19.556135614257393,
-        "lo": -25.406168221028025,
-        "hi": -16.40570717323146,
+        "p50": -17.831279684829774,
+        "lo": -22.158930364048995,
+        "hi": -14.964442375241013,
         "n": 30
        },
        "pct_change_aprjul": {
-        "p50": -19.454806082368584,
-        "lo": -25.176069887154927,
-        "hi": -13.476962409714348,
+        "p50": -16.905991424246572,
+        "lo": -23.024973886615054,
+        "hi": -14.113697143013095,
         "n": 30
        },
        "pct_change_year": {
-        "p50": -17.01518515974432,
-        "lo": -21.99931017728459,
-        "hi": -13.933377858915206,
+        "p50": -14.792638096971617,
+        "lo": -19.401002406650242,
+        "hi": -13.046291621816653,
         "n": 30
        },
        "days_avoided_per_year_mean_2016_2025": {
-        "p50": 27.4,
-        "lo": 20.525000000000002,
-        "hi": 34.73,
+        "p50": 25.549999999999997,
+        "lo": 20.96,
+        "hi": 33.855,
         "n": 30
        },
        "days_avoided_2025": {
-        "p50": 44.0,
-        "lo": 25.9,
-        "hi": 68.29999999999998,
+        "p50": 41.0,
+        "lo": 23.9,
+        "hi": 56.19999999999999,
         "n": 30
        },
        "elasticity_dlnC_dbare": {
-        "p50": 0.4691080973645302,
-        "lo": 0.3953587012445123,
-        "hi": 0.6413502173760848,
+        "p50": 0.4189179489704541,
+        "lo": 0.3552100101175825,
+        "hi": 0.5419391137507642,
         "n": 30
-       }
+       },
+       "central_inside_5_95": false
       }
      }
     },
@@ -2769,6 +3011,36 @@
      "cv_rmse_log_gain_from_bare_features": 0.0024111947265176292
     }
    }
+  },
+  "bootstrap_method": {
+   "kind": "bayesian_bootstrap_over_years",
+   "weights": "Dirichlet(1) per training year, scaled to mean 1",
+   "n": 30,
+   "train_years": {
+    "05482000": [
+     2016,
+     2017,
+     2018,
+     2019,
+     2020,
+     2021,
+     2022
+    ],
+    "05484500": [
+     2012,
+     2013,
+     2014,
+     2015,
+     2016,
+     2017,
+     2018,
+     2019,
+     2020,
+     2021,
+     2022
+    ]
+   },
+   "replaces": "row-duplicating year bootstrap (a repeated year counted twice against min_child_samples)"
   },
   "model_version": "v2",
   "note": "v2 (legacy-N) GBM; reservoir block repeats the v1 conceptual model for reference. The carryover store does not depend on cover, so cover acts only through the bare-share features."

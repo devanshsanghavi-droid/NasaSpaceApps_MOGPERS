@@ -8,7 +8,7 @@ longer record for the Raccoon (nitrate from 2012-03-02, covering the 2012 drough
 DESIGNED AFTER SEEING THE v1 2025 MISS: its 2023-2025 score is not a clean out-of-time test. The stricter
 check trains on 2012-2019 (Raccoon) / 2016-2019 (Des Moines) and tests 2020-2022 and 2023-2025.
 
-Display rule (fixed before computing any 2026 number, does not use 2026):
+Display rule (fixed before any v2 2026 metric was computed; v1's 2026 miss was already known; does not use 2026):
   use v2 for a site iff (a) v2's leave-one-year-out CV ln-RMSE averaged over the 2016-2022 folds is no worse
   than v1's, AND (b) on the strict check v2's pooled 2020-2025 ln-RMSE is lower than the v1 feature set
   trained on the same years with v1's hyperparameters. Otherwise keep v1.
@@ -42,7 +42,7 @@ GRID = dict(num_leaves=[7, 15], min_child_samples=[50, 150], n_estimators=[150, 
 RULE = ("Use v2 for a site iff (a) v2 leave-one-year-out CV ln-RMSE averaged over the 2016-2022 folds <= v1's "
         "(v1 value from models/config_<site>.json) AND (b) in the strict check (train 2012-2019 Raccoon / "
         "2016-2019 Des Moines, test 2020-2025) v2's pooled ln-RMSE < that of the v1 feature set trained on the "
-        "same years with v1's hyperparameters. Rule fixed before any 2026 metric was computed; 2026 not used.")
+        "same years with v1's hyperparameters. Rule fixed before any v2 2026 metric was computed (v1's 2026 miss was already known); 2026 not used.")
 
 
 def fit(g, y, feats, alpha, hp, n=None, base=None, seed=7):
@@ -221,7 +221,7 @@ def main():
             strict["2020_2025"]["v2"]["rmse_log"], strict["2020_2025"]["v1_features_same_years"]["rmse_log"],
             strict["2020_2025"]["v1_features_2016_2019"]["rmse_log"]))
 
-        # ---------------- display decision (rule; computed before any 2026 metric below)
+        # ---------------- display decision (rule; computed before any v2 2026 metric below; v1's 2026 results were already known)
         cond_a = hp["cv_rmse_log_2016_2022"] <= hp1["cv_rmse_log"]
         cond_b = strict["2020_2025"]["v2"]["rmse_log"] < strict["2020_2025"]["v1_features_same_years"]["rmse_log"]
         choice = "v2" if (cond_a and cond_b) else "v1"

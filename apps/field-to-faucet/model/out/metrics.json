@@ -8151,7 +8151,7 @@
   }
  },
  "display_model": {
-  "rule": "Use v2 for a site iff (a) v2 leave-one-year-out CV ln-RMSE averaged over the 2016-2022 folds <= v1's (v1 value from models/config_<site>.json) AND (b) in the strict check (train 2012-2019 Raccoon / 2016-2019 Des Moines, test 2020-2025) v2's pooled ln-RMSE < that of the v1 feature set trained on the same years with v1's hyperparameters. Rule fixed before any 2026 metric was computed; 2026 not used.",
+  "rule": "Use v2 for a site iff (a) v2 leave-one-year-out CV ln-RMSE averaged over the 2016-2022 folds <= v1's (v1 value from models/config_<site>.json) AND (b) in the strict check (train 2012-2019 Raccoon / 2016-2019 Des Moines, test 2020-2025) v2's pooled ln-RMSE < that of the v1 feature set trained on the same years with v1's hyperparameters. Rule fixed before any v2 2026 metric was computed (v1's 2026 miss was already known); 2026 not used.",
   "decided_before_2026_metrics": true,
   "sites": {
    "05484500": {
@@ -8172,6 +8172,7 @@
     "strict_v1": 1.2496164936866456,
     "cond_b_strict_improves": true
    }
-  }
+  },
+  "timing_note": "decided_before_2026_metrics means before any v2 2026 metric; v1's 2026 results (including its 2026 miss) were committed before v2 was designed."
  }
 }

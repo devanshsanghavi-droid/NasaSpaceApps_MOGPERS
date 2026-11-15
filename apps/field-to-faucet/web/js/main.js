@@ -1,8 +1,11 @@
 // Entry point: loads data in groups, renders views, hash routing (#city, #farmer, #farmer/<field_id>, #method).
+// First paint: the hero, KPIs and replay slider render from meta/facts/scenarios; the river chart, outlook and method
+// tables follow when river_series/validation/outlook arrive.
 import { createStore, ensure, onLoaded, renderBanner } from "./data.js";
-import { initCityMap, renderCity } from "./city.js";
-import { initFarmer, initFarmMap, selectField } from "./farmer.js";
+import { initCityMap, renderCity, renderCityRiver } from "./city.js";
+import { initFarmer, initFarmMap, selectField, showFieldNotFound } from "./farmer.js";
 import { renderMethod, renderProvenance } from "./method.js";
+import { initTips } from "./util.js";
 
 const VIEWS = ["city", "farmer", "method"];
 let store;
@@ -26,25 +29,45 @@ function show(view) {
 function onSelectField(id) {
   history.replaceState(null, "", `#farmer/${encodeURIComponent(id)}`);
   if (currentView !== "farmer") show("farmer");
-  selectField(id).then((ok) => { if (ok) document.getElementById("field-panel").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  selectField(id).then((ok) => {
+    if (ok) document.getElementById("field-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    else showFieldNotFound(id);
+  });
 }
 
 async function route() {
   const { view, arg } = parseHash();
   show(view);
-  if (view === "farmer" && arg) await selectField(arg);
+  if (view === "farmer" && arg) {
+    const ok = await selectField(arg);
+    if (!ok) showFieldNotFound(arg);
+  }
+}
+
+// The vendored libraries are plain scripts; if one failed to load, say so instead of throwing later.
+function checkLibs() {
+  const missing = [];
+  if (typeof window.Chart === "undefined") missing.push("Chart.js (charts)");
+  if (typeof window.maplibregl === "undefined") missing.push("MapLibre GL (maps)");
+  const b = document.getElementById("lib-banner");
+  if (!missing.length) return;
+  b.innerHTML = `<strong>Some page parts could not load:</strong> ${missing.join(", ")}. Numbers and text still work; reload the page to try again.`;
+  b.hidden = false;
 }
 
 async function main() {
+  checkLibs();
+  initTips();
   store = await createStore();
   onLoaded(store, () => { renderBanner(store.source); renderProvenance(store); });
   renderBanner(store.source);
   renderCity(store);
   initFarmer(store, onSelectField);
-  renderMethod(store);
   window.addEventListener("hashchange", route);
   await route();
-  // Map layers next (the city map and hotspot list need them); farm data waits until the farmer view opens.
+  // River chart, outlook and method tables next; then map layers (city map + hotspot list); farm data waits until
+  // the farmer view opens.
+  ensure(store, "river").then(() => { renderCityRiver(); renderMethod(store); });
   ensure(store, "map");
 }
 

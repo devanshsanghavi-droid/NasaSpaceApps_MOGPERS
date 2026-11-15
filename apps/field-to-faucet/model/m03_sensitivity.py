@@ -7,8 +7,9 @@ Counterfactual perturbation: daily causal bare share is cut by 10/25/50% of its 
 are recomputed (river.perturb_cover), and the models re-predict. Reported per site:
   * gbm: % change of the p50 simulation (window days, Apr-Jul, whole year), elasticity d ln C / d bare,
          days > 10 mg/L avoided per year when the model's ratio is applied to the OBSERVED series
-         ("obs-anchored"), with uncertainty from >= 20 refits on bootstrap-resampled training YEARS
-         plus the shift of the p10/p90 quantile models;
+         ("obs-anchored"), with uncertainty from 30 Bayesian-bootstrap refits over training YEARS (Dirichlet(1)
+         year weights passed as LightGBM row weights; rows are never duplicated, so a repeated year cannot loosen
+         min_child_samples) plus the shift of the p10/p90 quantile models;
   * reservoir: the same perturbation through the conceptual model (uptake by living cover);
   * identification diagnostics: how much of bare-share variation is seasonal, how far the perturbation
          leaves the training range, and how much leave-one-year-out CV skill bare-share features add.
@@ -29,6 +30,7 @@ import river  # noqa: E402
 
 FRACS = [0.10, 0.25, 0.50]
 N_BOOT = 30
+SEED_CHECK = [100, 101, 102, 103, 104]
 YEARS = list(range(2016, 2026))
 MCL = 10.0
 
@@ -97,16 +99,14 @@ def main():
         perturbation=dict(variable="daily causal MODIS bare share of persistent row-crop land (living = 1 - bare)",
                           window="Oct 15 - May 31 every year", fracs=FRACS,
                           recomputed=F.COVER_DERIVED, api="model/river.py: perturb_cover(features_df, frac, months)"),
-        uncertainty=(f"{N_BOOT} refits of the median GBM on bootstrap-resampled training years (2016-2022, whole "
-                     "years drawn with replacement) -> 5-95% range; plus the effect seen by the p10 and p90 quantile "
-                     "models; plus the conceptual reservoir model as a structurally different estimate."),
+        uncertainty=None,  # filled below from the training years actually resampled
         flow_conditioning=(
             "All effects are changes in CONCENTRATION conditional on the observed streamflow: discharge features are "
             "model inputs and are held fixed in the counterfactual (they carry a large share of the GBM gain; see "
             "diagnostics.gain_share). Cover crops can also reduce drainage volume, so these are not load changes "
             "and a load estimate needs a separate flow assumption."),
         central_value_note=(
-            "'central' = the saved (deployed) models; 'bootstrap' = 30 refits on resampled training years. Both use "
+            "'central' = the saved (deployed) models; 'bootstrap' = 30 Bayesian-bootstrap refits over training years. Both use "
             "training-period behaviour, so the effect sizes are mostly in-sample, not validated out of sample."),
         identification_caveat=(
             "Historical bare-share variation is overwhelmingly seasonal (bare in winter/spring, green in summer) and "
@@ -117,6 +117,7 @@ def main():
             "a 50% cut takes winter bare share far outside the training range, where trees extrapolate flat (the "
             "effect saturates). This is why the scenario engine blends it with field-trial priors."),
         sites={})
+    train_years_used = {}
     for site, g in feats.groupby("site"):
         if site not in M:
             continue
@@ -160,11 +161,16 @@ def main():
         boot = {str(f): dict(win=[], aj=[], yr=[], days=[], d25=[], el=[]) for f in FRACS}
         Xb = g[fl]
         okp = g.rain_7.notna().values & g.logq.notna().values
+        train_years_used[site] = [int(v) for v in tr_years]
+        idx = np.where(valid & np.isin(yrs, tr_years))[0]
         for b in range(N_BOOT):
-            pick = rng.choice(tr_years, size=len(tr_years), replace=True)
-            idx = np.concatenate([np.where(valid & (yrs == yy))[0] for yy in pick])
+            # Bayesian bootstrap over years: Dirichlet(1) weight per training year, applied as row weights
+            # (scaled to mean 1 per row). The old row-duplicating bootstrap counted a repeated year twice against
+            # min_child_samples, loosening the trees, so its range excluded the deployed model's own effect.
+            wy = dict(zip(tr_years, rng.dirichlet(np.ones(len(tr_years))) * len(tr_years)))
+            wrow = np.array([wy[v] for v in yrs[idx]])
             mdl = Q.fit(g.iloc[idx], y[idx], fl, 0.5, mono(fl), hp["num_leaves"],
-                        hp["min_child_samples"], hp["n_estimators"], seed=100 + b)
+                        hp["min_child_samples"], hp["n_estimators"], seed=100 + b, weight=wrow)
             p0 = np.where(okp, np.exp(mdl.predict(Xb)), np.nan)
             for f in FRACS:
                 p1 = np.where(okp, np.exp(mdl.predict(pert[f][fl])), np.nan)
@@ -174,14 +180,30 @@ def main():
                 bb["yr"].append(e["pct_change_year"]); bb["days"].append(e["days_avoided_per_year_mean_2016_2025"])
                 bb["d25"].append(e["days_avoided_2025"])
                 bb["el"].append(elasticity(g, p0, p1, g.bare.values, pert[f].bare.values))
+        # ---- seed spread: refits on ALL training years (equal weights) with other seeds. Separates fit-to-fit noise
+        # (bagging/feature sampling) from year resampling: the deployed model is a single seed (7).
+        seed_eff = {str(f): [] for f in FRACS}
+        for sd in SEED_CHECK:
+            mdl = Q.fit(g.iloc[idx], y[idx], fl, 0.5, mono(fl), hp["num_leaves"],
+                        hp["min_child_samples"], hp["n_estimators"], seed=sd)
+            p0 = np.where(okp, np.exp(mdl.predict(Xb)), np.nan)
+            for f in FRACS:
+                p1 = np.where(okp, np.exp(mdl.predict(pert[f][fl])), np.nan)
+                seed_eff[str(f)].append(effects(g, p0, p1)["pct_change_window"])
         for f in FRACS:
             bb = boot[str(f)]
+            out["gbm"][str(f)]["seed_spread_all_years"] = dict(
+                seeds=SEED_CHECK, pct_change_window=[round(v, 2) for v in seed_eff[str(f)]],
+                note="equal-weight refits on all training years with other seeds; the deployed (central) model is seed 7")
             out["gbm"][str(f)]["bootstrap"] = dict(
                 pct_change_window=summarize(bb["win"]), pct_change_aprjul=summarize(bb["aj"]),
                 pct_change_year=summarize(bb["yr"]), days_avoided_per_year_mean_2016_2025=summarize(bb["days"]),
                 days_avoided_2025=summarize(bb["d25"]), elasticity_dlnC_dbare=summarize(bb["el"]))
             s = out["gbm"][str(f)]["bootstrap"]
-            print(f"  boot frac {f:.2f}: window {s['pct_change_window']['p50']:+.1f}% "
+            cw = out["gbm"][str(f)]["central"]["pct_change_window"]
+            s["central_inside_5_95"] = bool(s["pct_change_window"]["lo"] <= cw <= s["pct_change_window"]["hi"])
+            print(f"  seeds frac {f:.2f}: {[round(v, 1) for v in seed_eff[str(f)]]}")
+            print(f"  boot frac {f:.2f}: central {cw:+.1f}% inside={s['central_inside_5_95']} window {s['pct_change_window']['p50']:+.1f}% "
                   f"[{s['pct_change_window']['lo']:+.1f}, {s['pct_change_window']['hi']:+.1f}]  "
                   f"days/yr {s['days_avoided_per_year_mean_2016_2025']['p50']:.1f} "
                   f"[{s['days_avoided_per_year_mean_2016_2025']['lo']:.1f}, "
@@ -243,6 +265,15 @@ def main():
               f"out-of-range days {oor}, CV rmse with {cvr['with_bare']['mean_rmse_log']:.3f} "
               f"without {cvr['without_bare']['mean_rmse_log']:.3f}")
         res["sites"][site] = out
+    yrs_txt = "; ".join(f"{k}: {min(v)}-{max(v)}" for k, v in train_years_used.items())
+    res["uncertainty"] = (
+        f"{N_BOOT} Bayesian-bootstrap refits of the median GBM over its training years ({yrs_txt}): each refit "
+        "draws Dirichlet(1) weights per year and passes them as LightGBM row weights (no row duplication, so "
+        "min_child_samples keeps counting distinct days) -> 5-95% range; plus the effect seen by the p10 and p90 "
+        "quantile models; plus the conceptual reservoir model as a structurally different estimate.")
+    res["bootstrap_method"] = dict(kind="bayesian_bootstrap_over_years", weights="Dirichlet(1) per training year, scaled to mean 1",
+                                   n=N_BOOT, train_years=train_years_used,
+                                   replaces="row-duplicating year bootstrap (a repeated year counted twice against min_child_samples)")
     path = F.OUT / "sensitivity.json"
     old = json.load(open(path)) if path.exists() else {}
     if VERSION == "v1":

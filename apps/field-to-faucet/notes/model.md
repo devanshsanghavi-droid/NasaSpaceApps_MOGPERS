@@ -44,7 +44,7 @@ Numbers below are from the run on 2026-11-14, with data through 2026-11-13 (NWIS
   - **Strict check** (train 2012-2019, test 2020-2025): ln-RMSE 0.75 for v2 vs 0.99 for the v1 features on the same years.
 - **Des Moines:** essentially no gain. 2025 is still 10 of 105 days; test NSE 0.59 vs 0.56; the strict check improves only 1.20 vs 1.25.
 
-**Display rule** (fixed before any 2026 metric; `metrics.json → display_model`):
+**Display rule** (fixed before any v2 2026 metric was computed; v1's 2026 miss was already known; `metrics.json → display_model`):
 - Use v2 iff (a) its 2016-2022 LOYO CV is no worse than v1's and (b) it improves the strict check.
 - Result: **v2 at both sites** (Raccoon CV 0.519 vs 0.527, strict 0.75 vs 0.99; Des Moines CV 0.463 vs 0.522, strict 1.20 vs 1.25).
 - The Des Moines gain is marginal; read Des Moines v2 as "about v1".
@@ -56,14 +56,15 @@ Numbers below are from the run on 2026-11-14, with data through 2026-11-13 (NWIS
 
 **Outlook.** It beats persistence in squared error at every lead: test MSE skill +20%/+25% at Raccoon (h7/h14) and +37%/+17% at Des Moines. **It has no probability skill at 14 days** against probabilistic persistence (Brier skill +0.03 Raccoon, −0.04 Des Moines; at 7 days +0.13 and +0.19).
 
-**Bare-soil sensitivity.** It is weakly identified and is a **concentration change conditional on observed flow** (not a load change). Days above 10 mg/L avoided per year at a 25% cut, central model with the 5-95% bootstrap range (mostly in-sample):
+**Bare-soil sensitivity.** It is weakly identified and is a **concentration change conditional on observed flow** (not a load change). Days above 10 mg/L avoided per year at a 25% cut, central model with the 5-95% Bayesian-bootstrap range (mostly in-sample):
 
 | version | Raccoon | Des Moines |
 |---|---|---|
-| v1 | 3.8 (1.6-9.9) | 10.6 (6.7-18.9) |
-| v2 | 11.3 (10.6-23.0) | 5.2 (4.2-14.0) |
+| v1 | 3.8 (2.5-11.0) | 10.6 (6.6-18.5) |
+| v2 | 11.3 (11.7-21.1) | 5.2 (4.3-12.0) |
 
-Blend with trial priors.
+The bare-soil features add no tested skill (LOYO ln-RMSE gain 0.002-0.009). Blend with trial priors and show the
+trials-only result alongside.
 
 ## 1. Features (`m01_features.py` → `features.parquet`; v2: `m07_features_v2.py` → `features_v2.parquet`)
 Every feature at day t uses only data from days ≤ t. Weather features are NaN where POWER is missing (latency); they are never computed from partial windows.
@@ -251,23 +252,36 @@ Under the strict check, the Raccoon v2 still predicts only 36 of 191 days above 
 - The daily causal bare share is cut by 10/25/50% of its value on Oct 15-May 31, with living share rising to match.
 - All cover-derived features are recomputed (`river.perturb_cover`) on the full series (v1 from 2015-01-01; v2 from 2009), and the models re-predict.
 - Effects are % changes of the p50, and days above 10 mg/L avoided per year when cf/base is applied to the **observed** series ("obs-anchored").
-- Uncertainty: 30 refits on bootstrap-resampled training years.
+- Uncertainty: 30 **Bayesian-bootstrap** refits over training years (v1: 2016-2022; v2: Raccoon 2012-2022, Des Moines
+  2016-2022). Each refit draws Dirichlet(1) weights per year, scaled to mean 1, and passes them to LightGBM as row
+  weights (`qgbm.fit(weight=...)`; the pinball objective multiplies gradient and Hessian by the weight, because LightGBM
+  does not apply Dataset weights to a custom objective).
+- **Bootstrap fix (2026-11-15, after review).** The earlier bootstrap duplicated the rows of a resampled year. A year drawn
+  twice then counted twice against `min_child_samples` (150 for v2), which loosened the trees and inflated the effect:
+  the v2 Raccoon range (−18.0..−10.6% at 25%) excluded the deployed model's own −9.6%. With weights and no duplication
+  the range is −15.4..−9.7%.
+- **The v2 central values still sit at or just outside the edge of the range** (Raccoon 25%: −9.6 vs −15.4..−9.7; Des
+  Moines: −5.6 vs −12.4..−6.2). Two further reasons, both stored in sensitivity.json: (1) the deployed model is one seed
+  (7), and equal-weight refits on all training years with seeds 100-104 give −9.8..−10.5% (Raccoon) and −5.8..−8.1% (Des
+  Moines), so seed 7 sits at the weak end (`gbm.<frac>.seed_spread_all_years`); (2) reweighted refits rarely give a
+  smaller effect than the full-data fit, so the bootstrap is skewed toward larger effects. v1 centrals are inside their
+  ranges at every level (`bootstrap.central_inside_5_95`).
 - **These are concentration changes conditional on the observed flow.** Flow features carry 38-52% of the GBM gain (v1 Raccoon 0.52, Des Moines 0.40; v2 0.41 / 0.38), and cover crops can also cut drainage volume, so these are not load changes.
 - Both the central (saved-model) and bootstrap values are mostly in-sample effect sizes, not validated out of sample.
 
 | version | site | bare cut | Δ nitrate in window, central (boot 5-95%) | days > 10 avoided per year, central (boot 5-95%) | 2025 days avoided (central) | d ln C / d bare |
 |---|---|---|---|---|---|---|
-| v1 | Raccoon | 10 / 25 / 50% | −2.6 / −4.1 / −7.6% (25%: −6.3..−2.5) | 1.2 / **3.8** / 11.7 (25%: 1.6-9.9) | 2 / 7 / 16 | 0.37 → 0.19 |
-| v1 | Des Moines | 10 / 25 / 50% | −4.9 / −8.0 / −13.5% (25%: −15.3..−6.7) | 5.4 / **10.6** / 19.7 (25%: 6.7-18.9) | 10 / 27 / 49 | 0.47 → 0.26 |
-| v2 | Raccoon | 10 / 25 / 50% | −5.6 / −9.6 / −14.0% (25%: −18.0..−10.6) | 4.9 / **11.3** / 21.3 (25%: 10.6-23.0) | 8 / 13 / 28 | 0.68 → 0.34 |
-| v2 | Des Moines | 10 / 25 / 50% | −3.8 / −5.6 / −8.2% (25%: −14.7..−5.1) | 3.7 / **5.2** / 9.7 (25%: 4.2-14.0) | 8 / 15 / 26 | 0.43 → 0.18 |
+| v1 | Raccoon | 10 / 25 / 50% | −2.6 / −4.1 / −7.6% (25%: −5.9..−2.9) | 1.2 / **3.8** / 11.7 (25%: 2.5-11.0) | 2 / 7 / 16 | 0.37 → 0.19 |
+| v1 | Des Moines | 10 / 25 / 50% | −4.9 / −8.0 / −13.5% (25%: −13.9..−7.2) | 5.4 / **10.6** / 19.7 (25%: 6.6-18.5) | 10 / 27 / 49 | 0.47 → 0.26 |
+| v2 | Raccoon | 10 / 25 / 50% | −5.6 / −9.6 / −14.0% (25%: −15.4..−9.7) | 4.9 / **11.3** / 21.3 (25%: 11.7-21.1) | 8 / 13 / 28 | 0.68 → 0.34 |
+| v2 | Des Moines | 10 / 25 / 50% | −3.8 / −5.6 / −8.2% (25%: −12.4..−6.2) | 3.7 / **5.2** / 9.7 (25%: 4.3-12.0) | 8 / 15 / 26 | 0.43 → 0.18 |
 
 The reservoir model gives −10 to −37% (Raccoon). Its uptake is learned from summer crops; treat it as an implausible upper bound.
 
 **Identification (weak).**
 - 97-98% of bare-share variance is the seasonal cycle. The Oct-May mean varies between seasons with an SD of only 0.019-0.025.
 - A 10% cut is already 3.6-4.8 SD, and leaves the training range on 44-63% of window days (87-90% for a 50% cut). Trees extrapolate flat there, so the response saturates.
-- Bare-share features improve LOYO ln-RMSE by only 0.002-0.009.
+- Bare-share features improve LOYO ln-RMSE by only 0.002-0.009 (v1: Des Moines 0.002, Raccoon 0.005; v2: 0.009 / 0.002). They add no tested skill.
 - The monotone constraint fixes the sign (less bare soil never raises nitrate), not the size.
 - The sensitivity differs a lot between v1 and v2 (Raccoon 3.8 vs 11.3 days per year at 25%). That spread is itself a measure of how loosely it is pinned down.
 - **The scenario engine must blend it with trial priors and show ranges.**
@@ -351,7 +365,7 @@ The reservoir model gives −10 to −37% (Raccoon). Its uptake is learned from 
 | 2026 days > 10 (v1) | 8 → 7 | 0 → 17 |
 | LOYO CV ln-RMSE | 0.517 → 0.527 | 0.490 → 0.522 |
 | sensitivity, central days avoided per year at 25% | 4.7 → 3.8 | 5.3 → 10.6 |
-| sensitivity, bootstrap at 25% | 6.4 (2.9-11.3) → 4.6 (1.6-9.9) | 5.8 (3.5-12.2) → 10.5 (6.7-18.9) |
+| sensitivity, bootstrap at 25% | 6.4 (2.9-11.3) → 4.6 (1.6-9.9) [→ 5.6 (2.5-11.0) Bayesian bootstrap, 2026-11-15] | 5.8 (3.5-12.2) → 10.5 (6.7-18.9) [→ 11.4 (6.6-18.5)] |
 | outlook MSE skill, test h7 / h14 | +19/+24% → +20/+25% | +39/+18% → +37/+17% |
 | outlook Brier skill, test h7 / h14 | +0.33/+0.29 (deterministic baseline) → +0.13/+0.03 (probabilistic) | +0.43/+0.29 → +0.19/−0.04 |
 

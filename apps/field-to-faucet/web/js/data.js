@@ -2,7 +2,8 @@
 // instead and the file is recorded as MOCK so the red banner can name it. Mock values never go anywhere else.
 //
 // Files load in groups so the first view stays light:
-//   CORE  (city text, KPIs, replay, river, outlook, method) -> loaded before the first render
+//   CORE  (hero text, KPIs, replay slider)                  -> loaded before the first render
+//   RIVER (river chart, outlook, method tables)             -> loaded right after the hero is drawn
 //   MAP   (HUC-12 hotspots, context layers)                 -> loaded right after the first render
 //   FARM  (fields, strategies)                              -> loaded only when the farmer view opens
 //   field_index.json + field_detail/<huc12>.json            -> loaded on the first field click
@@ -14,11 +15,12 @@
 import { esc } from "./util.js";
 
 export const GROUPS = {
-  core: ["meta.json", "facts.json", "scenarios.json", "river_series.json", "validation.json", "outlook.json", "sites.json"],
+  core: ["meta.json", "facts.json", "scenarios.json", "sites.json"],
+  river: ["river_series.json", "validation.json", "outlook.json"],
   map: ["huc12.geojson", "basins.geojson", "rivers.geojson", "places.json"],
   farm: ["fields.geojson", "strategies.json"],
 };
-export const FILES = [...GROUPS.core, ...GROUPS.map, ...GROUPS.farm];
+export const FILES = [...GROUPS.core, ...GROUPS.river, ...GROUPS.map, ...GROUPS.farm];
 // Optional real-only layers: drawn when present, never mocked, never trigger the banner.
 const OPTIONAL = ["counties.geojson"];
 GROUPS.map.push(...OPTIONAL);
@@ -76,7 +78,7 @@ export function onLoaded(store, fn) {
   store.listeners.push(fn);
 }
 
-// Loads a group ("core" | "map" | "farm") once; returns a promise that resolves when it is in store.data.
+// Loads a group ("core" | "river" | "map" | "farm") once; returns a promise that resolves when it is in store.data.
 export function ensure(store, group) {
   if (!store.loading.has(group)) {
     const p = Promise.all(GROUPS[group].map((f) => loadOne(store, f))).then(async () => {
@@ -168,9 +170,16 @@ export async function getFieldDetail(store, fieldId, hucHint) {
   if (!huc12) return null;
   if (detail.source === "mock" && !detail.split.has(huc12)) return null;
   if (!detailCache.has(huc12)) {
-    detailCache.set(huc12, fetchJson(`${detail.base}${huc12}.json`).catch(() => ({})));
+    detailCache.set(huc12, fetchJson(`${detail.base}${huc12}.json`).catch(() => {
+      // A missing or broken detail file is reported (banner + panel note), never swallowed.
+      store.source.field_detail = "missing";
+      store.detail.failed = [...(store.detail.failed || []), `${huc12}.json`];
+      store.listeners.forEach((fn) => fn("detail"));
+      return null;
+    }));
   }
   const part = await detailCache.get(huc12);
+  if (part === null) return { _missing: `${huc12}.json` };
   return part?.[fieldId] ?? null;
 }
 
@@ -190,6 +199,7 @@ export function renderBanner(source) {
   const b = document.getElementById("mock-banner");
   const keys = mockKeys(source);
   const missing = Object.entries(source).filter(([, s]) => s === "missing").map(([k]) => k);
+  b.classList.toggle("warn", !keys.length);
   if (!keys.length && !missing.length) { b.hidden = true; b.innerHTML = ""; document.documentElement.style.setProperty("--banner-h", "0px"); return; }
   const list = keys.map((k) => `<code>${esc(LABELS[k] || k)}${source[k] === "partial" ? " (leak scores)" : ""}</code>`).join(" ");
   const miss = missing.length ? ` Missing: ${missing.map((k) => `<code>${esc(LABELS[k] || k)}</code>`).join(" ")}.` : "";

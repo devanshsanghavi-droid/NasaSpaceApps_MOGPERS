@@ -1,7 +1,8 @@
 # Field to Faucet: validation
 
 This file reports out-of-time tests against simple baselines. Every number below was read from the output files on
-2026-11-14 (data through 2026-11-13 for USGS, 2026-11-11 for NASA POWER):
+2026-11-14 (data through 2026-11-13 for USGS, 2026-11-11 for NASA POWER); §9 and the scenario rows were refreshed on
+2026-11-15 after an independent science review (Bayesian bootstrap, real-run-day plant rule, trials-only results):
 
 - `model/out/metrics.json` (river models, outlook, v2, display rule)
 - `model/out/sensitivity.json` (learned response to less bare soil)
@@ -138,8 +139,8 @@ measured); Des Moines 158 measured, v1 17, v2 4.
 1. The model is used for relative changes (what-ifs), applied to the measured river. Its absolute 2025 level is never
    used for an impact count.
 2. Near-term levels come from the 14-day outlook, which starts from the latest measurement (§7).
-3. v2 was built and tested with the extra checks in §4-§5, and a display rule (§6) was fixed before any 2026 metric was
-   computed.
+3. v2 was built and tested with the extra checks in §4-§5, and a display rule (§6) was fixed before any v2 2026 metric
+   was computed; v1's 2026 miss was already known (v1's 2026 results were committed before v2 was designed).
 
 ## 4. Blind 2013 check (Raccoon, pre-registered)
 
@@ -173,9 +174,13 @@ v2 improves log error at both sites, clearly at the Raccoon and marginally at th
 check the Raccoon v2 catches only 36 of 191 days above 10 in 2023-2025. **Much of v2's 2025 skill needs the 2020-2022
 training years.**
 
-## 6. Display-model rule (fixed before any 2026 metric)
+## 6. Display-model rule (fixed before any v2 2026 metric was computed; v1's 2026 miss was already known)
 
-Rule (`metrics.json → display_model`, `decided_before_2026_metrics: true`): use v2 at a site if and only if
+Timing, stated exactly: the rule was fixed before any v2 2026 metric was computed, but v1's 2026 results, including its
+2026 miss, had already been committed before v2 was designed. The flag `decided_before_2026_metrics: true` in
+`metrics.json` means "before any v2 2026 metric" (`display_model.timing_note`). The rule itself does not use 2026 data.
+
+Rule (`metrics.json → display_model`): use v2 at a site if and only if
 (a) v2's leave-one-year-out CV ln-RMSE over the 2016-2022 folds is no worse than v1's, **and** (b) v2 improves the
 pooled 2020-2025 ln-RMSE of the strict check.
 
@@ -249,16 +254,27 @@ Other checks:
 
 Cutting the daily bare share by 25% on Oct 15-May 31 changes modelled concentration, **given the observed flow**, by:
 
-| model | site | Δ nitrate in window, central (bootstrap 5-95%) | days > 10 avoided per year 2016-25, central (bootstrap 5-95%) |
-|---|---|---|---|
-| v1 | Raccoon | −4.1% (−6.3 to −2.5%) | 3.8 (1.6-9.9) |
-| v1 | Des Moines | −8.0% (−15.3 to −6.7%) | 10.6 (6.7-18.9) |
-| v2 | Raccoon | −9.6% (−18.0 to −10.6%) | 11.3 (10.6-23.0) |
-| v2 | Des Moines | −5.6% (−14.7 to −5.1%) | 5.2 (4.2-14.0) |
+| model | site | Δ nitrate in window, central (bootstrap 5-95%) | days > 10 avoided per year 2016-25, central (bootstrap 5-95%) | LOYO ln-RMSE gain from bare-soil features |
+|---|---|---|---|---|
+| v1 | Raccoon | −4.1% (−5.9 to −2.9%) | 3.8 (2.5-11.0) | 0.005 |
+| v1 | Des Moines | −8.0% (−13.9 to −7.2%) | 10.6 (6.6-18.5) | 0.002 |
+| v2 | Raccoon | −9.6% (−15.4 to −9.7%) | 11.3 (11.7-21.1) | 0.002 |
+| v2 | Des Moines | −5.6% (−12.4 to −6.2%) | 5.2 (4.3-12.0) | 0.009 |
 
-"Central" is the deployed model; the bootstrap is 30 refits on resampled training years. Both are mostly in-sample. The
-v2 Raccoon central value falls outside its own bootstrap range, and v1 and v2 differ by a factor of 3 at the Raccoon:
-that spread is a measure of how loosely the effect is pinned down.
+"Central" is the deployed model. The bootstrap is 30 **Bayesian-bootstrap** refits over the training years (v1:
+2016-2022; v2: Raccoon 2012-2022, Des Moines 2016-2022): Dirichlet(1) weights per year passed to LightGBM as row
+weights, with no row duplication. Both are mostly in-sample.
+- **Bootstrap fix.** The earlier bootstrap duplicated the rows of a resampled year, so a year drawn twice counted twice
+  against `min_child_samples` and loosened the trees. Its v2 Raccoon range (−18.0 to −10.6%) excluded the central
+  −9.6%. It is now −15.4 to −9.7%. The v1 ranges, which the scenarios use, now contain their central values at every
+  level (`sensitivity.json → gbm.<frac>.bootstrap.central_inside_5_95`).
+- **The v2 centrals still sit at or just outside the edge** (Raccoon −9.6 vs −9.7; Des Moines −5.6 vs −6.2). The deployed
+  model is one seed: refits on all training years with five other seeds give −9.8 to −10.5% (Raccoon) and −5.8 to −8.1%
+  (Des Moines) (`seed_spread_all_years`), so seed 7 sits at the weak end. Reweighted refits also rarely give a smaller
+  effect than the full-data fit, so the bootstrap leans toward larger effects.
+- **The bare-soil features add no tested skill.** Including them improves leave-one-year-out ln-RMSE by only
+  0.002-0.009, i.e. well under 1%. v1 and v2 also differ by a factor of about 3 at the Raccoon. The effect size is not
+  pinned down by the river data.
 
 Why it is weakly identified:
 - 97-98% of bare-share variance in training is the seasonal cycle; the Oct-May mean varies between years with an SD of
@@ -268,8 +284,11 @@ Why it is weakly identified:
 - Flow features carry 38-52% of the model's gain, and cover crops can also reduce drainage volume, so these are
   concentration changes, not load changes.
 
-This is why the scenario engine gives equal weight to this learned path and to the Iowa trial prior (INRS 2024:
-cereal rye 28% mean cut in drainage nitrate, SD 26), and reports the mixture's 10th-90th percentile.
+This is why the scenario engine gives equal weight to this river-model path and to the Iowa trial prior (INRS 2024:
+cereal rye 28% mean cut in drainage nitrate, SD 26), reports the mixture's 10th-90th percentile, and exports a
+**trials-only** result next to it for every year and level. The river-model path drives most of the mixture's plant-day
+effect (2025 at 25%: 17 (7-33) avoided plant days river-model only, 10 (2-36) trials only, 16 (3-34) mixture), so
+trials-only is the trial-anchored figure.
 
 ![Learned sensitivity (v1, bootstrap) and the conceptual model](model/out/fig_sensitivity.png)
 
@@ -333,6 +352,10 @@ The utility's operating rules are not public, so the scenarios use proxies.
   2025 F1 is within 0.025 of the best).
 - The proxy turns the plant on for 23 days in Oct-Nov 2026; no fall restart had been reported when facts were checked,
   so these are probably false alarms.
+- **Scenario plant days count only real run days.** In 2025 and 2026 a plant day counts only where the proxy is on and
+  the plant really ran (reported run windows), so avoided plant days are real run days the scenario switches off; Oct-Nov
+  2026 proxy days never count. Before this fix only about 15 of the 23 avoided 2025 days fell inside the real run, and
+  4 of the 19 avoided 2026 days were Aug-Nov days when the plant was off.
 - The ban proxy starts on 1 June in both years (real starts: 12 June 2025, 8 June 2026).
 - A ban start threshold fitted to 2025 (lower river > 13.25 mg/L) fits 2025 almost exactly (F1 0.98) and finds **no
   ban at all** in 2026. It was rejected as over-fitted. Ban-day changes in the app are labelled indicative.
@@ -344,18 +367,19 @@ The utility's operating rules are not public, so the scenarios use proxies.
 | **HUC-12 hotspot ranking** within a basin | not validated | No sub-basin nitrate gauges. In the Raccoon the ranking follows bare-and-wet days (r = 0.80), which come mostly from 50 km POWER weather, more than poorly drained share (r = 0.06). Shown as "where bare ground meets wet soil", not as measured sources. |
 | **Field-level leak** (lb N/acre/yr) | not validated against field data | A "field" is a 400 m grid cell; N rate, manure, tile layout and tillage are unknown. Values are the river load shared out by the index. |
 | **Practice effects** (rye, extended rotation, prairie) | from trials, not from our data | The river record contains almost no change in cover adoption to learn from. Effect sizes come from INRS 2024 practice efficiencies (cereal rye 28% ± 26; 4-year rotation 27% ± 25; land retirement 85% ± 9). |
-| **Scenario results** (days, plant days, $, ban days avoided) | not validated (counterfactual) | They combine trial priors with a weakly identified learned response, applied to the measured river through proxy rules. They describe a fully developed effect replayed on 2025 weather; legacy nitrogen means a real change takes more than one season. |
-| **Cover-crop adoption** from HLS | lower bound only | 0.8-4.2% of field-winters a year are detected against about 17% statewide adoption; thin rye below NDVI 0.30 is missed. |
+| **Scenario results** (days, plant days, $, ban days avoided) | not validated (counterfactual) | They combine trial priors with a river-model response whose bare-soil features add no tested skill, applied to the measured river through proxy rules. Trials-only results are shown alongside. They describe a fully developed effect replayed on 2025 weather; legacy nitrogen means a real change takes more than one season. |
+| **Cover-crop adoption** from HLS | lower bound only | 0.8-4.2% of field-winters a year are detected against about 17% statewide adoption. HLS sees only cover that has grown enough by late fall or early spring; covers drilled late or that stay small (below NDVI 0.30) are missed. |
 | **Outlook probabilities** at 14 days | no skill | Brier skill against probabilistic persistence +0.03 / −0.04 (test). |
 
 ## 12. Disagreements found between module notes and the output files
 
-- `notes/scenarios.md` §4 table (2025 at 25%: plant days 24 (10-36), $360k, ban 23 (16-30), Raccoon days 7 (3-11);
-  2026 at 25%: 5 (5-5), 17 (11-27) plant days, $263k) is from an earlier scenario run. `web/data/scenarios.json` gives
-  2025: Raccoon days 8 (2-16), Des Moines days 19 (5-36), plant days 23 (5-41), $350k ($73k-620k), ban days 23 (9-31);
-  2026: 5 (3-22), 29 (11-57), 19 (7-51), $282k ($110k-768k), 15 (1-26). This file and the app use the JSON.
-- `notes/scenarios.md` says the v2 run publishes no bootstrap sensitivity; `sensitivity.json → v2` does contain one
-  (§9). The scenario engine still uses v1 for the learned path.
+- Scenario numbers changed on 2026-11-15 (review fixes). `web/data/scenarios.json` now gives, at 25%, 2025 mixture:
+  Raccoon days 7 (2-16), Des Moines days 21 (5-36), plant days 16 (3-34), $234k ($47k-507k), ban days 23 (9-31); trials
+  only: 9 (1-21), 13 (2-28), 10 (2-36), $157k ($29k-534k), 17 (2-28). 2026 mixture: 5 (4-22), 30 (11-56), 14 (4-29),
+  $209k ($64k-444k), 16 (1-26); trials only: 12 (1-30), 21 (7-71), 14 (2-37), $218k ($29k-564k), 12 (0-29). The earlier
+  run (proxy-on plant days) gave 2025 plant days 23 (5-41), $350k. `notes/scenarios.md` §4 was regenerated from the JSON.
+- `facts.json → plant_cost_per_day_usd.range.lo` = $4,000 has no quote behind it (the CIWW page gives only the $16,000
+  full-capacity figure). The scenarios do not use it; cost per day stays U[$14,286, $16,000].
 - `notes/hydro.md` and the app caveats say USGS data are provisional from about mid-2025; the current NWIS pull has
   provisional (`P`) nitrate only from 2026-06-02 at both sites.
 - The strict check counts 191 measured days above 10 in 2023-2025 at the Raccoon; the test split counts 189 (6 + 68 +

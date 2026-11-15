@@ -83,7 +83,35 @@ export function el(html) {
 
 export function link(url, text) {
   if (!url) return esc(text);
+  // in-page (#hash) links stay in this tab; only external sources open a new one
+  if (/^#/.test(url)) return `<a href="${esc(url)}">${esc(text)}</a>`;
   return `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>`;
+}
+
+// 1 -> "1 day", 3 -> "3 days"
+export const plural = (n, one, many = one + "s") => (Math.round(n) === 1 ? one : many);
+
+// Keeps .tip-body tooltips inside the viewport (anchored right when they would run off the right edge).
+export function initTips() {
+  if (initTips.done) return;
+  initTips.done = true;
+  const place = (t) => {
+    const b = t?.querySelector?.(".tip-body");
+    if (!b) return;
+    b.style.left = "";
+    if (matchMedia("(max-width: 560px)").matches) return; // phones: fixed bottom sheet (CSS)
+    const prev = b.style.display;
+    b.style.display = "block";
+    const vw = document.documentElement.clientWidth;
+    let r = b.getBoundingClientRect();
+    let left = 0;
+    if (r.right > vw - 8) left -= r.right - (vw - 8);
+    if (r.left + left < 8) left += 8 - (r.left + left);
+    b.style.left = `${left}px`;
+    b.style.display = prev;
+  };
+  document.addEventListener("mouseover", (e) => { const t = e.target.closest?.(".tip"); if (t) place(t); });
+  document.addEventListener("focusin", (e) => { const t = e.target.closest?.(".tip"); if (t) place(t); });
 }
 
 // Escapes text and turns bare URLs in it into links (evidence and program notes sometimes cite one inline).

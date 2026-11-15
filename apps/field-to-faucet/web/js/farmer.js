@@ -3,14 +3,15 @@
 import { clamp, esc, fmt, fmtInt, fmtLbAc, isDarkColor, isNum, link, linkify, meanBand, MON3, MONTHS, monthRange, pct, usd, LEAK_RAMP, parseDate } from "./util.js";
 import { colors, timeChart, toXY } from "./charts.js";
 import { addLabel, addPlaces, bboxOf, createMap, rampLegend, stepExpr } from "./map.js";
-import { ensure, getFieldDetail, mockChip, nasaStrip } from "./data.js";
+import { ensure, factsMap, getFieldDetail, mockChip, nasaStrip } from "./data.js";
 
 let S;
 let farmMap; // undefined = not started, null = failed
 let selectedId = null;
 let ndviChart;
 let currentDetail = null;
-let sampleIdx = 0;
+let leakyIdx = 0;
+let geo = null; // field_id -> {lon, lat, town, km, dir}
 const weights = { n: 2, yield: 2, soil: 1, cost: 1 };
 const CRIT = [
   { k: "n", label: "Keep nitrogen / cut fertilizer cost", short: "Nitrogen kept" },
@@ -26,14 +27,103 @@ export function initFarmer(store, onSelect) {
   S = store;
   renderPriorities();
   document.getElementById("nasa-strip-farm").innerHTML = nasaStrip(S.data.meta, { compact: true });
+  const leakyBtn = document.getElementById("pick-leaky");
+  // First a TYPICAL field (near the median leak), so the demo is not cherry-picked; the leaky ones come second.
   document.getElementById("pick-sample").addEventListener("click", async () => {
-    await ensure(S, "farm");
-    const ids = sampleFields();
-    if (!ids.length) return;
-    const id = ids[sampleIdx % ids.length];
-    sampleIdx++;
+    await farmReady();
+    const id = typicalField();
+    if (!id) return;
+    leakyBtn.hidden = false;
     onSelect(id);
   });
+  leakyBtn.addEventListener("click", async () => {
+    await farmReady();
+    const ids = leakyFields();
+    if (!ids.length) return;
+    onSelect(ids[leakyIdx++ % ids.length]);
+  });
+  const form = document.getElementById("field-find");
+  const q = document.getElementById("field-q");
+  q.addEventListener("focus", () => { farmReady(); }, { once: true });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await farmReady();
+    const r = findField(q.value);
+    if (r.id) { onSelect(r.id); if (r.note) announce(r.note); }
+    else announce(r.note);
+  });
+}
+
+async function farmReady() {
+  await Promise.all([ensure(S, "farm"), ensure(S, "map")]);
+  if (!geo) buildGeo();
+}
+
+function announce(msg) {
+  const live = document.getElementById("field-live");
+  live.textContent = "";
+  setTimeout(() => { live.textContent = msg; }, 30);
+}
+
+// ------------------------------------------------------------------ names for humans: "Field near <town>"
+const towns = () => (S.data.places || []).filter((p) => isNum(p.lon) && isNum(p.lat) && p.kind !== "intake");
+function kmBetween(a, b) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (b[1] - a[1]) * rad, dLon = (b[0] - a[0]) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function compass(from, to) {
+  const dx = (to[0] - from[0]) * Math.cos(from[1] * Math.PI / 180), dy = to[1] - from[1];
+  const ang = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+  return ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"][Math.round(ang / 45) % 8];
+}
+function buildGeo() {
+  geo = new Map();
+  const ts = towns();
+  for (const f of fieldFeatures()) {
+    const bb = bboxOf([f]);
+    if (!bb) continue;
+    const c = [(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2];
+    let best = null;
+    for (const t of ts) { const km = kmBetween(c, [t.lon, t.lat]); if (!best || km < best.km) best = { t, km }; }
+    geo.set(f.properties.field_id, { c, town: best?.t.name || null, km: best?.km ?? null, dir: best ? compass([best.t.lon, best.t.lat], c) : "" });
+  }
+  // datalist for the keyboard / screen-reader field search
+  const names = [...new Set([...geo.values()].map((g) => g.town).filter(Boolean))].sort();
+  const opts = names.map((n) => `<option value="${esc(n)}"></option>`).concat(fieldFeatures().map((f) => `<option value="${esc(f.properties.field_id)} near ${esc(geo.get(f.properties.field_id)?.town || "")}"></option>`));
+  document.getElementById("field-list").innerHTML = opts.join("");
+}
+export function fieldName(id) {
+  const g = geo?.get(id);
+  return g?.town ? `Field near ${g.town}` : `Field ${id}`;
+}
+function whereText(id) {
+  const g = geo?.get(id);
+  if (!g?.town || !isNum(g.km)) return "";
+  return g.km < 1.5 ? `at ${g.town}` : `${fmtInt(g.km)} km ${g.dir} of ${g.town}`;
+}
+// "F01587", "F01587 near Jefferson" or a town name (nearest field to the town)
+function findField(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return { note: "Type a town name or a field ID such as F01587." };
+  const m = /\bF\d{3,}\b/i.exec(v);
+  if (m) {
+    const id = m[0].toUpperCase();
+    return fieldFeatures().some((f) => f.properties.field_id === id) ? { id } : { note: `Field ${id} not found in the focus area.` };
+  }
+  const t = towns().find((p) => p.name.toLowerCase() === v.toLowerCase()) || towns().find((p) => p.name.toLowerCase().startsWith(v.toLowerCase()));
+  if (!t) return { note: `No town or field matches “${v}”.` };
+  let best = null;
+  for (const [id, g] of geo) { const km = kmBetween(g.c, [t.lon, t.lat]); if (!best || km < best.km) best = { id, km }; }
+  return best ? { id: best.id, note: `Nearest field to ${t.name}: ${best.id}, ${fmtInt(best.km)} km away.` } : { note: "No fields loaded." };
+}
+
+export function showFieldNotFound(id) {
+  document.getElementById("field-content").hidden = true;
+  document.getElementById("field-empty").hidden = false;
+  document.getElementById("field-empty-msg").innerHTML = `<strong>Field “${esc(id)}” not found.</strong> Tap a square on the map, search by town or ID, or use <em>pick a sample field</em>.`;
+  announce(`Field ${id} not found.`);
 }
 
 function renderDisclaimer() {
@@ -44,8 +134,18 @@ function fieldFeatures() {
   return S.data.fields?.features || [];
 }
 
-// High-leak, poorly drained fields first: the story the demo tells.
-function sampleFields() {
+// A typical field: closest to the median modelled leak (ties: closest to the 50th percentile, then by id).
+function typicalField() {
+  const f = fieldFeatures().map((x) => x.properties).filter((p) => isNum(p.lbN_ac_yr_mean ?? p.leak_index));
+  if (!f.length) return null;
+  const v = (p) => p.lbN_ac_yr_mean ?? p.leak_index;
+  const sorted = f.map(v).sort((a, b) => a - b);
+  const med = sorted[Math.floor(sorted.length / 2)];
+  f.sort((a, b) => Math.abs(v(a) - med) - Math.abs(v(b) - med) || Math.abs((a.leak_pctile ?? 50) - 50) - Math.abs((b.leak_pctile ?? 50) - 50) || a.field_id.localeCompare(b.field_id));
+  return f[0].field_id;
+}
+// High-leak, poorly drained fields: offered second ("show a leaky field").
+function leakyFields() {
   const f = fieldFeatures().map((x) => x.properties).filter((p) => isNum(p.leak_pctile));
   const pd = f.filter((p) => /poor/i.test(p.drainage || "") && !/somewhat/i.test(p.drainage || ""));
   const pool = (pd.length >= 5 ? pd : f).sort((a, b) => b.leak_pctile - a.leak_pctile);
@@ -59,7 +159,7 @@ export async function initFarmMap(onSelect) {
   if (farmMap !== undefined) { farmMap?.resize(); return; }
   farmMap = null;
   const container = document.getElementById("farm-map");
-  await Promise.all([ensure(S, "farm"), ensure(S, "map")]);
+  await farmReady();
   renderDisclaimer();
   const feats = fieldFeatures();
   if (!feats.length) { container.innerHTML = `<div class="map-msg">Field data is not available yet.</div>`; return; }
@@ -107,22 +207,26 @@ function highlight(id, fly) {
 }
 
 export async function selectField(id, { fly = true } = {}) {
-  await ensure(S, "farm");
+  await farmReady();
   renderDisclaimer();
   const f = fieldFeatures().find((x) => x.properties.field_id === id);
   if (!f) return false;
   selectedId = id;
   highlight(id, fly);
   const p = f.properties;
-  const detail = await getFieldDetail(S, id, p.huc12);
+  let detail = await getFieldDetail(S, id, p.huc12);
   if (selectedId !== id) return true; // a newer click won
-  currentDetail = { props: p, detail };
+  const missing = detail?._missing || (!detail ? "no detail record" : null);
+  if (detail?._missing) detail = null;
+  currentDetail = { props: p, detail, missing };
   document.getElementById("field-empty").hidden = true;
   document.getElementById("field-content").hidden = false;
-  renderFieldHead(p, detail);
+  renderFieldHead(p, detail, missing);
   renderCalendar(detail);
   renderNdvi(detail);
   renderCards();
+  const leak = meanBand(detail?.leak?.lbN_ac_yr)?.mid ?? p.lbN_ac_yr_mean;
+  announce(`Selected ${fieldName(id)} (${id}). Modelled leak about ${fmtLbAc(leak)} pounds of nitrogen per acre a year.${missing ? " Some details for this field could not be loaded." : ""}`);
   return true;
 }
 
@@ -130,7 +234,7 @@ export async function selectField(id, { fly = true } = {}) {
 function hucName(h) {
   return (S.data.huc12?.features || []).find((f) => f.properties.huc12 === h)?.properties?.name;
 }
-function renderFieldHead(p, d) {
+function renderFieldHead(p, d, missing) {
   const leak = meanBand(d?.leak?.lbN_ac_yr) || (isNum(p.lbN_ac_yr_mean) ? { mid: p.lbN_ac_yr_mean, lo: p.lbN_ac_yr_mean, hi: p.lbN_ac_yr_mean } : null);
   const wet = d?.leak?.wet_year_2016;
   const seq = String(d?.seq || p.seq || "");
@@ -141,10 +245,11 @@ function renderFieldHead(p, d) {
   const byYear = d?.leak?.by_year || {};
   const yrs = Object.keys(byYear).sort();
   document.getElementById("field-head").innerHTML = `
-    <h2>Field ${esc(p.field_id)} ${mockChip(S.source, "fields", "field_detail")}</h2>
-    <p class="sub" style="margin:0;color:var(--muted)">About 40 acres in ${esc(hucName(p.huc12) || "HUC-12 " + p.huc12)}${pctile != null ? ` · ${pctile >= 99 ? `among the <strong style="color:var(--ink)">top 1%</strong> of fields nearby for nitrate leak` : `leaks more nitrate than <strong style="color:var(--ink)">${fmtInt(pctile)}%</strong> of fields nearby`}` : ""}</p>
+    <h2>${esc(fieldName(p.field_id))} <span class="muted field-id">(${esc(p.field_id)})</span> ${mockChip(S.source, "fields", "field_detail")}</h2>
+    ${missing ? `<p class="wet" role="status"><strong>Some details for this field could not be loaded</strong> (${esc(missing)}). The map values below are shown; the calendar and per-option numbers are not.</p>` : ""}
+    <p class="sub" style="margin:0;color:var(--muted)">About 40 acres${whereText(p.field_id) ? `, ${esc(whereText(p.field_id))}` : ""}, in ${esc(hucName(p.huc12) || "HUC-12 " + p.huc12)}${pctile != null ? ` · ${pctile >= 99 ? `among the <strong style="color:var(--ink)">top 1%</strong> of fields nearby for nitrate leak` : `leaks more nitrate than <strong style="color:var(--ink)">${fmtInt(pctile)}%</strong> of fields nearby`}` : ""}</p>
     <div class="facts">
-      <div class="fact fact-wide"><div class="fact-v big">${leak ? fmtLbAc(leak.mid) : "–"} <span class="unit">lb N/acre/yr</span></div><div class="fact-l">nitrate-N lost to the river, long-run average ${yrs.length ? `${yrs[0]}–${yrs[yrs.length - 1]}` : ""}${leak && leak.hi > leak.lo ? `<br><strong>${fmtLbAc(leak.lo)}–${fmtLbAc(leak.hi)} lb in 8 of 10 years</strong> (dry years lose almost nothing)` : ""}</div></div>
+      <div class="fact fact-wide"><div class="fact-v big">${leak ? fmtLbAc(leak.mid) : "–"} <span class="unit">lb N/acre/yr</span></div><div class="fact-l"><strong>modelled leak (estimate, not measured)</strong>: nitrate-N reaching the river, long-run average ${yrs.length ? `${yrs[0]}–${yrs[yrs.length - 1]}` : ""}${leak && leak.hi > leak.lo ? `<br><strong>${fmtLbAc(leak.lo)}–${fmtLbAc(leak.hi)} lb in 8 of 10 years</strong> (dry years deliver little to the river that year; nitrate can leave later)` : ""}</div></div>
       <div class="fact"><div class="fact-v">${esc(d?.drainage || p.drainage || "–")}</div><div class="fact-l">soil drainage (USDA SSURGO)</div></div>
       <div class="fact"><div class="fact-v">${isNum(d?.slope_pct ?? p.slope_pct) ? fmt(d?.slope_pct ?? p.slope_pct, 1) + "%" : "–"}</div><div class="fact-l">average slope (NASADEM)</div></div>
       <div class="fact"><div class="fact-v">${esc(d?.crop_2025 || CROPS[seq.slice(-1)] || "–")}</div><div class="fact-l">crop in 2025 (USDA CDL)</div></div>
@@ -241,30 +346,25 @@ function renderNdvi(d) {
   const xs = nd.dates.map(parseDate);
   ndviChart = timeChart(document.getElementById("ndvi-chart"), {
     xMin: xs[0], xMax: xs[xs.length - 1], yMax: 1, yHardMax: 1, yLabel: "NDVI", unit: "", digits: 2,
-    threshold: { value: 0.3, label: "living cover above 0.30", color: c.accent },
+    threshold: { value: 0.3, label: "living cover above 0.30", color: c.accent, align: "left" },
     series: [{ label: "NDVI", data: toXY(xs, nd.ndvi), color: c.ink2, width: 1.4, kind: "points" }],
   });
-  ndviChart.data.datasets[0].showLine = true;
-  ndviChart.update("none");
+  if (ndviChart) { ndviChart.data.datasets[0].showLine = true; ndviChart.update("none"); }
   note.innerHTML = `Data: clear-sky NASA HLS (Landsat + Sentinel-2) observations of this field, ${esc(nd.dates[0])} to ${esc(nd.dates[nd.dates.length - 1])}. Below the line the ground is bare or covered only by dead residue. ${mockChip(S.source, "field_detail")}`;
 }
 
 // ------------------------------------------------------------------ priorities + cards
 function renderPriorities() {
   const box = document.getElementById("prio-sliders");
-  box.innerHTML = CRIT.map((c) => `<div class="prio"><label for="w-${c.k}"><span>${esc(c.label)}</span><output id="o-${c.k}">${WLABEL[weights[c.k]]}</output></label><input type="range" id="w-${c.k}" min="0" max="3" step="1" value="${weights[c.k]}"></div>`).join("");
+  box.innerHTML = CRIT.map((c) => `<div class="prio"><label for="w-${c.k}"><span>${esc(c.label)}</span><output id="o-${c.k}" for="w-${c.k}">${WLABEL[weights[c.k]]}</output></label><input type="range" id="w-${c.k}" min="0" max="3" step="1" value="${weights[c.k]}" aria-valuetext="${WLABEL[weights[c.k]]}"></div>`).join("");
   box.addEventListener("input", (e) => {
     const k = e.target.id?.replace("w-", "");
     if (!(k in weights)) return;
     weights[k] = Number(e.target.value);
     document.getElementById("o-" + k).textContent = WLABEL[weights[k]];
-    renderFormula();
+    e.target.setAttribute("aria-valuetext", WLABEL[weights[k]]);
     renderCards();
   });
-  renderFormula();
-}
-function renderFormula() {
-  document.getElementById("prio-formula").innerHTML = `score = Σ (weight × goal score 0–1) ÷ Σ weights<br>weights now: ${CRIT.map((c) => `${c.short.toLowerCase()} ${weights[c.k]}`).join(", ")}<br><span class="muted">An unknown input (e.g. an unverified cost) is left out of that option's sum, not counted as $0.</span>`;
 }
 
 const YIELD_SCORE = { low: 1, "low-moderate": 0.75, moderate: 0.5, medium: 0.5, "moderate-high": 0.25, high: 0 };
@@ -285,6 +385,27 @@ function costBand(c) {
   return { mid: (c.lo + c.hi) / 2, lo: c.lo, hi: c.hi };
 }
 
+// Cost-share $/acre for a strategy: facts.json entries whose URL is one of the strategy's "who pays" programs and
+// whose id names a cost-share payment (insurance discounts etc. are not cost-share).
+function costShare(s) {
+  const F = factsMap(S.data.facts);
+  const progs = (s.who_pays || []).filter((w) => w?.url);
+  const items = [];
+  for (const w of progs) {
+    const f = Object.entries(F).find(([id, x]) => x && x.url === w.url && isNum(x.value) && /cost_?share|eqip/i.test(id) && /usd/i.test(x.unit || ""));
+    if (f && !items.some((i) => i.url === f[1].url)) items.push({ name: shortProgram(w.program), url: f[1].url, value: f[1].value, verified: f[1].verified !== false });
+  }
+  if (!items.length) return progs.length ? { listed: true } : null;
+  const vals = items.map((i) => i.value);
+  return { lo: Math.min(...vals), hi: Math.max(...vals), items };
+}
+function shortProgram(p) {
+  const t = String(p || "program").replace(/\s*\(.*$/, "");
+  return /EQIP/.test(t) ? "EQIP" : /IDALS/.test(t) ? "IDALS" : /Greater Des Moines/i.test(t) ? "Greater Des Moines Watershed" : t;
+}
+const usd0 = (v) => usd(v, { compact: false });
+const usdRng = (lo, hi) => (Math.round(lo) === Math.round(hi) ? usd0(lo) : `${usd0(lo)}–${usd0(hi)}`);
+
 function strategyMetrics(s, d) {
   const sd = d?.strategies?.[s.id] || {};
   const leak = meanBand(d?.leak?.lbN_ac_yr);
@@ -299,7 +420,7 @@ function strategyMetrics(s, d) {
   const yl = yieldLevel(s.yield_risk);
   const soil = isNum(s.soil_score) ? s.soil_score : Array.isArray(s.soil_health) ? s.soil_health.length : null;
   return {
-    kept, fert, cost, yl, wet, note: sd.note,
+    kept, fert, cost, yl, wet, note: sd.note, share: costShare(s),
     raw: {
       n: kept ? kept.mid : null,
       yield: yl ? YIELD_SCORE[yl] : null,
@@ -310,6 +431,7 @@ function strategyMetrics(s, d) {
 }
 
 // Min-max scale each goal over the options whose input is KNOWN; unknown inputs are left out of the score.
+// Score is null ("not scored") when none of the weighted goals is known for an option, or all weights are 0.
 function rank(strats, d) {
   const ms = strats.map((s) => ({ s, m: strategyMetrics(s, d) }));
   const norm = {};
@@ -322,34 +444,77 @@ function rank(strats, d) {
     x.n = Object.fromEntries(CRIT.map((c) => [c.k, norm[c.k](x.m.raw[c.k])]));
     const known = CRIT.filter((c) => x.n[c.k] != null);
     const wsum = known.reduce((s, c) => s + weights[c.k], 0);
-    x.score = wsum > 0 ? known.reduce((s, c) => s + weights[c.k] * x.n[c.k], 0) / wsum : 0;
+    x.score = wsum > 0 ? known.reduce((s, c) => s + weights[c.k] * x.n[c.k], 0) / wsum : null;
     x.unknown = CRIT.filter((c) => x.n[c.k] == null).map((c) => c.short.toLowerCase());
   }
-  return ms.sort((a, b) => b.score - a.score || a.s.id.localeCompare(b.s.id));
+  const sc = (x) => (x.score == null ? -1 : x.score);
+  return ms.sort((a, b) => sc(b) - sc(a) || a.s.id.localeCompare(b.s.id));
+}
+const scoreTxt = (x) => (x.score == null ? "not scored" : `${Math.round(x.score * 100)}/100`);
+
+function soilShort(s) {
+  const l = Array.isArray(s.soil_health) ? s.soil_health : [];
+  if (!l.length) return "–";
+  const first = String(l[0]).split(/[:(]/)[0].replace(/\s+(about|by)\s+.*$/i, "").trim().replace(/\.$/, "");
+  return `${esc(first)}${l.length > 1 ? ` <span class="muted">+${l.length - 1} more</span>` : ""}`;
+}
+
+function compareTable(ranked) {
+  const rows = ranked.map((x) => {
+    const { s, m } = x;
+    const cur = s.id === "S0";
+    const kept = cur ? "0 (reference)" : m.kept ? `<strong>${fmtLbAc(m.kept.mid)}</strong>` : "–";
+    const cost = m.cost ? (m.cost.hi === 0 ? "$0" : usdRng(m.cost.lo, m.cost.hi)) : `<span class="unknown">not verified</span>`;
+    const share = m.share?.items ? usdRng(m.share.lo, m.share.hi) : m.share?.listed ? `<span class="muted">program listed, rate not verified</span>` : "–";
+    const yl = m.yl ? `<span class="risk ${m.yl === "moderate" ? "medium" : m.yl}">${esc(m.yl)}</span>` : "–";
+    return `<tr${x === ranked[0] && x.score != null ? ' class="best"' : ""}><td><span class="cmp-rank">#${ranked.indexOf(x) + 1}</span> ${esc(s.name)}</td><td class="num">${kept}</td><td class="num">${cost}</td><td class="num">${share}</td><td>${yl}</td><td>${cur ? "–" : soilShort(s)}</td></tr>`;
+  }).join("");
+  return `<div class="tbl-wrap cmp"><table class="data"><caption class="sr-only">Rotation options compared for this field</caption>
+    <thead><tr><th scope="col">Option (ranked for you)</th><th scope="col" class="num">N kept, lb/acre/yr <span class="th-sub">long-run mean</span></th><th scope="col" class="num">Cost, $/acre/yr</th><th scope="col" class="num">Cost-share, $/acre</th><th scope="col">Yield risk</th><th scope="col">Soil benefit</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+    <p class="fine">N kept: this field's modelled long-run average (estimate). Cost-share: programs listed on each card (sources there); per planted acre, confirm rates and eligibility locally.</p>`;
 }
 
 function renderCards() {
   if (!currentDetail) return;
   const strats = S.data.strategies?.strategies || [];
   const box = document.getElementById("strategy-cards");
-  if (!strats.length) { box.innerHTML = `<p>Strategy evidence is not available yet.</p>`; return; }
+  const cmp = document.getElementById("strategy-compare");
+  if (!strats.length) { box.innerHTML = `<p>Strategy evidence is not available yet.</p>`; cmp.innerHTML = ""; return; }
   const d = currentDetail.detail;
   const ranked = rank(strats, d);
   const axisMax = Math.max(1, ...ranked.map((x) => x.m.kept?.hi || 0));
-  document.getElementById("cards-sub").innerHTML = `Ranked for your priorities (top card outlined). The big number is the long-run average lb N/acre a year; the bar shows the range in 8 of 10 years. Where leak happens comes from NASA satellites and weather; how much each practice cuts comes from Iowa field trials. ${mockChip(S.source, "strategies", "field_detail")}`;
-  box.innerHTML = ranked.map((x, i) => cardHTML(x, i, axisMax)).join("");
   const wsum = CRIT.reduce((s, c) => s + weights[c.k], 0);
+  document.getElementById("cards-sub").innerHTML = (wsum === 0
+    ? `<strong class="prompt">All goals are set to “not at all”: move a slider under “What matters to you?” to rank the options.</strong> `
+    : `Ranked for your priorities (top card outlined). `) +
+    `The big number is the long-run average lb N/acre a year this practice keeps in your field; the bar shows the range in 8 of 10 years. Where leak happens comes from NASA satellites and weather; how much each practice cuts comes from Iowa field trials. ${mockChip(S.source, "strategies", "field_detail")}`;
+  cmp.innerHTML = compareTable(ranked);
+  box.innerHTML = ranked.map((x, i) => cardHTML(x, i, axisMax)).join("");
   document.getElementById("how-rank").innerHTML = `
     <p class="fine">Each goal is scored 0–1 across the options whose input is known (best = 1, worst = 0), then weighted by your sliders (0–3). Unknown inputs are left out of that option's score instead of counting as zero cost.</p>
     <div class="formula">score = Σ known (weight × goal score) ÷ Σ known weights<br>weights: ${CRIT.map((c) => `${c.short.toLowerCase()} ${weights[c.k]}`).join(", ")} (Σ = ${wsum})</div>
     <p class="fine">Goal inputs: nitrogen kept = this field's long-run average lb N/acre; yield safety = trial-based yield risk (low 1, moderate 0.5, high 0); soil health = number of evidence-backed soil benefits; low net cost = −(cost − fertilizer value), $/acre.</p>
     <table><thead><tr><th>Option</th>${CRIT.map((c) => `<th>${esc(c.short)}</th>`).join("")}<th>Score</th></tr></thead>
-    <tbody>${ranked.map((x) => `<tr><td>${esc(x.s.id)}</td>${CRIT.map((c) => `<td>${x.n[c.k] == null ? `<span title="unknown: left out">n/a</span>` : fmt(x.n[c.k], 2)}</td>`).join("")}<td><strong>${Math.round(x.score * 100)}</strong></td></tr>`).join("")}</tbody></table>`;
+    <tbody>${ranked.map((x) => `<tr><td>${esc(x.s.id)}</td>${CRIT.map((c) => `<td>${x.n[c.k] == null ? `<span title="unknown: left out">n/a</span>` : fmt(x.n[c.k], 2)}</td>`).join("")}<td><strong>${x.score == null ? "not scored" : Math.round(x.score * 100)}</strong></td></tr>`).join("")}</tbody></table>`;
 }
 
 function list(items, fn = (t) => esc(t)) {
   if (!Array.isArray(items) || !items.length) return "<p class=\"muted\">None listed.</p>";
   return `<ul>${items.map((t) => `<li>${fn(t)}</li>`).join("")}</ul>`;
+}
+const fold = (title, body) => `<details class="card-sec card-more"><summary>${title}</summary>${body}</details>`;
+
+// "Costs $12–28/acre a year ($24–55 each time it is planted); cost-share of $25–74/acre can cover it."
+function moneyLine(s, m) {
+  const c = s.cost_usd_ac;
+  if (!m.cost || !m.share?.items || m.cost.hi === 0) return "";
+  const pp = c?.per_planting && isNum(c.per_planting.lo) && isNum(c.per_planting.hi) ? c.per_planting : null;
+  const need = pp ? pp.hi : m.cost.hi, needLo = pp ? pp.lo : m.cost.lo;
+  const verdict = m.share.hi >= need ? "can cover it" : m.share.hi >= needLo ? "can cover much of it" : "covers part of it";
+  const srcs = m.share.items.map((i) => `${link(i.url, `${i.name} $${Math.round(i.value)}`)}${i.verified ? "" : " (unverified)"}`).join(", ");
+  return `<p class="money">Costs <strong>${usdRng(m.cost.lo, m.cost.hi)}/acre</strong> a year${pp ? ` (${usdRng(pp.lo, pp.hi)} each time it is planted)` : ""}; cost-share of <strong>${usdRng(m.share.lo, m.share.hi)}/acre</strong> ${verdict}.
+    <span class="money-src">Cost: ${link(c.url, c.source ? String(c.source).replace(/\s*\(.*$/, "") : "source")}. Cost-share: ${srcs}.</span></p>`;
 }
 
 function cardHTML(x, i, axisMax) {
@@ -364,38 +529,46 @@ function cardHTML(x, i, axisMax) {
   const yl = m.yl;
   const c = s.cost_usd_ac;
   const costTxt = m.cost
-    ? `${m.cost.lo === m.cost.hi ? usd(m.cost.lo, { compact: false }) : `${usd(m.cost.lo, { compact: false })}–${usd(m.cost.hi, { compact: false })}`}/acre/yr${c?.url && !isCurrent ? ` <span class="muted">(${link(c.url, "source")})</span>` : ""}`
+    ? `${usdRng(m.cost.lo, m.cost.hi)}/acre/yr${c?.url && !isCurrent ? ` <span class="muted">(${link(c.url, "source")})</span>` : ""}`
     : `<span class="unknown">cost not verified</span>${c?.url ? ` <span class="muted">(${link(c.url, "what we know")})</span>` : ""}`;
   const fert = m.fert;
-  const money = (v) => (Math.abs(v) < 10 ? `$${v.toFixed(2)}` : usd(v, { compact: false }));
+  const money = (v) => (Math.abs(v) < 10 ? `$${v.toFixed(2)}` : usd0(v));
   const fertTxt = isCurrent ? "none (reference)" : fert ? `${money(fert.mid)}/acre/yr <span class="muted">(upper bound)</span>` : "–";
   const wet = m.wet;
   const wetTxt = !isCurrent && wet && wet.mid > 0 ? `<p class="wet-card"><strong>In a wet year like 2016:</strong> about ${fmtLbAc(wet.mid)} lb/acre kept${wet.hi > wet.lo ? ` (${fmtLbAc(wet.lo)}–${fmtLbAc(wet.hi)})` : ""}.</p>` : "";
-  return `<article class="card ${i === 0 ? "top" : ""}" aria-label="${esc(s.name)}">
-    <div class="card-rank"><span>#${i + 1}${i === 0 ? " for your priorities" : ""}${isCurrent ? " · what you do now" : ""}</span><span class="score">${Math.round(x.score * 100)}/100</span></div>
+  const money1 = isCurrent ? "" : moneyLine(s, m);
+  return `<article class="card ${i === 0 && x.score != null ? "top" : ""}" aria-label="${esc(s.name)}">
+    <div class="card-rank"><span>#${i + 1}${i === 0 && x.score != null ? " for your priorities" : ""}${isCurrent ? " · what you do now" : ""}</span><span class="score${x.score == null ? " unscored" : ""}">${scoreTxt(x)}</span></div>
     <h3>${esc(s.name)}</h3>
     ${s.short ? `<p class="short">${esc(s.short)}</p>` : ""}
     <div class="nkept">
       <div class="nkept-v ${!kept || kept.mid === 0 ? "zero" : ""}">${kept ? fmtLbAc(kept.mid) : "–"} <span class="nkept-u">lb N/acre/yr kept</span></div>
       ${bar}
-      <div class="nkept-l">${isCurrent ? "Reference: nothing changes." : kept ? `Long-run average. In 8 of 10 years: ${fmtLbAc(kept.lo)}–${fmtLbAc(kept.hi)} lb/acre stays in your field instead of the river.${kept.derived ? " (from trials × your field's leak)" : ""}` : "Not estimated for this field."}</div>
+      <div class="nkept-l">${isCurrent ? "Reference: nothing changes." : kept ? `Long-run average (modelled). In 8 of 10 years: ${fmtLbAc(kept.lo)}–${fmtLbAc(kept.hi)} lb/acre stays in your field instead of the river.${kept.derived ? " (from trials × your field's leak)" : ""}` : "Not estimated for this field."}</div>
       ${wetTxt}
       ${m.note ? `<p class="fine">${esc(m.note)}</p>` : ""}
     </div>
+    ${money1}
     <dl class="kv">
+      ${money1 ? "" : `<dt>Cost</dt><dd>${costTxt}</dd>`}
       <dt>Fertilizer value</dt><dd>${fertTxt}</dd>
-      <dt>Cost</dt><dd>${costTxt}</dd>
       <dt>Yield risk</dt><dd>${yl ? `<span class="risk ${yl === "moderate" ? "medium" : yl}">${esc(yl)}</span>` : "–"}</dd>
     </dl>
-    ${s.fert_value_note && !isCurrent ? `<p class="fine" style="margin:0">${esc(s.fert_value_note)}</p>` : ""}
-    ${c?.basis && !isCurrent ? `<p class="fine" style="margin:0">Cost basis: ${esc(c.basis)}${c.source ? ` (${esc(c.source)})` : ""}.</p>` : ""}
     ${x.unknown?.length ? `<p class="fine" style="margin:0">Ranked without: ${esc(x.unknown.join(", "))} (unknown).</p>` : ""}
-    ${yieldText(s.yield_risk) ? `<p class="fine" style="margin:0">${esc(yieldText(s.yield_risk))}</p>` : ""}
     <div class="card-sec"><h4>Why suggested</h4><p>${linkify(s.why || "")}</p></div>
-    <div class="card-sec"><h4>Evidence</h4>${trial}${list(s.evidence, (e) => (typeof e === "string" ? esc(e) : `${linkify(e.text || "")}${e.source || e.url ? ` — ${link(e.url, e.source || "source")}` : ""}`))}${s.satellite_evidence ? `<p><strong>From space:</strong> ${esc(s.satellite_evidence)}</p>` : ""}</div>
-    <div class="card-sec"><h4>Soil-health benefits</h4>${list(s.soil_health)}</div>
-    <div class="card-sec"><h4>What we don't know yet</h4>${list(s.gaps, linkify)}</div>
-    <div class="card-sec"><h4>Check locally before acting</h4>${list(s.risks_local_review)}</div>
-    <div class="card-sec"><h4>Who pays</h4>${Array.isArray(s.who_pays) && s.who_pays.length ? list(s.who_pays, (w) => `${link(w.url, w.program || "program")}${w.detail ? `: ${linkify(w.detail)}` : ""}`) : `<p class="muted">${isCurrent ? "No change, no payment." : "No program listed."}</p>`}</div>
+    ${(() => {
+      const notes = [
+        yieldText(s.yield_risk) ? `<p><strong>Yield:</strong> ${esc(yieldText(s.yield_risk))}</p>` : "",
+        c?.basis && !isCurrent ? `<p><strong>Cost basis:</strong> ${esc(c.basis)}${c.source ? ` (${esc(c.source)})` : ""}.</p>` : "",
+        money1 ? `<p><strong>Cost:</strong> ${costTxt}</p>` : "",
+        s.fert_value_note && !isCurrent ? `<p><strong>Fertilizer value:</strong> ${esc(s.fert_value_note)}</p>` : "",
+      ].filter(Boolean).join("");
+      return notes ? fold("Yield, cost and fertilizer notes", notes) : "";
+    })()}
+    ${fold("Evidence", `${trial}${list(s.evidence, (e) => (typeof e === "string" ? esc(e) : `${linkify(e.text || "")}${e.source || e.url ? ` — ${link(e.url, e.source || "source")}` : ""}`))}${s.satellite_evidence ? `<p><strong>From space:</strong> ${esc(s.satellite_evidence)}</p>` : ""}`)}
+    ${fold("Soil-health benefits", list(s.soil_health))}
+    ${fold("What we don't know yet", list(s.gaps, linkify))}
+    ${fold("Check locally before acting", list(s.risks_local_review))}
+    ${fold("Who pays", Array.isArray(s.who_pays) && s.who_pays.length ? list(s.who_pays, (w) => `${link(w.url, w.program || "program")}${w.detail ? `: ${linkify(w.detail)}` : ""}`) : `<p class="muted">${isCurrent ? "No change, no payment." : "No program listed."}</p>`)}
   </article>`;
 }

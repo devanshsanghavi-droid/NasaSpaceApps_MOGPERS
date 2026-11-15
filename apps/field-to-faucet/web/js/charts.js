@@ -92,9 +92,9 @@ const thresholdPlugin = {
     ctx.setLineDash([]);
     ctx.fillStyle = opts.color || c.nitrate;
     ctx.font = "700 11px " + Chart.defaults.font.family;
-    ctx.textAlign = "right";
+    ctx.textAlign = opts.align === "left" ? "left" : "right";
     ctx.textBaseline = "bottom";
-    ctx.fillText(opts.label || `Limit ${opts.value}`, a.right - 4, py - 3);
+    ctx.fillText(opts.label || `Limit ${opts.value}`, opts.align === "left" ? a.left + 4 : a.right - 4, py - 3);
     ctx.restore();
   },
 };
@@ -122,6 +122,12 @@ export const toXY = (dates, vals) => dates.map((d, i) => ({ x: typeof d === "num
  * series: [{label, data:[{x,y}], color, width, dash, fill, kind:'line'|'bandLo'|'bandHi'|'points', hideInTooltip}]
  */
 export function timeChart(canvas, { series, xMin, xMax, yMax, yHardMax, yLabel = "Nitrate (mg/L as N)", threshold, spans, unit = "mg/L", digits = 1, bandLabel = "8-in-10 model range" }) {
+  // Vendored Chart.js missing (blocked or failed download): say so in place of the chart; callers handle null.
+  if (typeof Chart === "undefined") {
+    const box = canvas?.parentElement;
+    if (box && !box.querySelector(".map-msg")) box.insertAdjacentHTML("beforeend", `<div class="map-msg">The chart library did not load, so this chart cannot be drawn. The numbers in the text still apply.</div>`);
+    return null;
+  }
   setDefaults();
   const c = colors();
   const datasets = series.map((s) => ({

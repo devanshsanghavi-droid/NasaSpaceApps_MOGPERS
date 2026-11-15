@@ -18,8 +18,10 @@ Deliverables in this folder: [`PITCH.md`](PITCH.md) (7 slides + 30-second video)
   days** in 2026.
 - Central Iowa Water Works imposed lawn-watering bans in both summers: **56 days** for all customers in 2025 and **42 days**
   for businesses and governments (23 days for homes) in 2026.
-- Replaying 2025 with 25% more upstream acres under winter living cover gives about **23 fewer plant days (5-41)**,
-  about **$350k** less operating cost ($73k-620k) and about **23 fewer ban days (9-31, indicative)**.
+- Replaying 2025 with cover on 25% more of all upstream corn/soy acres (about 17% → 42%) gives about **16 fewer plant
+  days (3-34)**, counted only on days the plant really ran, about **$234k** less operating cost ($47k-507k) and about
+  **23 fewer ban days (9-31, indicative)**. On Iowa trial evidence alone: 10 plant days (2-36), $157k ($29k-534k), 17
+  ban days (2-28).
 
 Sources and status for each number: [`CLAIMS.md`](CLAIMS.md).
 
@@ -125,7 +127,7 @@ prints a short report. Times are approximate on 4 CPUs (first run / cached).
 |---|---|---|---|
 | 1 | `m01_features.py` | causal daily features (v1) | ~2 s |
 | 2 | `m02_river_model.py` | v1 river model, baselines, `metrics.json`, `river_daily.parquet` | ~4 min |
-| 3 | `m03_sensitivity.py` | learned response to less bare soil (v1) | ~30 s |
+| 3 | `m03_sensitivity.py` | learned response to less bare soil (v1; `--v2` for v2), Bayesian bootstrap over years | ~1-2 min |
 | 4 | `m04_outlook.py` | 14-day outlook + skill | ~2 min |
 | 5 | `m06_history.py` | 2008-2015 USGS, POWER, MODIS, CDL for v2 | ~6 min cold |
 | 6 | `m07_features_v2.py` | v2 features with the N carry-over store | ~10 s |
@@ -158,7 +160,8 @@ rasterio, pystac-client, planetary-computer, xarray, zarr, geopandas, shapely, p
   wetness, inputs from POWER, MODIS, CDL and USGS flow, never measured nitrate. Train 2016-2022, test 2023-2025, live
   2026. Baselines: climatology, a two-reservoir conceptual model, 7- and 14-day persistence.
 - *v2 (post-hoc):* adds a causal nitrogen carry-over store (builds in dry years, flushed by wet soil) and, for the
-  Raccoon, the 2012-2015 record. Shown on the chart by a rule fixed before any 2026 metric.
+  Raccoon, the 2012-2015 record. Shown on the chart by a rule fixed before any v2 2026 metric was computed (v1's 2026
+  miss was already known).
 - *Outlook:* quantile models of the 1-14-day change from the last measurement; no weather forecast.
 
 **Field leak calibration.**
@@ -171,13 +174,16 @@ rasterio, pystac-client, planetary-computer, xarray, zarr, geopandas, shapely, p
   poorly drained fields about 1.35× more than well-drained ones.
 
 **Scenario engine.**
-- Lever: X% additional upstream row-crop acres with a cereal-rye-type cover Oct-May (X = 0-50%), on top of today's
-  ~17% statewide adoption.
+- Lever: X% of all upstream corn/soy acres add a cereal-rye-type cover Oct-May (X = 0-50%), beyond the ~17% already
+  covered statewide (X = 25: about 17% → 42%).
 - Each day's **measured** nitrate is cut by a fraction from two lines of evidence, half of 4,000 Monte Carlo draws each:
-  (a) Iowa trials (INRS 2024 rye 28%, SD 26) × row-crop share of river nitrate; (b) our river model's response when bare
-  share is cut by X on Oct 15-May 31.
-- Plant and ban days come from proxy rules fitted to 2025 and tested on 2026; cost = plant days × $14,286-16,000
-  (operating only).
+  (a) Iowa trials (INRS 2024 rye 28%, SD 26) × row-crop share of river nitrate; (b) a river-model sensitivity when bare
+  share is cut by X on Oct 15-May 31. Path (b) has no tested skill: its bare-soil features improve leave-one-year-out
+  error by only 0.002-0.005, and it drives most of the plant-day effect. The 50/50 mixture is the headline and a
+  **trials-only** result is shown next to it.
+- Plant and ban days come from proxy rules fitted to 2025 and tested on 2026. In 2025 and 2026 a plant day counts only
+  if the plant really ran that day. Cost = plant days × $14,286-16,000 (operating only; no source gives a
+  partial-operation cost).
 - Results are p50 and the 10th-90th percentile.
 
 **Strategy cards.** Practice efficiency (INRS 2024, truncated normal) × the field's own modelled leak distribution ×
@@ -204,8 +210,9 @@ no interannual skill (partial r −0.39). Practice effects come from trials. The
 
 1. **The 2025-26 level is not explained.** The rivers carried 1.7-2.1× the nitrate the drivers explain. Legacy nitrogen
    after the 2020-2023 drought is a hypothesis; scenarios therefore change the measured river by a relative amount.
-2. **Practice effects come from Iowa trials,** with large spreads (rye 28 ± 26%). The learned river response to bare
-   soil is weakly identified: past cover changes were almost all seasonal.
+2. **Practice effects come from Iowa trials,** with large spreads (rye 28 ± 26%). The river-model response to bare
+   soil is weakly identified (past cover changes were almost all seasonal) and adds no tested skill; trials-only results
+   are shown alongside.
 3. **Proxy rules.** The utility's plant and ban rules are not public. Ban-day results are indicative; demand, heat and
    treatment capacity also drive bans.
 4. **Cost** is operating cost only; the ~$40M plant expansion is not avoided.

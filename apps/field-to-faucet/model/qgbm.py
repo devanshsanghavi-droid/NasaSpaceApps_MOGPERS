@@ -44,20 +44,38 @@ class QGBM:
 
 
 def pinball_obj(alpha):
+    """Pinball gradient with unit Hessian. LightGBM does not apply Dataset weights to a custom objective, so the
+    row weights (if any) are applied here to both gradient and Hessian."""
     def f(preds, data):
         y = data.get_label()
         grad = np.where(y > preds, -alpha, 1.0 - alpha)
-        return grad, np.ones_like(grad)
+        hess = np.ones_like(grad)
+        w = data.get_weight()
+        if w is not None:
+            grad, hess = grad * w, hess * w
+        return grad, hess
     return f
 
 
+def weighted_quantile(v, q, w=None):
+    v = np.asarray(v, dtype=float)
+    if w is None:
+        return float(np.quantile(v, q))
+    o = np.argsort(v)
+    cw = np.cumsum(np.asarray(w, dtype=float)[o])
+    return float(v[o][np.searchsorted(cw, q * cw[-1])])
+
+
 def fit(X, y, feats, alpha, monotone, num_leaves=15, min_child_samples=50, n_estimators=400, seed=7,
-        params=None, base=None):
+        params=None, base=None, weight=None):
+    """weight: optional per-row weights (e.g. Bayesian-bootstrap year weights). Rows are never duplicated, so
+    min_child_samples keeps counting distinct days."""
     y = np.asarray(y, dtype=float)
     off = base.predict(X) if base is not None else 0.0
-    init = float(np.quantile(y - off, alpha))
+    init = weighted_quantile(y - off, alpha, weight)
     p = dict(BASE_PARAMS if params is None else params, objective=pinball_obj(alpha), num_leaves=num_leaves,
              min_child_samples=min_child_samples, monotone_constraints=list(monotone), seed=seed)
-    ds = lgb.Dataset(X[feats], y - off - init, free_raw_data=False)
+    ds = lgb.Dataset(X[feats], y - off - init, weight=None if weight is None else np.asarray(weight, dtype=float),
+                     free_raw_data=False)
     b = lgb.train(p, ds, num_boost_round=n_estimators)
     return QGBM(b, init, feats, alpha, base)

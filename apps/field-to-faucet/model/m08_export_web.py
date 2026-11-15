@@ -262,7 +262,8 @@ def export_validation(metrics, dm, scen):
             txt += (f" Pre-registered blind check on 2013 (the flush after the 2012 drought, held out): measured "
                     f"{b13.get('obs_days_over10')} days above 10, v2 {b13['v2'].get('pred_days_over10')}, v1 features "
                     f"{b13.get('v1_features', {}).get('pred_days_over10')}.")
-        txt += f" The chart shows {'v2' if dm.get(site) == 'v2' else 'v1'} here (rule fixed before any 2026 number)."
+        txt += (f" The chart shows {'v2' if dm.get(site) == 'v2' else 'v1'} here (display rule fixed before any v2 2026 "
+                f"metric was computed; v1's 2026 miss was already known).")
         lines.append(txt)
     lines.append(
         "So the app uses the model for what it does well: RELATIVE what-if changes (less bare soil), applied to the "

@@ -10,12 +10,17 @@ models/, sensitivity.json, metrics.json, basin_index_check.json, river_daily.par
 outlook.json, fields.geojson, field_detail/, strategies.json, huc12_props.json}` and `docs/facts.json` (by id).
 **After any river-model or fields rerun, run m07 and then m08.**
 
-Numbers below are from the run of 2026-11-14 ~23:40 UTC (NWIS through 2026-11-13; v1 river model refit at 23:31-23:34).
+Numbers below are from the run of 2026-11-15 ~00:38 UTC (NWIS through 2026-11-13; m03 sensitivity rerun with the
+Bayesian bootstrap at 00:30-00:35; v1 river model unchanged). This run follows an independent science review: plant days
+now count only real run days, trials-only results are exported for every level, and the learned path is labelled as
+having no tested skill.
 
 ## 1. The question and the lever
 "What if X% more of the upstream row-crop acres (both intake basins: Raccoon at Van Meter 05484500 and Des Moines River
 at 2nd Ave 05482000) grew a cereal-rye-type living cover from October to May, on top of current practice?"
-X = 0, 5, ..., 50. Results for every calendar year 2016-2026 (2026 partial, through Nov 13); replays for 2025 and 2026.
+X = 0, 5, ..., 50. **X is a share of ALL upstream corn/soy acres, added on top of today** (`x_definition` in
+scenarios.json: "X% of all upstream corn/soy acres add cover, beyond the ~17% already covered statewide"). X = 25 takes
+coverage from about 17% to about 42%. Results for every calendar year 2016-2026 (2026 partial, through Nov 13); replays for 2025 and 2026.
 
 ## 2. Method
 **Impact basis: observed river, relative change.** The simulation misses the 2025-26 level (about 1.7-2x the drivers),
@@ -31,17 +36,24 @@ gap-filled concentration (same regression gap filler as m05).
   crops act on; Aug-Sep get no effect. Pooled 2016-25 it is 0.92 at both sites. 2025 is only 0.76-0.77, because August 2025 carried about a fifth of
   that year's load, and August is outside the window. `method_detail.path_a_trial.w.by_year` has every year.
 
-**Path (b), learned model.** `D_b(t) = 1 - cf/base` for the v1 GBM median simulation, where cf has the causal bare share
-cut by X (relative) on Oct 15-May 31 (`river.perturb_cover`, all cover features recomputed).
-- The spread is a per-draw multiplier k. It combines the bootstrap refits over training years (sensitivity.json 5-95%,
-  as a split normal, interpolated in X between 10/25/50%) with the SD of the median, p10 and p90 models' responses.
-  These are the uncertainty sources sensitivity.json lists.
-- The v2 run publishes no bootstrap sensitivity, and the modeler keeps the driver-only v1 for relative what-ifs, so the
+**Path (b), river-model sensitivity (no tested skill).** `D_b(t) = 1 - cf/base` for the v1 GBM median simulation, where
+cf has the causal bare share cut by X (relative) on Oct 15-May 31 (`river.perturb_cover`, all cover features recomputed).
+- The spread is a per-draw multiplier k. It combines the Bayesian-bootstrap refits over training years (sensitivity.json
+  5-95%, as a split normal, interpolated in X between 10/25/50%) with the SD of the median, p10 and p90 models' responses.
+- **The bare-soil features add no tested skill.** Leave-one-year-out ln-RMSE improves by only 0.002 (Des Moines) and
+  0.005 (Raccoon) when they are included (sensitivity.json `diagnostics.cv_rmse_log_gain_from_bare_features`). Yet at
+  25% this path cuts the annual load 8.7% at the Des Moines River against 2.0% at the Raccoon. The size of the effect is
+  not something the river data can confirm.
+- sensitivity.json also has a v2 bootstrap block, but the modeler keeps the driver-only v1 for relative what-ifs, so the
   learned path stays on v1 even when the chart shows v2.
 
-**Blend (orchestrator decision, final).** Equal-weight MIXTURE: half of the Monte Carlo draws use the trial-prior path,
-half the learned-model path (`MIX_TRIAL` in m07). The headline range therefore spans both lines of evidence and stays
-anchored to Iowa trials. Inverse-variance weights are still computed and reported (table below, `weights` in
+**Blend and headline (decision after review).** Equal-weight MIXTURE: half of the Monte Carlo draws use the trial-prior
+path, half the river-model path (`MIX_TRIAL` in m07). **The mixture stays the headline, and "trials only" is exported
+next to it for every year and level** (`by_year.<y>.levels[].trials_only.avoided`, same p50/lo/hi keys), so the UI
+can show both. This is stated in `scenarios.json → headline` and in `method`.
+- The mixture's plant-day result leans on the unvalidated river-model half: 2025 at 25% avoids 17 (7-33) real plant days
+  river-model only, 10 (2-36) trials only, 16 (3-34) mixture (`headline.river_model_dominates_plant_days: true`). The
+  method text says so and calls "trials only" the conservative, trial-anchored figure. Inverse-variance weights are still computed and reported (table below, `weights` in
 scenarios.json) only as a diagnostic; they were rejected because the learned path's narrow bootstrap spread omits its
 known identification problem, which would have put 93-97% of the Raccoon weight on the weaker evidence.
 - 4,000 draws, with common random numbers across levels and years, so results are monotone in X within a draw.
@@ -49,23 +61,25 @@ known identification problem, which would have put 93-97% of the Raccoon weight 
 
 | annual load cut, % (p50, p10-p90) | X | trial (a) | learned (b) | inverse-variance blend (diagnostic, not used) | IV weight on trials |
 |---|---|---|---|---|---|
-| Raccoon | 10% | 1.9 (0.4-4.1) | 0.8 (0.5-1.2) | 0.9 (0.5-1.3) | 0.04 |
-| Raccoon | 25% | 4.8 (1.1-10.3) | 2.1 (1.2-2.9) | 2.2 (1.3-3.0) | 0.03 |
-| Raccoon | 50% | 9.5 (2.1-20.7) | 5.9 (3.6-8.7) | 6.3 (4.0-8.9) | 0.07 |
-| Des Moines | 10% | 1.9 (0.4-4.2) | 4.7 (2.6-6.8) | 3.2 (2.0-4.7) | 0.56 |
-| Des Moines | 25% | 4.8 (1.1-10.4) | 8.6 (5.2-12.3) | 7.4 (4.8-10.3) | 0.37 |
-| Des Moines | 50% | 9.6 (2.1-20.8) | 16.0 (10.6-21.9) | 14.5 (10.0-19.5) | 0.27 |
+| Raccoon | 10% | 1.9 (0.4-4.1) | 0.8 (0.5-1.1) | 0.9 (0.5-1.1) | 0.03 |
+| Raccoon | 25% | 4.8 (1.1-10.3) | 2.0 (1.3-2.7) | 2.1 (1.4-2.7) | 0.02 |
+| Raccoon | 50% | 9.5 (2.1-20.7) | 5.9 (4.0-8.2) | 6.2 (4.3-8.4) | 0.05 |
+| Des Moines | 10% | 1.9 (0.4-4.2) | 4.7 (3.0-6.5) | 3.4 (2.2-4.8) | 0.49 |
+| Des Moines | 25% | 4.8 (1.1-10.4) | 8.7 (5.7-12.2) | 7.6 (5.2-10.4) | 0.33 |
+| Des Moines | 50% | 9.6 (2.1-20.8) | 15.8 (11.0-20.9) | 14.7 (10.5-19.2) | 0.23 |
 
 **Read this before using the blend.** The trial prior's spread is wide: an SD of 26 points on a mean of 28. The learned
-path's bootstrap spread is narrow, so inverse-variance weighting puts 93-97% of the Raccoon weight on the learned path.
+path's bootstrap spread is narrow, so inverse-variance weighting puts 95-98% of the Raccoon weight on the learned path.
 - That spread does **not** include the identification problem. The modeler documents that the bare-share effect is
   weakly identified: past cover variation was mostly seasonal, and the perturbation leaves the training range.
-- The paths happen to agree on 2025 days above 10 at 25% adoption: trials alone give 9 (1-21), the learned model alone
-  7 (3-11). The paths disagree on size at the Raccoon: the learned annual load cut is about half the trial one. At the
-  Des Moines River they disagree the other way: the learned cut is about twice the trial one.
-- Path-only results are in `scenarios.json → method_detail.path_only_avoided` (2025 and 2026, X = 10/25/50).
-- The equal-weight mixture is what the app shows. 2025 at 25% adoption (mixture): days > 10 avoided 8 (2-16), plant
-  days 23 (5-41), operating $ 350k (73k-620k), ban days 23 (9-31).
+- The paths happen to agree on 2025 Raccoon days above 10 at 25% adoption: trials alone give 9 (1-21), the learned
+  model alone 7 (3-9). The paths disagree on size at the Raccoon: the learned annual load cut is about half the trial
+  one. At the Des Moines River they disagree the other way: the learned cut is about twice the trial one, which is why
+  the learned path drives Des Moines days and plant days.
+- Path-only results are in `scenarios.json → method_detail.path_only_avoided` (2025 and 2026, every level); trials-only
+  is also on every level of every year (`levels[].trials_only`).
+- 2025 at 25% adoption: mixture days > 10 avoided 7 (2-16), plant days 16 (3-34), operating $234k (47k-507k), ban days
+  23 (9-31); trials only 9 (1-21), 10 (2-36), $157k (29k-534k), 17 (2-28).
 
 ## 3. Operating-rule proxies (the utility's rules are not public)
 ### Removal plant
@@ -82,6 +96,16 @@ above T. The aggregate is the higher river, the average or the lower river.
 | 2025 fit (T = 10.2) | 106 | 112 | 102 | 4 | 10 | 0.94 |
 | **2026 test, Jan-Jul, no refit** | **157** | **193** | 157 | 0 | 36 | **0.90** |
 | 2026 Aug-Nov (unverified) | 23 | 0 reported | | | | |
+
+**Plant days counted in the scenarios (rule changed after review).** In years with reported run dates (2025: 10-18 Apr
+and 28 Apr-8 Aug; 2026: 6 Jan-2 Mar and 9 Mar-23 Jul; facts `plant_days_2025`, `plant_days_2026`), a plant day counts
+only if the proxy says "on" **and** the real plant ran (`pl & truth` in m07). An avoided plant day is therefore a real run
+day that the scenario switches off. Before the fix, avoided days came from proxy-on days alone: in 2025 only about 15 of
+23 avoided days fell inside the real run, and in 2026 about 4 of 19 were Aug-Nov days when the plant was off.
+- Baseline counted plant days: 2025 106 (102-112) of 112 reported; 2026 167 (158-173) of 193.
+- 2016-2024 have no reported run dates, so those years still count proxy days (`plant_days_basis` on each level).
+- The proxy-only counts stay in the output as a diagnostic (`plant_days_proxy`, `avoided.plant_days_proxy`): 2025 at 25%,
+  24 (5-40) proxy-only against 16 (3-34) counted.
 
 **2026 test, honestly.**
 - The proxy never ran the plant when the utility did not, but it missed 36 run days. The misses are shoulder days when
@@ -114,32 +138,46 @@ are above 10 mg/L.
 ### Cost
 - Plant days x operating cost per day, ~ U[$14,286, $16,000]. The low end is 2025 O&M ($1.6M) / 112 days; the high end
   is full capacity (facts `plant_om_cost_2025_usd`, `plant_days_2025`, `plant_cost_per_day_usd`).
+- **The range is kept because no source gives a partial-operation daily cost.** The CIWW page (re-read 2026-11-15) says
+  only that full capacity costs about $16,000 a day; the ~$4k/day lower bound in `facts.json → plant_cost_per_day_usd.range`
+  has no quote behind it and is not used.
+- Lower-rate sensitivity: Q1-2026 O&M ($660k, `plant_om_cost_2026_q1_usd`) over the 79 Q1-2026 run days is about
+  $8,354 per run day (winter, partial operation). `avoided.cost_usd_q1_2026_rate` uses it: 2025 at 25%, $134k (25k-284k)
+  mixture, $84k (17k-301k) trials only.
 - Capital ($0.6M in 2025; the ~$40M expansion) is not avoided in the short run.
-- Avoided days are shoulder days, when partial operation can cost less (facts: as low as ~$4k/day), so the $ range may be
-  high.
 - People served: >600,000 (`water_people_served`).
 
-## 4. Results, 2025 replay (avoided vs today; p50 and 8-in-10 range)
+## 4. Results, 2025 and 2026 replays (avoided vs today; p50 and 8-in-10 range)
 In 2025 the river was measured above 10 mg/L on 115 days at the Raccoon and 105 at Des Moines. The plant ran 112 days
-(proxy median 120) and the ban lasted 56 days (proxy 68). The two rivers carried a load of 55,300 t N.
+(proxy median 120, of which 106 inside the real run) and the ban lasted 56 days (proxy 68). The two rivers carried a load
+of 55,300 t N.
 
-Final run (equal-weight mixture; regenerated from web/data/scenarios.json):
+Regenerated from web/data/scenarios.json (run 2026-11-15 00:38 UTC). "Mixture" is the headline; "trials only" puts every
+draw on the trial path. Plant days count real run days only (§3).
 
-| year | X | days > 10, Raccoon | days > 10, Des Moines | plant days | plant O&M $ | ban days (indicative) | load, t N | N kept, lb |
-|---|---|---|---|---|---|---|---|---|
-| 2025 | 10% | 2 (0-4) | 8 (0-15) | 7 (2-16) | $105k (29k-237k) | 9 (1-13) | 1,162 (365-1,838) | 2.6M (0.8-4.0M) |
-| 2025 | 25% | 8 (2-16) | 19 (5-36) | 23 (5-41) | $350k (73k-620k) | 23 (9-31) | 2,931 (942-4,548) | 6.5M (2.1-10.0M) |
-| 2025 | 50% | 16 (5-45) | 43 (13-69) | 46 (11-72) | $690k (159k-1080k) | 32 (13-46) | 5,955 (1,906-8,872) | 13.1M (4.2-19.6M) |
-| 2026 | 10% | 3 (0-8) | 11 (0-19) | 8 (2-16) | $123k (31k-243k) | 1 (0-7) | 1,137 (448-1,946) | 2.5M (1.0-4.3M) |
-| 2026 | 25% | 5 (3-22) | 29 (11-57) | 19 (7-51) | $282k (110k-768k) | 15 (1-26) | 2,850 (1,156-4,853) | 6.3M (2.5-10.7M) |
-| 2026 | 50% | 15 (6-81) | 84 (19-137) | 60 (16-129) | $900k (242k-1962k) | 40 (11-40) | 5,879 (2,395-9,702) | 13.0M (5.3-21.4M) |
+| year | X | basis | days > 10, Raccoon | days > 10, Des Moines | plant days (real run days) | plant O&M $ | ban days (indicative) | load, t N | N kept, lb |
+|---|---|---|---|---|---|---|---|---|---|
+| 2025 | 10% | mixture | 2 (0-4) | 8 (0-15) | 3 (1-10) | $48k (15k-154k) | 9 (1-13) | 1,170 (376-1,781) | 2.6M (0.8-3.9M) |
+| 2025 | 10% | trials only | 2 (0-5) | 5 (0-13) | 4 (0-10) | $59k (0k-149k) | 9 (0-13) | 876 (195-1,908) | 1.9M (0.4-4.2M) |
+| 2025 | 25% | **mixture** | **7 (2-16)** | **21 (5-36)** | **16 (3-34)** | **$234k (47k-507k)** | **23 (9-31)** | **2,966 (951-4,508)** | **6.5M (2.1-9.9M)** |
+| 2025 | 25% | trials only | 9 (1-21) | 13 (2-28) | 10 (2-36) | $157k (29k-534k) | 17 (2-28) | 2,191 (487-4,769) | 4.8M (1.1-10.5M) |
+| 2025 | 50% | mixture | 16 (5-43) | 43 (13-67) | 35 (9-60) | $528k (134k-918k) | 32 (13-44) | 5,981 (1,906-8,691) | 13.2M (4.2-19.2M) |
+| 2025 | 50% | trials only | 18 (2-60) | 24 (5-66) | 31 (4-68) | $470k (62k-1,035k) | 28 (9-50) | 4,382 (974-9,538) | 9.7M (2.1-21.0M) |
+| 2026 | 10% | mixture | 3 (0-8) | 11 (0-18) | 6 (1-11) | $86k (15k-170k) | 1 (0-7) | 1,126 (463-1,936) | 2.5M (1.0-4.3M) |
+| 2026 | 10% | trials only | 4 (0-10) | 11 (0-19) | 4 (1-13) | $63k (14k-198k) | 1 (0-11) | 1,111 (247-2,419) | 2.5M (0.5-5.3M) |
+| 2026 | 25% | **mixture** | **5 (4-22)** | **30 (11-56)** | **14 (4-29)** | **$209k (64k-444k)** | **16 (1-26)** | **2,856 (1,185-4,843)** | **6.3M (2.6-10.7M)** |
+| 2026 | 25% | trials only | 12 (1-30) | 21 (7-71) | 14 (2-37) | $218k (29k-564k) | 12 (0-29) | 2,779 (618-6,048) | 6.1M (1.4-13.3M) |
+| 2026 | 50% | mixture | 15 (6-81) | 83 (19-137) | 47 (10-101) | $714k (147k-1,546k) | 40 (11-40) | 5,858 (2,417-9,667) | 12.9M (5.3-21.3M) |
+| 2026 | 50% | trials only | 27 (4-116) | 60 (11-149) | 33 (5-135) | $500k (73k-2,032k) | 26 (1-40) | 5,557 (1,236-12,097) | 12.2M (2.7-26.7M) |
 
-2026 is a partial year (data to 2026-11-13).
+2026 is a partial year (data to 2026-11-13); its plant days stop at the reported 23 Jul shutdown, so Aug-Nov proxy days
+never count. Previous run (proxy-on plant days): 2025 at 25% plant days 23 (5-41), $350k; 2026 19 (7-51), $282k.
 
 **Reading.**
 - The Raccoon sat far above 10 for long stretches in 2025-26, so a 2-3% load cut flips few of its days.
 - Plant and ban days respond more, because the proxy rules use the average or the lower of the two rivers. Those
-  hovered at 10-11 mg/L in late spring and summer, and the Des Moines River responds more in the learned path.
+  hovered at 10-11 mg/L in late spring and summer, and the Des Moines River responds more in the river-model path
+  (which has no tested skill; compare the trials-only rows).
 - These are threshold effects of proxy rules. The ban numbers are the least certain.
 - "N kept" is nitrate that would have reached the two gauges; on-farm retention is larger.
 
@@ -149,14 +187,14 @@ Final run (equal-weight mixture; regenerated from web/data/scenarios.json):
 | `river_series.json` | daily 2016-01-01 to latest; obs, q_cfs, p10/p50/p90 of the display model per site (`sites[s].model`), reservoir_p50, `provisional_from`; split dates (live end = last date) |
 | `validation.json` | `{display_model, splits, sites{<site>{name, by_split{train,test,live}{gbm, reservoir, climatology, persistence_7d, persistence_14d, gbm_v2?}, test_by_year, crisis_2025, live_2026, level_ratio_obs_over_model, v2?}}, lines[], crisis_2025.text, outlook_skill}`. Train `gbm` is the leave-one-year-out CV, not the in-sample fit. `lines` includes the honest 2025 miss and its explanation, plus a v2 line when v2 exists |
 | `outlook.json` | model/out/outlook.json, rounded |
-| `scenarios.json` | contract + `method_detail`, `thresholds.calibration`, `replays{2025, 2026}`, `levels[].avoided`, `days_over10_dm`, `load_tN_*`, `caveats` |
+| `scenarios.json` | contract + `x_definition`, `hls_winter_cover_pct` ({lo, hi, by_year}), `headline`, `method_detail` (incl. `plant_day_rule`, `path_only_avoided` at every level), `thresholds.calibration`, `replays{2025, 2026}` (+ `plant_on_reported`), `levels[].avoided`, `levels[].trials_only.avoided`, `plant_days_proxy`, `days_over10_dm`, `load_tN_*`, `caveats` |
 | `fields.geojson`, `field_detail/<huc12>.json` (10 files), `field_index.json` | copies of fields_model output (detail rounded); split files only |
 | `strategies.json` | copy, rounded |
 | `huc12.geojson` | existing outlines and props + `huc12_props.json`: leak_index, share_of_basin_leak, rank, row_crop_share, poorly_drained_share, bare_days_wet, in_focus, lbN_ac_yr, share_of_basin_leak_recent, n_in_basin |
 | `facts.json` | `{facts:{<id>:{value, unit, label, source, url, verification, verified, range, quote, ...}}, aliases}`. Unverified facts are dropped. Alias keys: people_served, plant_days_<Y>, plant_cost_2025_usd, ban_days_<Y>, fert_price_usd_lb_N (+ plant_om_cost_2025_usd, plant_cost_per_day_usd, mcl_mgL). There is no `plant_cost_2026_usd` because no full-year figure exists |
 | `meta.json` | data_through (nwis, power, modis, hls, cdl, model_series), 13 sources with nasa flags and roles, caveats, file sizes |
 
-Total 7.0 MB (limit 15 MB). Every file parses, and `python3 -m http.server` serves them, including the directory
+Total 7.1 MB (limit 15 MB). Every file parses, and `python3 -m http.server` serves them, including the directory
 listing the loader reads. m08 never writes basins/sites/rivers/counties/places.
 
 **Display model.** metrics.json `display_model` may be a string or the v2 run's per-site dict
@@ -170,15 +208,20 @@ series and the v1 learned path.
 1. **Legacy nitrate.** Soil and groundwater nitrate mean a field change takes more than one season to show in the river.
    Results describe a fully developed effect, replayed on that year's weather and river.
 2. **Current adoption.** About 17% of Iowa corn+soy acres already have cover (`iowa_cover_share_pct`, secondary,
-   statewide). X is additional acres, so 50% means roughly two-thirds of acres covered.
+   statewide). X is a share of all upstream corn/soy acres added on top, so 25% means about 42% covered and 50% about
+   two-thirds. Satellite (HLS) detects winter cover on only 0.8-4.2% of fields a year against that ~17%: it sees only
+   cover that has grown enough by late fall or early spring, so it is a lower bound (many covers are drilled late or
+   stay small).
 3. **Typical adopters.** Adopters are assumed to be typical fields. Targeting leaky tile-drained fields would do more;
    poor rye establishment would do less. Cover is assumed living and effective all Oct-May; real fall establishment is
    slower.
-4. **Weak evidence on size.** Trial efficiencies are drainage-concentration means with large SDs. The learned river
-   response is weakly identified, and its bootstrap spread is too narrow (§2).
+4. **Weak evidence on size.** Trial efficiencies are drainage-concentration means with large SDs. The river-model
+   response is weakly identified, its bare-soil features add no tested LOYO skill, and its bootstrap spread is too
+   narrow (§2). It drives most of the mixture's plant-day effect; trials-only is shown alongside.
 5. **Proxy rules.** The rules are proxies. The plant proxy misses shoulder days (2026 test); the ban proxy starts early
    and cannot see demand or capacity.
-6. **Cost.** Only operating cost is counted, and per-day cost on shoulder days may be lower than the range used.
+6. **Cost.** Only operating cost is counted, and per-day cost on shoulder days may be lower than the range used (no
+   source gives a partial-operation cost; Q1-2026 averaged about $8.4k per run day, used as a sensitivity).
 7. **Flow.** Flow is held fixed; cover crops can slightly reduce spring drainage volume, which is not counted.
 8. **Data.** 2026 is partial and its nitrate data are partly provisional. Des Moines nitrate is missing 3 Jan-2 Mar 2025 (except
    11-12 Jan) plus scattered fall days; it is gap-filled for loads only, and the plant rule uses the Raccoon alone there.
