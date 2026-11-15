@@ -30,31 +30,47 @@
     <!-- ======================= CITY ======================= -->
     <section id="view-city" class="view" data-view="city" aria-labelledby="city-h">
       <div class="wrap">
-        <div class="hero">
-          <p class="eyebrow">Des Moines drinking water · <span id="city-year">2025</span> replay</p>
-          <h1 id="city-h">What reaches the faucet</h1>
-          <p class="lede" id="city-lede">Loading the river record…</p>
+        <div class="hero hero-city">
+          <div class="hero-top">
+            <p class="eyebrow">Des Moines drinking water · what upstream fields cost the tap</p>
+            <div class="seg seg-year" role="group" aria-label="Replay year" id="year-switch"></div>
+          </div>
+          <h1 id="city-h" class="hero-h">Loading the river record…</h1>
+          <div class="impact" id="impact" aria-live="polite">
+            <div class="impact-control">
+              <label for="adopt-hero" class="impact-label">Try it: <span id="adopt-hero-pct">25%</span> more upstream fields with living roots over winter <span class="muted">(<span id="adopt-hero-frac">1 in 4</span>, on top of today)</span></label>
+              <input type="range" id="adopt-hero" class="js-adopt" min="0" max="50" step="5" value="25" aria-describedby="impact-fine">
+            </div>
+            <p class="impact-text" id="impact-text"></p>
+            <div class="impact-tiles" id="impact-tiles"></div>
+            <p class="fine" id="impact-fine"></p>
+          </div>
         </div>
-        <div class="kpis" id="city-kpis" aria-live="polite"></div>
+        <div id="nasa-strip-city"></div>
+        <h2 class="kpi-h">The <span class="js-replay-year">2025</span> record, with sources</h2>
+        <div class="kpis" id="city-kpis"></div>
+        <p class="fine" id="city-lede"></p>
       </div>
 
       <div class="wrap section" id="sec-replay">
         <div class="section-head">
-          <h2>Replay <span class="js-replay-year">2025</span>: what if upstream fields kept living roots?</h2>
-          <p class="sub">Move the slider. The model re-runs the year with more fields covered by a living crop through the bare, wet months.</p>
+          <h2>Replay <span class="js-replay-year">2025</span>: the measured river with more living cover</h2>
+          <p class="sub">We take the river USGS actually measured and cut each day's nitrate by what Iowa field trials and our NASA-driven river model say more living cover would remove. Move the slider.</p>
         </div>
         <div class="replay-grid">
           <div class="replay-control">
-            <label for="adopt" class="slider-label"><strong class="big-num" id="adopt-val">0%</strong> of upstream fields add living cover</label>
-            <input type="range" id="adopt" min="0" max="50" step="5" value="0" aria-describedby="adopt-help">
+            <label for="adopt" class="slider-label"><strong class="big-num" id="adopt-val">25%</strong> more upstream fields add living cover</label>
+            <input type="range" id="adopt" class="js-adopt" min="0" max="50" step="5" value="25" aria-describedby="adopt-help">
             <div class="slider-ticks" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span></div>
-            <p id="adopt-help" class="fine">Living cover = cereal rye or another crop growing in fall, winter and spring.</p>
+            <p id="adopt-help" class="fine">Living cover = cereal rye or another crop growing in fall, winter and spring, on top of today's cover.</p>
             <p class="freq" id="replay-freq"></p>
             <div class="deltas" id="replay-deltas"></div>
           </div>
           <div class="chart-card">
             <div class="legend" id="replay-legend"></div>
-            <div class="chart-box tall"><canvas id="replay-chart" aria-label="Replay chart: river nitrate in the replay year, observed and modelled"></canvas></div>
+            <div class="chart-box tall"><canvas id="replay-chart" aria-label="Replay chart: measured river nitrate and the same river with more living cover"></canvas></div>
+            <label class="check"><input type="checkbox" id="replay-band"> Show the 8-in-10 range of the scenario</label>
+            <p class="cap" id="replay-cap"></p>
             <p class="fine" id="replay-note"></p>
           </div>
         </div>
@@ -63,8 +79,9 @@
       <div class="wrap section" id="sec-river">
         <div class="section-head">
           <h2>The river record and our model</h2>
-          <p class="sub">Daily nitrate at the city's intake gauges, measured by USGS sensors, against a model driven only by satellite and weather data.</p>
+          <p class="sub">Daily nitrate at the city's intake gauges, measured by USGS sensors, against a model that only sees NASA weather, soil wetness and satellite cover (never the river's nitrate).</p>
         </div>
+        <p class="honest" id="river-honest"></p>
         <div class="chart-card">
           <div class="controls">
             <div class="seg" role="group" aria-label="River gauge" id="river-site"></div>
@@ -72,6 +89,7 @@
           </div>
           <div class="legend" id="river-legend"></div>
           <div class="chart-box tall"><canvas id="river-chart" aria-label="River nitrate chart: observed and model with uncertainty band"></canvas></div>
+          <p class="cap" id="river-cap"></p>
           <p class="fine" id="river-note"></p>
         </div>
       </div>
@@ -88,6 +106,7 @@
             </div>
             <div id="city-map" class="map" role="region" aria-label="Map of upstream sub-watersheds"></div>
             <div class="legend-ramp" id="city-map-legend"></div>
+            <p class="cap">Data: bare-soil share from NASA MODIS (250 m, every 8 days) and NASA HLS; wet-soil drainage from NASA POWER rain and root-zone wetness; soils USDA SSURGO; crops USDA CDL; outlines USGS WBD. Calibrated so all sub-watersheds add up to the load USGS measured at the intakes.</p>
           </div>
           <aside class="hotspots">
             <h3>Top hotspots <span class="muted" id="hotspot-basin"></span></h3>
@@ -101,16 +120,19 @@
         <div class="section-head">
           <h2>Tap-water nitrate outlook: next 14 days</h2>
           <p class="sub" id="outlook-sub"></p>
+          <div class="controls" style="margin-top:8px"><div class="seg" role="group" aria-label="Outlook gauge" id="outlook-site"></div></div>
         </div>
         <div class="outlook-grid">
           <div class="chart-card">
             <div class="legend" id="outlook-legend"></div>
             <div class="chart-box"><canvas id="outlook-chart" aria-label="Fourteen-day nitrate outlook fan chart"></canvas></div>
             <div class="prob-strip" id="outlook-prob"></div>
+            <p class="cap" id="outlook-cap"></p>
           </div>
           <div class="outlook-text">
             <p class="outlook-headline" id="outlook-headline"></p>
             <ul class="drivers" id="outlook-drivers"></ul>
+            <p class="skill" id="outlook-skill"></p>
             <p class="fine" id="outlook-text"></p>
           </div>
         </div>
@@ -127,11 +149,13 @@
             <button type="button" class="btn btn-accent" id="pick-sample">pick a sample field</button></p>
           <p class="agro-note" role="note"><strong>Decision support, not a replacement for your agronomist.</strong> Numbers are estimates with ranges; check them against your own records and local advice.</p>
         </div>
+        <div id="nasa-strip-farm"></div>
       </div>
       <div class="wrap">
         <div class="map-card">
           <div id="farm-map" class="map map-farm" role="region" aria-label="Map of fields in the focus area"></div>
           <div class="legend-ramp" id="farm-map-legend"></div>
+          <p class="cap">Data: bare vs living cover per 400 m field from NASA HLS (Landsat + Sentinel-2, 2020–26); drainage from NASA POWER rain and root-zone soil wetness; slope NASADEM; soil drainage USDA SSURGO; crop history USDA CDL.</p>
         </div>
       </div>
       <div class="wrap section" id="field-panel">
@@ -146,7 +170,7 @@
               <p class="calendar-explain" id="cal-explain"></p>
               <div class="calendar" id="calendar" role="table" aria-label="Leak calendar by month"></div>
               <p class="fine" id="cal-note"></p>
-              <h3 class="h3">Living cover seen from space <span class="muted">· last 12 months (NDVI)</span></h3>
+              <h3 class="h3">Living cover seen from space <span class="muted">· NASA HLS greenness (NDVI), recent clear views</span></h3>
               <div class="chart-box short"><canvas id="ndvi-chart" aria-label="Recent NDVI of the field"></canvas></div>
               <p class="fine" id="ndvi-note"></p>
             </div>
@@ -154,6 +178,7 @@
               <h3 class="h3" id="prio-h">What matters to you?</h3>
               <p class="fine">Slide to set how much each goal counts. The cards below re-rank instantly.</p>
               <div id="prio-sliders"></div>
+              <div class="formula" id="prio-formula"></div>
               <details class="how">
                 <summary>How we rank</summary>
                 <div id="how-rank"></div>
@@ -176,10 +201,14 @@
         <div class="hero hero-small">
           <p class="eyebrow">Method &amp; evidence</p>
           <h1 id="method-h">How we know</h1>
-          <p class="lede">NASA satellites measure when fields are bare and soils are wet. A model learned from 15-minute USGS river sensors turns that into river nitrate. We test it on years it never saw.</p>
+          <p class="lede">NASA satellites measure when fields are bare and soils are wet. A model learned from USGS river sensors turns that into river nitrate. We test it on years it never saw, and we say where it fails.</p>
         </div>
+        <div id="nasa-strip-method"></div>
       </div>
+      <div class="wrap section"><h2>Where the model fails, and what we do about it</h2><div id="method-honest"></div></div>
       <div class="wrap section"><h2>Validation: does the model beat simple guesses?</h2><div id="validation"></div></div>
+      <div class="wrap section"><h2>14-day outlook: tested skill</h2><div id="outlook-val"></div></div>
+      <div class="wrap section"><h2>Removal-plant and watering-ban rules: fitted on 2025, tested on 2026</h2><div id="proxy-val"></div></div>
       <div class="wrap section"><h2>Data sources</h2><div id="sources"></div></div>
       <div class="wrap section"><h2>Caveats</h2><ul class="caveats" id="caveats"></ul></div>
       <div class="wrap section"><h2>Data files in this page</h2><div id="provenance"></div>
@@ -190,7 +219,7 @@
 
   <footer class="footer">
     <div class="wrap">
-      <p>Field to Faucet · NASA Space Apps 2026, “Field Shift: Adapting Farms with NASA Data”. Data: NASA HLS, GPM IMERG, NASA POWER, SMAP, NASADEM, MODIS; USGS NWIS &amp; WBD; USDA CDL &amp; SSURGO.</p>
+      <p>Field to Faucet · NASA Space Apps 2026, “Field Shift: Adapting Farms with NASA Data”. Data: NASA HLS (Landsat + Sentinel-2), MODIS, NASA POWER, GPM IMERG, NASADEM; USGS NWIS &amp; WBD; USDA CDL &amp; SSURGO.</p>
       <p class="fine">Decision support, not a replacement for your agronomist. EPA drinking-water limit for nitrate: 10 mg/L as N.</p>
     </div>
   </footer>

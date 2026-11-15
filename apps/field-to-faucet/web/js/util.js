@@ -33,6 +33,27 @@ export function band(o) {
   return { mid, lo: isNum(lo) ? lo : mid, hi: isNum(hi) ? hi : mid };
 }
 
+// Headline band for farmer numbers: long-run mean first (fields_model: "use mean as the headline"), p10-p90 range.
+export function meanBand(o) {
+  if (o == null) return null;
+  if (isNum(o)) return { mid: o, lo: o, hi: o };
+  const mid = o.mean ?? o.p50 ?? o.mid ?? o.value;
+  if (!isNum(mid)) return null;
+  const lo = o.p10 ?? o.lo, hi = o.p90 ?? o.hi;
+  return { mid, lo: isNum(lo) ? lo : mid, hi: isNum(hi) ? hi : mid, p50: isNum(o.p50) ? o.p50 : null };
+}
+
+// 25 -> "1 in 4", 10 -> "1 in 10", 30 -> "3 in 10" (share of fields as a natural frequency)
+export function shareAsFreq(pctVal) {
+  if (!isNum(pctVal) || pctVal <= 0) return "no";
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  const n = Math.round(pctVal), g = gcd(n, 100);
+  return `${n / g} in ${100 / g}`;
+}
+
+// 0.9 -> "0.9", 12.4 -> "12", for lb/acre
+export const fmtLbAc = (v) => (!isNum(v) ? "–" : Math.abs(v) < 10 ? (Math.round(v * 10) / 10).toString() : Math.round(v).toString());
+
 export const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 export const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -65,6 +86,11 @@ export function link(url, text) {
   return `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>`;
 }
 
+// Escapes text and turns bare URLs in it into links (evidence and program notes sometimes cite one inline).
+export function linkify(text) {
+  return esc(text).replace(/https?:\/\/[^\s<>"')]+[^\s<>"').,;:]/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, "").replace(/\/.*$/, "")}</a>`);
+}
+
 export const parseDate = (s) => {
   // "YYYY-MM-DD" -> UTC ms (no timezone drift)
   const [y, m, d] = String(s).split("-").map(Number);
@@ -83,7 +109,7 @@ export function segmented(container, options, initial, onChange) {
     onChange(b.dataset.v);
   });
   function set(v) {
-    container.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === v)));
+    container.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === String(v))));
   }
   return set;
 }

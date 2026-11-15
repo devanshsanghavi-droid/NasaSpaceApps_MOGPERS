@@ -31,7 +31,7 @@ All outputs were generated on 2026-11-14.
 | src | str | contract field: source of the nitrate value, `dv` or `iv`. None when nitrate is missing |
 | no3_src, q_src | str | the source of each variable on its own |
 
-Qualifier counts for nitrate: A 7,018, P 318, `A,[4]` 137, `P,[4]` 10, `A,e` 2. Provisional data start in roughly mid-2025.
+Qualifier counts for nitrate: A 7,018, P 318, `A,[4]` 137, `P,[4]` 10, `A,e` 2. Provisional (P) nitrate values start on 2026-06-02 at both sites.
 
 ### Sanity stats
 - 2025-06-01, Raccoon: **12.7 mg/L** (A). This matches the contract.
@@ -154,7 +154,7 @@ These match known history:
   - With 10 to 17 cells per basin, basin means are robust, but per-HUC-12 precipitation is just a blend of 1-4 cells.
   - The GEOS-IT period (most recent months) may have a small level shift against MERRA-2. Check before trusting live-period anomalies.
 - **NWIS:**
-  - Data from about mid-2025 are provisional (`P`) and can be revised. The re-run re-fetches the last 400 days.
+  - Data from 2026-06-02 on are provisional (`P`) and can be revised. The re-run re-fetches the last 400 days.
   - Gaps are left as NaN, with nothing interpolated. When counting exceedance days, use coverage or count only observed days.
   - The 2015 Des Moines nitrate record starts in 2016.
 - **Loads:** load_kgN_day uses daily means (Σc·q/n ≠ mean(c)·mean(q)). That is fine at daily scale; for annual loads sum only days that have both values, or fill gaps with a model.

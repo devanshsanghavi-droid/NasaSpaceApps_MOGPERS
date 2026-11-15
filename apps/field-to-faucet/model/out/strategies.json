@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T22:57:42Z",
+ "generated_at": "2026-11-15T00:09:15Z",
  "strategies": [
   {
    "id": "S0",
@@ -92,7 +92,7 @@
     "Less erosion: rye cut interrill erosion about half and rill erosion about 90% in a central Iowa test (Kaspar 2001).",
     "More water soaks in: cover crops raised infiltration about 35% (meta-analysis, Basche & DeLonge 2019).",
     "Slowly more soil carbon: about +4% with grass covers (global meta-analysis, He et al. 2025).",
-    "Lower total N2O (via less nitrate leaving) in a 10-year central Iowa study (Parkin 2016)."
+    "Lower indirect N2O (less nitrate leaving the field) in a 10-year central Iowa study; direct field N2O did not change (Parkin 2016)."
    ],
    "gaps": [
     "How much rye grows on your field each year (fall seeding date, winter, spring termination date) sets most of the benefit; the trial range is wide.",

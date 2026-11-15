@@ -323,7 +323,7 @@ def main():
                 pri.get("E1_erosion_kaspar2001") and "Less erosion: rye cut interrill erosion about half and rill erosion about 90% in a central Iowa test (Kaspar 2001).",
                 pri.get("E1_infiltration_basche2019") and "More water soaks in: cover crops raised infiltration about 35% (meta-analysis, Basche & DeLonge 2019).",
                 pri.get("E1_soc_he2025") and "Slowly more soil carbon: about +4% with grass covers (global meta-analysis, He et al. 2025).",
-                pri.get("E1_n2o_parkin2016") and "Lower total N2O (via less nitrate leaving) in a 10-year central Iowa study (Parkin 2016).",
+                pri.get("E1_n2o_parkin2016") and "Lower indirect N2O (less nitrate leaving the field) in a 10-year central Iowa study; direct field N2O did not change (Parkin 2016).",
             ]),
             "gaps": ["How much rye grows on your field each year (fall seeding date, winter, spring termination date) sets most of the benefit; the trial range is wide.",
                      "Satellite cover detection misses small rye that never reaches NDVI 0.30, so true adoption may be a bit higher than shown.",

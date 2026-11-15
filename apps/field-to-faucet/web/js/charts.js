@@ -121,7 +121,7 @@ export const toXY = (dates, vals) => dates.map((d, i) => ({ x: typeof d === "num
  * Generic time-series chart.
  * series: [{label, data:[{x,y}], color, width, dash, fill, kind:'line'|'bandLo'|'bandHi'|'points', hideInTooltip}]
  */
-export function timeChart(canvas, { series, xMin, xMax, yMax, yHardMax, yLabel = "Nitrate (mg/L as N)", threshold, spans, unit = "mg/L", digits = 1 }) {
+export function timeChart(canvas, { series, xMin, xMax, yMax, yHardMax, yLabel = "Nitrate (mg/L as N)", threshold, spans, unit = "mg/L", digits = 1, bandLabel = "8-in-10 model range" }) {
   setDefaults();
   const c = colors();
   const datasets = series.map((s) => ({
@@ -178,11 +178,11 @@ export function timeChart(canvas, { series, xMin, xMax, yMax, yHardMax, yLabel =
             afterBody: (items) => {
               if (!items.length) return "";
               const i = items[0].dataIndex;
-              const hi = chart.data.datasets.find((d) => d._band);
+              const hi = chart.data.datasets.find((d) => d._band && !d.hidden);
               if (!hi) return "";
               const lo = chart.data.datasets[chart.data.datasets.indexOf(hi) - 1];
               const a = lo?.data[i]?.y, b = hi.data[i]?.y;
-              return isNum(a) && isNum(b) ? ` 8-in-10 model range: ${a.toFixed(1)}–${b.toFixed(1)} ${unit}` : "";
+              return isNum(a) && isNum(b) ? ` ${bandLabel}: ${a.toFixed(digits)}–${b.toFixed(digits)} ${unit}` : "";
             },
           },
         },
@@ -194,5 +194,6 @@ export function timeChart(canvas, { series, xMin, xMax, yMax, yHardMax, yLabel =
 }
 
 export function legendHTML(items) {
-  return items.map((it) => `<span><span class="sw ${it.kind || ""}" style="color:${it.color}"></span>${it.label}</span>`).join("");
+  // band swatches take an explicit rgba fill when given (e.g. "kept out of the river"), else the shared band tint
+  return items.map((it) => `<span><span class="sw ${it.kind || ""}" style="color:${it.color}${it.kind === "band" && /^rgba/.test(it.color) ? `;background:${it.color}` : ""}"></span>${it.label}</span>`).join("");
 }

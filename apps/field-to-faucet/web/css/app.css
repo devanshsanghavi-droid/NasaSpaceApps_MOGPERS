@@ -156,7 +156,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); margin: 12px 0 2
 .empty-state { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line-2); border-radius: var(--radius); }
 .field-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: 24px; align-items: start; }
 .field-head h2 { margin-bottom: 4px; }
-.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); margin-top: 10px; }
+.facts { display: grid; grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); margin-top: 10px; }
 .fact { padding: 10px 10px 10px 0; min-width: 0; }
 .fact + .fact { border-left: 1px solid var(--line); padding-left: 10px; }
 .fact-v { font-weight: 700; color: var(--ink); font-size: 1.05rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -222,7 +222,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); margin: 12px 0 2
 table.data { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
 table.data th, table.data td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 table.data th { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); background: var(--ground); }
-table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 table.data tr.best td { font-weight: 700; color: var(--ink); }
 .nasa { display: inline-block; font: 700 0.66rem/1 var(--sans); letter-spacing: 0.06em; color: #fff; background: #0b3d91; padding: 3px 5px; border-radius: 3px; }
 .caveats li { margin-bottom: 6px; }
@@ -233,6 +233,69 @@ table.data tr.best td { font-weight: 700; color: var(--ink); }
 .footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 20px 0 30px; font-size: 0.86rem; color: var(--muted); }
 .footer p { margin: 0 0 6px; }
 
+
+/* ---- city impact hero ---- */
+.hero-city { padding: 28px 0 10px; }
+.hero-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 10px; }
+.hero-top .eyebrow { margin: 0; }
+.hero-h { font-family: var(--serif); font-weight: 600; font-size: clamp(1.55rem, 3.6vw, 2.5rem); line-height: 1.18; letter-spacing: -0.005em; max-width: 58rem; color: var(--ink); }
+.hero-h strong { font-weight: 700; }
+.hero-h .red { color: var(--nitrate); }
+.hero-year { color: var(--accent); }
+.hero-cost { font-size: 0.8em; color: var(--ink-2); white-space: nowrap; }
+.impact { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: var(--radius); padding: 16px 18px 14px; max-width: 70rem; }
+.impact-label { display: block; font-weight: 650; color: var(--ink); font-size: 0.98rem; }
+.impact-label #adopt-hero-pct { color: var(--accent); font-size: 1.15em; }
+.impact input[type="range"] { margin: 6px 0 4px; max-width: 520px; display: block; }
+.impact-text { font-size: clamp(1.05rem, 2.1vw, 1.28rem); line-height: 1.45; color: var(--ink); margin: 8px 0 12px; }
+.impact-text strong { color: var(--accent-2); }
+.impact-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; border-top: 1px solid var(--line); }
+.itile { padding: 10px 0 4px; min-width: 0; }
+.itile-v { font-family: var(--serif); font-size: clamp(1.7rem, 3.2vw, 2.4rem); font-weight: 600; color: var(--accent); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.itile-v.zero { color: var(--muted); }
+.itile-l { font-size: 0.9rem; color: var(--ink-2); margin-top: 2px; }
+.itile-r { font-size: 0.8rem; color: var(--muted); }
+.kpi-h { font-family: var(--sans); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 22px 0 0; }
+.kpi-h + .kpis { margin-top: 6px; }
+.seg-year button { padding: 6px 14px; }
+
+/* tooltip: hover, focus or tap */
+.tip { position: relative; border-bottom: 1px dotted currentColor; cursor: help; white-space: nowrap; outline-offset: 1px; }
+.tip-body { display: none; position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: min(320px, 80vw); white-space: normal; background: var(--ink); color: #fff; font: 400 0.82rem/1.4 var(--sans); padding: 8px 10px; border-radius: 4px; box-shadow: 0 4px 14px rgba(0,0,0,0.18); text-align: left; letter-spacing: 0; text-transform: none; }
+.tip:hover .tip-body, .tip:focus .tip-body, .tip:focus-within .tip-body { display: block; }
+
+/* ---- What NASA sees ---- */
+.nasa-strip { display: grid; grid-template-columns: auto repeat(5, minmax(0, 1fr)); gap: 0; align-items: stretch; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin: 18px 0 0; font-size: 0.82rem; }
+.nasa-strip-h { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-weight: 700; color: var(--ink); white-space: nowrap; border-right: 1px solid var(--line); }
+.nasa-item { padding: 8px 12px; border-right: 1px solid var(--line); min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.nasa-item:last-child { border-right: 0; }
+.nasa-item a { font-weight: 700; color: #0b3d91; text-decoration: none; }
+.nasa-item a:hover { text-decoration: underline; }
+.nasa-item span { color: var(--ink-2); line-height: 1.3; }
+.nasa-item em { font-style: normal; color: var(--muted); white-space: nowrap; }
+
+/* ---- captions, honesty, misc ---- */
+.cap { font-size: 0.8rem; color: var(--ink-2); margin: 8px 0 0; padding-top: 6px; border-top: 1px dashed var(--line); }
+.cap a { color: var(--ink-2); }
+.honest { background: #fff8e8; border-left: 4px solid #b7791f; padding: 10px 12px; margin: 0 0 12px; color: var(--ink); font-size: 0.95rem; border-radius: 0 4px 4px 0; max-width: 70rem; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 0.84rem; color: var(--ink-2); margin-top: 6px; cursor: pointer; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.skill { font-size: 0.9rem; color: var(--ink); background: var(--ground); border-radius: 4px; padding: 8px 10px; margin: 10px 0 0; }
+.prob-cell.noskill { opacity: 0.45; }
+.noskill-t { color: var(--muted); }
+.tag { display: inline-block; font: 700 0.62rem/1 var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; padding: 2px 4px; vertical-align: middle; margin-left: 4px; }
+.h4 { font-size: 0.92rem; font-weight: 650; color: var(--ink); margin: 14px 0 6px; }
+.val-lines { padding-left: 1.2em; }
+.val-lines li { margin-bottom: 6px; }
+.wet { background: var(--nitrate-soft); border-left: 4px solid var(--nitrate); padding: 8px 12px; margin: 10px 0 0; color: var(--ink); font-size: 0.95rem; border-radius: 0 4px 4px 0; }
+.wet-card { font-size: 0.84rem; margin: 6px 0 0; color: var(--ink); }
+.unknown { color: #7a4d00; font-weight: 700; }
+.unit { font-family: var(--sans); font-size: 0.85rem; color: var(--ink-2); font-weight: 600; }
+.nkept-u { font-size: 0.9rem; font-family: var(--sans); }
+.cal-h.interp { color: #9aa3ab; }
+.cal-c.interp { background: repeating-linear-gradient(135deg, #eceae4 0 4px, #f6f5f1 4px 8px); color: #6b747c; }
+.interp-key { display: inline-block; width: 14px; height: 10px; vertical-align: middle; background: repeating-linear-gradient(135deg, #e2dfd7 0 3px, #f6f5f1 3px 6px); border: 1px solid var(--line-2); }
+
 /* ---- responsive ---- */
 @media (max-width: 960px) {
   .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -241,6 +304,10 @@ table.data tr.best td { font-weight: 700; color: var(--ink); }
   .kpi:nth-child(n+4) { border-top: 1px solid var(--line); }
   .replay-grid, .map-grid, .outlook-grid, .field-grid { grid-template-columns: minmax(0, 1fr); }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nasa-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .nasa-strip-h { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--line); }
+  .nasa-item { border-bottom: 1px solid var(--line); }
+  .nasa-item:nth-child(4) { border-right: 0; }
 }
 @media (max-width: 560px) {
   body { font-size: 15px; }
@@ -259,14 +326,27 @@ table.data tr.best td { font-weight: 700; color: var(--ink); }
   .map { height: 380px; }
   .map-farm { height: 400px; }
   .cards { grid-template-columns: minmax(0, 1fr); }
-  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .fact:nth-child(3) { border-left: 0; padding-left: 0; }
-  .fact:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .fact:nth-child(2), .fact:nth-child(4) { border-left: 0; padding-left: 0; }
+  .fact:nth-child(3) { border-left: 1px solid var(--line); padding-left: 10px; }
+  .fact:nth-child(n+2) { border-top: 1px solid var(--line); }
   .calendar { grid-template-columns: repeat(12, minmax(0, 1fr)); }
   .cal-l { grid-column: 1 / -1; padding-top: 6px; }
   .cal-h-blank { display: none; }
-  .cal-c { height: 24px; font-size: 0.6rem; }
-  .prob-cell { font-size: 0.56rem; }
+  .cal-c { height: 26px; font-size: 0.68rem; }
+  .prob-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .prob-cell { font-size: 0.72rem; }
+  .impact { padding: 12px 12px 10px; }
+  .impact-tiles { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .itile { display: grid; grid-template-columns: 88px minmax(0, 1fr); column-gap: 10px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 8px 0; }
+  .itile:last-of-type { border-bottom: 0; }
+  .itile-v { grid-row: 1 / span 2; font-size: 1.8rem; }
+  .hero-cost { white-space: normal; }
+  .nasa-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nasa-item:nth-child(4) { border-right: 1px solid var(--line); }
+  .nasa-item:nth-child(odd) { border-right: 0; }
+  .tip-body { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fact-wide { grid-column: 1 / -1; }
   .mock-banner { position: static; font-size: 0.82rem; }
   .mock-banner:not([hidden]) ~ .topbar { top: 0; }
 }

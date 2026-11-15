@@ -246,7 +246,7 @@ def export_validation(metrics, dm, scen):
             f"Why: from early 2025 the rivers carried about {rat['2025']['ratio_obs_over_pred']:.1f}x (Raccoon) and "
             f"{ratd.get('2025', {}).get('ratio_obs_over_pred', float('nan')):.1f}x (Des Moines) the nitrate that that year's "
             f"weather, wet soil and bare ground explain, in every season and at low and high flow. Years after droughts run "
-            f"high (2022 and 2024 too), which points to nitrate left in soils and groundwater after the 2020-2023 drought, "
+            f"high (2022 and 2024 too), consistent with one hypothesis, nitrate left in soils and groundwater after the 2020-2023 drought (not proven: 2023 ran low right after the 2022 drought; fertilizer, groundwater lag or a rain-data shift could also contribute), "
             f"a slow store the model has no input for. The 2025 data are USGS-approved, so it is not a sensor artifact.")
     for site, nm in (("05484500", "Raccoon"), ("05482000", "Des Moines")):
         e2 = sites_out.get(site, {}).get("v2")
@@ -426,7 +426,7 @@ def export_meta(dm, river_end, scen, sizes):
         "A 'field' is a 400 m grid cell (about 40 acres) that was one row crop in most years; its N rate, manure and tile layout are unknown.",
         "NASA POWER rain is about 50 km resolution and smooths storm peaks; continuous IMERG was not available after May 2021.",
         "MODIS (250 m) bare share is a relative index, not a cover-crop map; Jul-Nov 2025 is filled from HLS.",
-        "USGS nitrate data from about mid-2025 on are provisional. Exceedance days are counted on days with a measurement.",
+        "USGS nitrate data from 2026-06-02 on are provisional. Exceedance days are counted on days with a measurement.",
         "Fertilizer values are upper bounds and the AMS price is a secondary source (ISU budgets N at $0.53/lb).",
     ]
     if scen:

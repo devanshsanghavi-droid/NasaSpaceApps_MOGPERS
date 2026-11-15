@@ -1,8 +1,8 @@
-// Entry point: loads data, renders views, hash routing (#city, #farmer, #farmer/<field_id>, #method).
-import { loadAll, renderBanner } from "./data.js";
+// Entry point: loads data in groups, renders views, hash routing (#city, #farmer, #farmer/<field_id>, #method).
+import { createStore, ensure, onLoaded, renderBanner } from "./data.js";
 import { initCityMap, renderCity } from "./city.js";
 import { initFarmer, initFarmMap, selectField } from "./farmer.js";
-import { renderMethod } from "./method.js";
+import { renderMethod, renderProvenance } from "./method.js";
 
 const VIEWS = ["city", "farmer", "method"];
 let store;
@@ -25,6 +25,7 @@ function show(view) {
 
 function onSelectField(id) {
   history.replaceState(null, "", `#farmer/${encodeURIComponent(id)}`);
+  if (currentView !== "farmer") show("farmer");
   selectField(id).then((ok) => { if (ok) document.getElementById("field-panel").scrollIntoView({ behavior: "smooth", block: "start" }); });
 }
 
@@ -35,13 +36,16 @@ async function route() {
 }
 
 async function main() {
-  store = await loadAll();
+  store = await createStore();
+  onLoaded(store, () => { renderBanner(store.source); renderProvenance(store); });
   renderBanner(store.source);
   renderCity(store);
   initFarmer(store, onSelectField);
   renderMethod(store);
   window.addEventListener("hashchange", route);
   await route();
+  // Map layers next (the city map and hotspot list need them); farm data waits until the farmer view opens.
+  ensure(store, "map");
 }
 
 main();

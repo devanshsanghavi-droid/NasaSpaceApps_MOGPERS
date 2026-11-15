@@ -123,14 +123,18 @@ are above 10 mg/L.
 In 2025 the river was measured above 10 mg/L on 115 days at the Raccoon and 105 at Des Moines. The plant ran 112 days
 (proxy median 120) and the ban lasted 56 days (proxy 68). The two rivers carried a load of 55,300 t N.
 
-| X | days > 10, Raccoon | days > 10, Des Moines | plant days | plant O&M $ | ban days (indicative) | load, t N | N kept, lb |
-|---|---|---|---|---|---|---|---|
-| 10% | 2 (1-2) | 8 (4-10) | 6 (3-13) | $89k (43k-191k) | 8 (5-10) | 1,060 (710-1,490) | 2.3M (1.6-3.3M) |
-| 25% | **7 (3-11)** | 22 (12-29) | **24 (10-36)** | **$360k (151k-548k)** | **23 (16-30)** | 2,890 (2,020-3,800) | 6.4M (4.5-8.4M) |
-| 50% | 17 (7-30) | 46 (27-65) | 46 (27-62) | $695k (404k-941k) | 33 (29-42) | 6,040 (4,420-7,760) | 13.3M (9.7-17.1M) |
+Final run (equal-weight mixture; regenerated from web/data/scenarios.json):
 
-2026 at 25%, partial year: 5 (5-5) fewer Raccoon days above 10, 30 (16-49) at Des Moines, 17 (11-27) plant days,
-$263k (165k-412k) and 15 (12-25) ban days.
+| year | X | days > 10, Raccoon | days > 10, Des Moines | plant days | plant O&M $ | ban days (indicative) | load, t N | N kept, lb |
+|---|---|---|---|---|---|---|---|---|
+| 2025 | 10% | 2 (0-4) | 8 (0-15) | 7 (2-16) | $105k (29k-237k) | 9 (1-13) | 1,162 (365-1,838) | 2.6M (0.8-4.0M) |
+| 2025 | 25% | 8 (2-16) | 19 (5-36) | 23 (5-41) | $350k (73k-620k) | 23 (9-31) | 2,931 (942-4,548) | 6.5M (2.1-10.0M) |
+| 2025 | 50% | 16 (5-45) | 43 (13-69) | 46 (11-72) | $690k (159k-1080k) | 32 (13-46) | 5,955 (1,906-8,872) | 13.1M (4.2-19.6M) |
+| 2026 | 10% | 3 (0-8) | 11 (0-19) | 8 (2-16) | $123k (31k-243k) | 1 (0-7) | 1,137 (448-1,946) | 2.5M (1.0-4.3M) |
+| 2026 | 25% | 5 (3-22) | 29 (11-57) | 19 (7-51) | $282k (110k-768k) | 15 (1-26) | 2,850 (1,156-4,853) | 6.3M (2.5-10.7M) |
+| 2026 | 50% | 15 (6-81) | 84 (19-137) | 60 (16-129) | $900k (242k-1962k) | 40 (11-40) | 5,879 (2,395-9,702) | 13.0M (5.3-21.4M) |
+
+2026 is a partial year (data to 2026-11-13).
 
 **Reading.**
 - The Raccoon sat far above 10 for long stretches in 2025-26, so a 2-3% load cut flips few of its days.
