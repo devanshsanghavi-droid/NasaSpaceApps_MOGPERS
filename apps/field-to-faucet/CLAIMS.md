@@ -253,9 +253,9 @@ Status for every row: **model** (counterfactual, not validated).
 ## Open items (for the app-wording pass; the facts owner is adding entries in parallel)
 
 - **Tap water met the standard**: removed from the pitch and app (no stored source).
-- `meta.json` caveat 1 says the 2025-26 level was "likely legacy nitrate after the 2020-23 drought". `VALIDATION.md`
-  treats that as a hypothesis, so "one hypothesis" or "possibly" would be consistent.
-- The S1 card's EQIP label is changing from "$74 (unverified)" to "~$74, third-party figure" in the parallel wording
+- Resolved: the `meta.json` caveat now says "one hypothesis: nitrate left over after the 2020-2023 drought", matching
+  `VALIDATION.md`.
+- Resolved: the S1 card's EQIP label now reads "~$74, third-party figure" (was "$74 (unverified)"); the original note follows
   pass, which matches the secondary status. Check this in the final screenshots.
 - The Method view shows v1 Raccoon test CSI 0.33. `VALIDATION.md` §2 shows 0.32 (different rounding or count basis).
 - The first-ever-ban IPR URL (2025-06-20) and the EPA MCL page are cited but could not be re-opened from this session
