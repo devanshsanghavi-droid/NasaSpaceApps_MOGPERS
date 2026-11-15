@@ -27,58 +27,62 @@
   },
   "bill_2045_usd": {
    "ssp245": {
-    "est": 2860000000.0,
-    "lo": 1940000000.0,
-    "hi": 6470000000.0
+    "est": 3110000000.0,
+    "lo": 1980000000.0,
+    "hi": 6390000000.0
    },
    "ssp585": {
-    "est": 3430000000.0,
-    "lo": 2340000000.0,
-    "hi": 4350000000.0
+    "est": 3800000000.0,
+    "lo": 2370000000.0,
+    "hi": 5770000000.0
    }
   },
   "change_2045_pct": {
    "ssp245": {
-    "est": 60.1,
-    "lo": 14.4,
-    "hi": 276.9
+    "est": 74.4,
+    "lo": 15.5,
+    "hi": 271.2
    },
    "ssp585": {
-    "est": 92.4,
-    "lo": 32.8,
-    "hi": 145.5
+    "est": 112.9,
+    "lo": 35.8,
+    "hi": 241.3
    }
   },
   "change_2045_pct_by_gcm": {
    "ssp245": {
-    "ACCESS-CM2 (emulator)": 283.9,
-    "ACCESS-CM2 (no_emulator)": 145.5,
-    "GFDL-ESM4 (emulator)": 78.3,
-    "GFDL-ESM4 (no_emulator)": 24.5,
-    "MPI-ESM1-2-HR (emulator)": 26.0,
+    "ACCESS-CM2 (emulator)": 291.8,
+    "ACCESS-CM2 (no_emulator)": 149.8,
+    "GFDL-ESM4 (emulator)": 79.3,
+    "GFDL-ESM4 (no_emulator)": 25.0,
+    "MPI-ESM1-2-HR (emulator)": 26.1,
     "MPI-ESM1-2-HR (no_emulator)": 17.8,
-    "MRI-ESM2-0 (emulator)": 70.5,
-    "MRI-ESM2-0 (no_emulator)": 49.8
+    "MRI-ESM2-0 (emulator)": 69.5,
+    "MRI-ESM2-0 (no_emulator)": 48.9,
+    "NorESM2-MM (emulator)": 175.5,
+    "NorESM2-MM (no_emulator)": 90.9
    },
    "ssp585": {
-    "ACCESS-CM2 (emulator)": 145.6,
-    "ACCESS-CM2 (no_emulator)": 74.6,
-    "GFDL-ESM4 (emulator)": 110.2,
-    "GFDL-ESM4 (no_emulator)": 36.2,
-    "MPI-ESM1-2-HR (emulator)": 111.0,
-    "MPI-ESM1-2-HR (no_emulator)": 42.3,
-    "MRI-ESM2-0 (emulator)": 124.1,
-    "MRI-ESM2-0 (no_emulator)": 65.7
+    "ACCESS-CM2 (emulator)": 144.3,
+    "ACCESS-CM2 (no_emulator)": 74.0,
+    "GFDL-ESM4 (emulator)": 111.2,
+    "GFDL-ESM4 (no_emulator)": 37.0,
+    "MPI-ESM1-2-HR (emulator)": 114.6,
+    "MPI-ESM1-2-HR (no_emulator)": 43.9,
+    "MRI-ESM2-0 (emulator)": 125.2,
+    "MRI-ESM2-0 (no_emulator)": 66.5,
+    "NorESM2-MM (emulator)": 251.5,
+    "NorESM2-MM (no_emulator)": 127.9
    }
   },
   "change_2045_pct_by_soil_assumption": {
    "ssp245": {
-    "emulator": 74.4,
-    "no_emulator": 37.1
+    "emulator": 79.3,
+    "no_emulator": 48.9
    },
    "ssp585": {
-    "emulator": 117.5,
-    "no_emulator": 54.0
+    "emulator": 125.2,
+    "no_emulator": 66.5
    }
   },
   "name": "7 Corn Belt and Plains states (IA, NE, KS, MO, IL, SD, MN)",
@@ -86,7 +90,8 @@
    "ACCESS-CM2",
    "GFDL-ESM4",
    "MPI-ESM1-2-HR",
-   "MRI-ESM2-0"
+   "MRI-ESM2-0",
+   "NorESM2-MM"
   ]
  },
  "states": {
@@ -115,58 +120,62 @@
    },
    "bill_2045_usd": {
     "ssp245": {
-     "est": 375000000.0,
-     "lo": 246000000.0,
-     "hi": 1030000000.0
+     "est": 409000000.0,
+     "lo": 254000000.0,
+     "hi": 1040000000.0
     },
     "ssp585": {
-     "est": 428000000.0,
-     "lo": 325000000.0,
-     "hi": 614000000.0
+     "est": 472000000.0,
+     "lo": 330000000.0,
+     "hi": 806000000.0
     }
    },
    "change_2045_pct": {
     "ssp245": {
-     "est": 58.7,
-     "lo": 10.5,
-     "hi": 341.4
+     "est": 73.1,
+     "lo": 11.0,
+     "hi": 333.6
     },
     "ssp585": {
-     "est": 81.4,
-     "lo": 43.0,
-     "hi": 155.1
+     "est": 100.1,
+     "lo": 44.8,
+     "hi": 239.0
     }
    },
    "change_2045_pct_by_gcm": {
     "ssp245": {
-     "ACCESS-CM2 (emulator)": 351.5,
-     "ACCESS-CM2 (no_emulator)": 243.6,
-     "GFDL-ESM4 (emulator)": 57.9,
-     "GFDL-ESM4 (no_emulator)": 30.9,
-     "MPI-ESM1-2-HR (emulator)": 20.0,
-     "MPI-ESM1-2-HR (no_emulator)": 13.9,
-     "MRI-ESM2-0 (emulator)": 87.2,
-     "MRI-ESM2-0 (no_emulator)": 59.4
+     "ACCESS-CM2 (emulator)": 360.9,
+     "ACCESS-CM2 (no_emulator)": 251.4,
+     "GFDL-ESM4 (emulator)": 59.1,
+     "GFDL-ESM4 (no_emulator)": 32.0,
+     "MPI-ESM1-2-HR (emulator)": 19.4,
+     "MPI-ESM1-2-HR (no_emulator)": 13.3,
+     "MRI-ESM2-0 (emulator)": 87.0,
+     "MRI-ESM2-0 (no_emulator)": 59.3,
+     "NorESM2-MM (emulator)": 160.4,
+     "NorESM2-MM (no_emulator)": 116.1
     },
     "ssp585": {
-     "ACCESS-CM2 (emulator)": 156.2,
+     "ACCESS-CM2 (emulator)": 156.1,
      "ACCESS-CM2 (no_emulator)": 113.3,
-     "GFDL-ESM4 (emulator)": 90.1,
-     "GFDL-ESM4 (no_emulator)": 54.3,
-     "MPI-ESM1-2-HR (emulator)": 70.2,
-     "MPI-ESM1-2-HR (no_emulator)": 49.4,
-     "MRI-ESM2-0 (emulator)": 108.2,
-     "MRI-ESM2-0 (no_emulator)": 72.8
+     "GFDL-ESM4 (emulator)": 92.1,
+     "GFDL-ESM4 (no_emulator)": 56.1,
+     "MPI-ESM1-2-HR (emulator)": 71.5,
+     "MPI-ESM1-2-HR (no_emulator)": 50.6,
+     "MRI-ESM2-0 (emulator)": 108.1,
+     "MRI-ESM2-0 (no_emulator)": 72.8,
+     "NorESM2-MM (emulator)": 258.3,
+     "NorESM2-MM (no_emulator)": 170.0
     }
    },
    "change_2045_pct_by_soil_assumption": {
     "ssp245": {
-     "emulator": 72.6,
-     "no_emulator": 45.2
+     "emulator": 87.0,
+     "no_emulator": 59.3
     },
     "ssp585": {
-     "emulator": 99.1,
-     "no_emulator": 63.6
+     "emulator": 108.1,
+     "no_emulator": 72.8
     }
    }
   },
@@ -195,58 +204,62 @@
    },
    "bill_2045_usd": {
     "ssp245": {
-     "est": 392000000.0,
-     "lo": 255000000.0,
-     "hi": 830000000.0
+     "est": 420000000.0,
+     "lo": 260000000.0,
+     "hi": 817000000.0
     },
     "ssp585": {
-     "est": 491000000.0,
-     "lo": 303000000.0,
-     "hi": 663000000.0
+     "est": 529000000.0,
+     "lo": 311000000.0,
+     "hi": 799000000.0
     }
    },
    "change_2045_pct": {
     "ssp245": {
-     "est": 72.0,
-     "lo": 20.1,
-     "hi": 285.6
+     "est": 84.5,
+     "lo": 21.8,
+     "hi": 273.6
     },
     "ssp585": {
-     "est": 115.3,
-     "lo": 44.3,
-     "hi": 196.9
+     "est": 132.0,
+     "lo": 44.9,
+     "hi": 256.9
     }
    },
    "change_2045_pct_by_gcm": {
     "ssp245": {
-     "ACCESS-CM2 (emulator)": 297.0,
-     "ACCESS-CM2 (no_emulator)": 119.6,
-     "GFDL-ESM4 (emulator)": 156.5,
-     "GFDL-ESM4 (no_emulator)": 37.9,
-     "MPI-ESM1-2-HR (emulator)": 44.1,
-     "MPI-ESM1-2-HR (no_emulator)": 25.9,
-     "MRI-ESM2-0 (emulator)": 91.0,
-     "MRI-ESM2-0 (no_emulator)": 53.0
+     "ACCESS-CM2 (emulator)": 302.5,
+     "ACCESS-CM2 (no_emulator)": 121.9,
+     "GFDL-ESM4 (emulator)": 158.1,
+     "GFDL-ESM4 (no_emulator)": 38.5,
+     "MPI-ESM1-2-HR (emulator)": 43.9,
+     "MPI-ESM1-2-HR (no_emulator)": 25.7,
+     "MRI-ESM2-0 (emulator)": 90.2,
+     "MRI-ESM2-0 (no_emulator)": 52.4,
+     "NorESM2-MM (emulator)": 184.4,
+     "NorESM2-MM (no_emulator)": 78.8
     },
     "ssp585": {
-     "ACCESS-CM2 (emulator)": 159.4,
-     "ACCESS-CM2 (no_emulator)": 60.2,
-     "GFDL-ESM4 (emulator)": 198.4,
-     "GFDL-ESM4 (no_emulator)": 52.3,
-     "MPI-ESM1-2-HR (emulator)": 185.0,
-     "MPI-ESM1-2-HR (no_emulator)": 54.5,
-     "MRI-ESM2-0 (emulator)": 159.0,
-     "MRI-ESM2-0 (no_emulator)": 71.5
+     "ACCESS-CM2 (emulator)": 156.1,
+     "ACCESS-CM2 (no_emulator)": 58.4,
+     "GFDL-ESM4 (emulator)": 200.1,
+     "GFDL-ESM4 (no_emulator)": 53.2,
+     "MPI-ESM1-2-HR (emulator)": 190.5,
+     "MPI-ESM1-2-HR (no_emulator)": 56.2,
+     "MRI-ESM2-0 (emulator)": 159.7,
+     "MRI-ESM2-0 (no_emulator)": 72.0,
+     "NorESM2-MM (emulator)": 294.5,
+     "NorESM2-MM (no_emulator)": 108.0
     }
    },
    "change_2045_pct_by_soil_assumption": {
     "ssp245": {
-     "emulator": 123.8,
-     "no_emulator": 45.5
+     "emulator": 158.1,
+     "no_emulator": 52.4
     },
     "ssp585": {
-     "emulator": 172.2,
-     "no_emulator": 57.3
+     "emulator": 190.5,
+     "no_emulator": 58.4
     }
    }
   },
@@ -275,58 +288,62 @@
    },
    "bill_2045_usd": {
     "ssp245": {
-     "est": 624000000.0,
-     "lo": 463000000.0,
-     "hi": 1150000000.0
+     "est": 659000000.0,
+     "lo": 471000000.0,
+     "hi": 1290000000.0
     },
     "ssp585": {
-     "est": 877000000.0,
-     "lo": 517000000.0,
-     "hi": 1250000000.0
+     "est": 878000000.0,
+     "lo": 521000000.0,
+     "hi": 1340000000.0
     }
    },
    "change_2045_pct": {
     "ssp245": {
-     "est": 36.6,
-     "lo": 9.9,
-     "hi": 163.5
+     "est": 44.3,
+     "lo": 11.0,
+     "hi": 188.6
     },
     "ssp585": {
-     "est": 92.1,
-     "lo": 19.1,
-     "hi": 178.5
+     "est": 92.3,
+     "lo": 20.5,
+     "hi": 200.3
     }
    },
    "change_2045_pct_by_gcm": {
     "ssp245": {
-     "ACCESS-CM2 (emulator)": 161.9,
-     "ACCESS-CM2 (no_emulator)": 48.3,
-     "GFDL-ESM4 (emulator)": 124.2,
-     "GFDL-ESM4 (no_emulator)": 20.1,
-     "MPI-ESM1-2-HR (emulator)": 15.0,
-     "MPI-ESM1-2-HR (no_emulator)": 25.0,
-     "MRI-ESM2-0 (emulator)": 30.2,
-     "MRI-ESM2-0 (no_emulator)": 42.9
+     "ACCESS-CM2 (emulator)": 164.6,
+     "ACCESS-CM2 (no_emulator)": 49.4,
+     "GFDL-ESM4 (emulator)": 126.3,
+     "GFDL-ESM4 (no_emulator)": 21.1,
+     "MPI-ESM1-2-HR (emulator)": 15.2,
+     "MPI-ESM1-2-HR (no_emulator)": 25.2,
+     "MRI-ESM2-0 (emulator)": 29.1,
+     "MRI-ESM2-0 (no_emulator)": 41.4,
+     "NorESM2-MM (emulator)": 191.0,
+     "NorESM2-MM (no_emulator)": 47.2
     },
     "ssp585": {
-     "ACCESS-CM2 (emulator)": 122.2,
-     "ACCESS-CM2 (no_emulator)": 24.2,
-     "GFDL-ESM4 (emulator)": 164.8,
-     "GFDL-ESM4 (no_emulator)": 24.4,
-     "MPI-ESM1-2-HR (emulator)": 173.4,
-     "MPI-ESM1-2-HR (no_emulator)": 35.1,
-     "MRI-ESM2-0 (emulator)": 148.7,
-     "MRI-ESM2-0 (no_emulator)": 61.9
+     "ACCESS-CM2 (emulator)": 118.4,
+     "ACCESS-CM2 (no_emulator)": 22.2,
+     "GFDL-ESM4 (emulator)": 166.3,
+     "GFDL-ESM4 (no_emulator)": 25.3,
+     "MPI-ESM1-2-HR (emulator)": 181.6,
+     "MPI-ESM1-2-HR (no_emulator)": 38.0,
+     "MRI-ESM2-0 (emulator)": 153.8,
+     "MRI-ESM2-0 (no_emulator)": 65.2,
+     "NorESM2-MM (emulator)": 200.9,
+     "NorESM2-MM (no_emulator)": 66.3
     }
    },
    "change_2045_pct_by_soil_assumption": {
     "ssp245": {
-     "emulator": 77.2,
-     "no_emulator": 34.0
+     "emulator": 126.3,
+     "no_emulator": 41.4
     },
     "ssp585": {
-     "emulator": 156.7,
-     "no_emulator": 29.8
+     "emulator": 166.3,
+     "no_emulator": 38.0
     }
    }
   },
@@ -355,58 +372,62 @@
    },
    "bill_2045_usd": {
     "ssp245": {
-     "est": 274000000.0,
-     "lo": 171000000.0,
-     "hi": 418000000.0
+     "est": 288000000.0,
+     "lo": 170000000.0,
+     "hi": 428000000.0
     },
     "ssp585": {
-     "est": 289000000.0,
-     "lo": 225000000.0,
-     "hi": 362000000.0
+     "est": 304000000.0,
+     "lo": 228000000.0,
+     "hi": 513000000.0
     }
    },
    "change_2045_pct": {
     "ssp245": {
-     "est": 65.2,
-     "lo": 8.1,
-     "hi": 164.0
+     "est": 74.0,
+     "lo": 6.7,
+     "hi": 173.8
     },
     "ssp585": {
-     "est": 74.3,
-     "lo": 41.2,
-     "hi": 127.4
+     "est": 83.7,
+     "lo": 42.7,
+     "hi": 217.2
     }
    },
    "change_2045_pct_by_gcm": {
     "ssp245": {
-     "ACCESS-CM2 (emulator)": 155.1,
-     "ACCESS-CM2 (no_emulator)": 112.9,
-     "GFDL-ESM4 (emulator)": 64.1,
-     "GFDL-ESM4 (no_emulator)": 43.1,
-     "MPI-ESM1-2-HR (emulator)": 13.8,
-     "MPI-ESM1-2-HR (no_emulator)": 12.9,
-     "MRI-ESM2-0 (emulator)": 84.0,
-     "MRI-ESM2-0 (no_emulator)": 66.4
+     "ACCESS-CM2 (emulator)": 160.0,
+     "ACCESS-CM2 (no_emulator)": 117.0,
+     "GFDL-ESM4 (emulator)": 65.9,
+     "GFDL-ESM4 (no_emulator)": 44.6,
+     "MPI-ESM1-2-HR (emulator)": 12.2,
+     "MPI-ESM1-2-HR (no_emulator)": 11.3,
+     "MRI-ESM2-0 (emulator)": 82.1,
+     "MRI-ESM2-0 (no_emulator)": 64.9,
+     "NorESM2-MM (emulator)": 147.1,
+     "NorESM2-MM (no_emulator)": 113.6
     },
     "ssp585": {
-     "ACCESS-CM2 (emulator)": 78.0,
-     "ACCESS-CM2 (no_emulator)": 54.5,
-     "GFDL-ESM4 (emulator)": 88.4,
-     "GFDL-ESM4 (no_emulator)": 58.8,
-     "MPI-ESM1-2-HR (emulator)": 70.6,
-     "MPI-ESM1-2-HR (no_emulator)": 51.4,
-     "MRI-ESM2-0 (emulator)": 122.0,
-     "MRI-ESM2-0 (no_emulator)": 93.1
+     "ACCESS-CM2 (emulator)": 76.0,
+     "ACCESS-CM2 (no_emulator)": 52.7,
+     "GFDL-ESM4 (emulator)": 91.5,
+     "GFDL-ESM4 (no_emulator)": 61.4,
+     "MPI-ESM1-2-HR (emulator)": 71.5,
+     "MPI-ESM1-2-HR (no_emulator)": 52.3,
+     "MRI-ESM2-0 (emulator)": 123.6,
+     "MRI-ESM2-0 (no_emulator)": 94.6,
+     "NorESM2-MM (emulator)": 220.0,
+     "NorESM2-MM (no_emulator)": 164.3
     }
    },
    "change_2045_pct_by_soil_assumption": {
     "ssp245": {
-     "emulator": 74.0,
-     "no_emulator": 54.8
+     "emulator": 82.1,
+     "no_emulator": 64.9
     },
     "ssp585": {
-     "emulator": 83.2,
-     "no_emulator": 56.6
+     "emulator": 91.5,
+     "no_emulator": 61.4
     }
    }
   },
@@ -435,58 +456,62 @@
    },
    "bill_2045_usd": {
     "ssp245": {
-     "est": 372000000.0,
-     "lo": 230000000.0,
-     "hi": 835000000.0
+     "est": 389000000.0,
+     "lo": 243000000.0,
+     "hi": 860000000.0
     },
     "ssp585": {
-     "est": 404000000.0,
-     "lo": 274000000.0,
-     "hi": 538000000.0
+     "est": 436000000.0,
+     "lo": 283000000.0,
+     "hi": 963000000.0
     }
    },
    "change_2045_pct": {
     "ssp245": {
-     "est": 47.7,
-     "lo": 2.4,
-     "hi": 224.1
+     "est": 54.4,
+     "lo": 2.2,
+     "hi": 233.9
     },
     "ssp585": {
-     "est": 60.1,
-     "lo": 27.0,
-     "hi": 107.0
+     "est": 73.1,
+     "lo": 28.4,
+     "hi": 271.1
     }
    },
    "change_2045_pct_by_gcm": {
     "ssp245": {
-     "ACCESS-CM2 (emulator)": 232.7,
-     "ACCESS-CM2 (no_emulator)": 169.5,
-     "GFDL-ESM4 (emulator)": 45.8,
-     "GFDL-ESM4 (no_emulator)": 35.0,
-     "MPI-ESM1-2-HR (emulator)": 7.6,
-     "MPI-ESM1-2-HR (no_emulator)": 7.3,
-     "MRI-ESM2-0 (emulator)": 60.8,
-     "MRI-ESM2-0 (no_emulator)": 49.6
+     "ACCESS-CM2 (emulator)": 242.4,
+     "ACCESS-CM2 (no_emulator)": 176.9,
+     "GFDL-ESM4 (emulator)": 47.0,
+     "GFDL-ESM4 (no_emulator)": 36.2,
+     "MPI-ESM1-2-HR (emulator)": 6.5,
+     "MPI-ESM1-2-HR (no_emulator)": 6.3,
+     "MRI-ESM2-0 (emulator)": 60.0,
+     "MRI-ESM2-0 (no_emulator)": 48.9,
+     "NorESM2-MM (emulator)": 175.0,
+     "NorESM2-MM (no_emulator)": 146.4
     },
     "ssp585": {
-     "ACCESS-CM2 (emulator)": 100.4,
-     "ACCESS-CM2 (no_emulator)": 80.3,
-     "GFDL-ESM4 (emulator)": 44.4,
-     "GFDL-ESM4 (no_emulator)": 35.4,
-     "MPI-ESM1-2-HR (emulator)": 54.4,
-     "MPI-ESM1-2-HR (no_emulator)": 46.4,
-     "MRI-ESM2-0 (emulator)": 83.7,
-     "MRI-ESM2-0 (no_emulator)": 65.9
+     "ACCESS-CM2 (emulator)": 100.7,
+     "ACCESS-CM2 (no_emulator)": 80.7,
+     "GFDL-ESM4 (emulator)": 44.6,
+     "GFDL-ESM4 (no_emulator)": 35.6,
+     "MPI-ESM1-2-HR (emulator)": 55.7,
+     "MPI-ESM1-2-HR (no_emulator)": 47.8,
+     "MRI-ESM2-0 (emulator)": 83.3,
+     "MRI-ESM2-0 (no_emulator)": 65.6,
+     "NorESM2-MM (emulator)": 286.9,
+     "NorESM2-MM (no_emulator)": 221.7
     }
    },
    "change_2045_pct_by_soil_assumption": {
     "ssp245": {
-     "emulator": 53.3,
-     "no_emulator": 42.3
+     "emulator": 60.0,
+     "no_emulator": 48.9
     },
     "ssp585": {
-     "emulator": 69.0,
-     "no_emulator": 56.2
+     "emulator": 83.3,
+     "no_emulator": 65.6
     }
    }
   },
@@ -515,58 +540,62 @@
    },
    "bill_2045_usd": {
     "ssp245": {
-     "est": 461000000.0,
+     "est": 526000000.0,
      "lo": 309000000.0,
-     "hi": 1570000000.0
+     "hi": 1550000000.0
     },
     "ssp585": {
-     "est": 551000000.0,
-     "lo": 345000000.0,
-     "hi": 872000000.0
+     "est": 595000000.0,
+     "lo": 346000000.0,
+     "hi": 1130000000.0
     }
    },
    "change_2045_pct": {
     "ssp245": {
-     "est": 50.3,
+     "est": 71.4,
      "lo": 7.2,
-     "hi": 442.1
+     "hi": 441.9
     },
     "ssp585": {
-     "est": 79.5,
-     "lo": 20.5,
-     "hi": 192.3
+     "est": 94.0,
+     "lo": 20.6,
+     "hi": 282.4
     }
    },
    "change_2045_pct_by_gcm": {
     "ssp245": {
-     "ACCESS-CM2 (emulator)": 454.0,
-     "ACCESS-CM2 (no_emulator)": 179.9,
-     "GFDL-ESM4 (emulator)": 34.2,
-     "GFDL-ESM4 (no_emulator)": 8.3,
-     "MPI-ESM1-2-HR (emulator)": 56.7,
-     "MPI-ESM1-2-HR (no_emulator)": 18.2,
-     "MRI-ESM2-0 (emulator)": 101.8,
-     "MRI-ESM2-0 (no_emulator)": 43.9
+     "ACCESS-CM2 (emulator)": 469.0,
+     "ACCESS-CM2 (no_emulator)": 184.3,
+     "GFDL-ESM4 (emulator)": 32.9,
+     "GFDL-ESM4 (no_emulator)": 7.2,
+     "MPI-ESM1-2-HR (emulator)": 58.0,
+     "MPI-ESM1-2-HR (no_emulator)": 19.1,
+     "MRI-ESM2-0 (emulator)": 100.8,
+     "MRI-ESM2-0 (no_emulator)": 43.3,
+     "NorESM2-MM (emulator)": 183.9,
+     "NorESM2-MM (no_emulator)": 84.8
     },
     "ssp585": {
-     "ACCESS-CM2 (emulator)": 198.1,
-     "ACCESS-CM2 (no_emulator)": 102.0,
-     "GFDL-ESM4 (emulator)": 73.6,
-     "GFDL-ESM4 (no_emulator)": 20.8,
-     "MPI-ESM1-2-HR (emulator)": 85.5,
-     "MPI-ESM1-2-HR (no_emulator)": 32.6,
-     "MRI-ESM2-0 (emulator)": 128.7,
-     "MRI-ESM2-0 (no_emulator)": 54.2
+     "ACCESS-CM2 (emulator)": 197.8,
+     "ACCESS-CM2 (no_emulator)": 101.7,
+     "GFDL-ESM4 (emulator)": 72.2,
+     "GFDL-ESM4 (no_emulator)": 20.0,
+     "MPI-ESM1-2-HR (emulator)": 86.3,
+     "MPI-ESM1-2-HR (no_emulator)": 33.0,
+     "MRI-ESM2-0 (emulator)": 127.4,
+     "MRI-ESM2-0 (no_emulator)": 53.4,
+     "NorESM2-MM (emulator)": 297.4,
+     "NorESM2-MM (no_emulator)": 106.8
     }
    },
    "change_2045_pct_by_soil_assumption": {
     "ssp245": {
-     "emulator": 79.3,
-     "no_emulator": 31.1
+     "emulator": 100.8,
+     "no_emulator": 43.3
     },
     "ssp585": {
-     "emulator": 107.1,
-     "no_emulator": 43.4
+     "emulator": 127.4,
+     "no_emulator": 53.4
     }
    }
   },
@@ -595,58 +624,62 @@
    },
    "bill_2045_usd": {
     "ssp245": {
-     "est": 186000000.0,
-     "lo": 120000000.0,
-     "hi": 670000000.0
+     "est": 220000000.0,
+     "lo": 124000000.0,
+     "hi": 655000000.0
     },
     "ssp585": {
-     "est": 216000000.0,
-     "lo": 154000000.0,
-     "hi": 438000000.0
+     "est": 237000000.0,
+     "lo": 158000000.0,
+     "hi": 457000000.0
     }
    },
    "change_2045_pct": {
     "ssp245": {
-     "est": 33.5,
-     "lo": 0.1,
-     "hi": 409.2
+     "est": 58.1,
+     "lo": 0.9,
+     "hi": 407.1
     },
     "ssp585": {
-     "est": 55.3,
-     "lo": 25.1,
-     "hi": 224.5
+     "est": 70.3,
+     "lo": 27.9,
+     "hi": 232.3
     }
    },
    "change_2045_pct_by_gcm": {
     "ssp245": {
-     "ACCESS-CM2 (emulator)": 418.9,
-     "ACCESS-CM2 (no_emulator)": 259.5,
-     "GFDL-ESM4 (emulator)": 7.5,
-     "GFDL-ESM4 (no_emulator)": 0.2,
-     "MPI-ESM1-2-HR (emulator)": 23.0,
-     "MPI-ESM1-2-HR (no_emulator)": 11.8,
-     "MRI-ESM2-0 (emulator)": 72.7,
-     "MRI-ESM2-0 (no_emulator)": 44.0
+     "ACCESS-CM2 (emulator)": 430.4,
+     "ACCESS-CM2 (no_emulator)": 266.1,
+     "GFDL-ESM4 (emulator)": 7.1,
+     "GFDL-ESM4 (no_emulator)": -0.1,
+     "MPI-ESM1-2-HR (emulator)": 25.4,
+     "MPI-ESM1-2-HR (no_emulator)": 13.8,
+     "MRI-ESM2-0 (emulator)": 72.3,
+     "MRI-ESM2-0 (no_emulator)": 43.9,
+     "NorESM2-MM (emulator)": 152.3,
+     "NorESM2-MM (no_emulator)": 97.7
     },
     "ssp585": {
-     "ACCESS-CM2 (emulator)": 228.3,
-     "ACCESS-CM2 (no_emulator)": 151.5,
-     "GFDL-ESM4 (emulator)": 47.2,
-     "GFDL-ESM4 (no_emulator)": 26.7,
-     "MPI-ESM1-2-HR (emulator)": 61.1,
-     "MPI-ESM1-2-HR (no_emulator)": 36.9,
-     "MRI-ESM2-0 (emulator)": 77.9,
-     "MRI-ESM2-0 (no_emulator)": 49.4
+     "ACCESS-CM2 (emulator)": 232.5,
+     "ACCESS-CM2 (no_emulator)": 154.5,
+     "GFDL-ESM4 (emulator)": 48.0,
+     "GFDL-ESM4 (no_emulator)": 27.5,
+     "MPI-ESM1-2-HR (emulator)": 63.8,
+     "MPI-ESM1-2-HR (no_emulator)": 39.1,
+     "MRI-ESM2-0 (emulator)": 76.8,
+     "MRI-ESM2-0 (no_emulator)": 48.6,
+     "NorESM2-MM (emulator)": 207.3,
+     "NorESM2-MM (no_emulator)": 124.2
     }
    },
    "change_2045_pct_by_soil_assumption": {
     "ssp245": {
-     "emulator": 47.8,
-     "no_emulator": 27.9
+     "emulator": 72.3,
+     "no_emulator": 43.9
     },
     "ssp585": {
-     "emulator": 69.5,
-     "no_emulator": 43.2
+     "emulator": 76.8,
+     "no_emulator": 48.6
     }
    }
   }

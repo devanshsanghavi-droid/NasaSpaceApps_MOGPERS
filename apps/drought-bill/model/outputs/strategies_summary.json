@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-14T23:19:40+00:00",
+ "generated_at": "2026-11-15T00:49:50+00:00",
  "interval_mode": "bootstrap",
  "draws": 101,
- "file_size_bytes": 1415700,
+ "file_size_bytes": 1415648,
  "counties": 615,
  "counties_in_sim": 640,
  "eligible_rule": "corn sim with >= 5 insured years 2001-2024 and a soybean sim row (sim_county_crop)",
@@ -972,7 +972,7 @@
     "prcp": 302,
     "edd": 30,
     "aws": 305,
-    "c45": 130,
+    "c45": 132,
     "s3p": 3
    },
    "f": [
@@ -1394,7 +1394,7 @@
     "prcp": 324,
     "edd": 88,
     "aws": 227,
-    "c45": 83,
+    "c45": 52,
     "s3p": 48
    },
    "f": [
@@ -1791,7 +1791,7 @@
     "prcp": 325,
     "edd": 54,
     "aws": 268,
-    "c45": 118,
+    "c45": 83,
     "s3p": 35
    },
    "f": [
@@ -2176,7 +2176,7 @@
     "prcp": 270,
     "edd": 45,
     "aws": 277,
-    "c45": 167,
+    "c45": 47,
     "s3p": 8
    },
    "f": [
@@ -2573,5 +2573,5 @@
   "dry_summer": 84,
   "irr_some": 66
  },
- "runtime_s": 57.1
+ "runtime_s": 55.2
 }

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T23:25:41+00:00",
+ "generated_at": "2026-11-15T00:48:54+00:00",
  "mock": false,
  "region": {
   "states": [
@@ -79,7 +79,7 @@
   "Ranges on expected bills are parameter uncertainty of a long-run average; single-year ranges (hindcast, slider) are calibrated 90% prediction intervals (county coverage on 2021-2024 tests: see hindcast.json).",
   "Taxpayer share is an actuarial approximation (subsidy share x expected losses); it excludes delivery (A&O) reimbursements and underwriting gains.",
   "Rotation diversity: county insurance data show no robust drought-protection effect of rotation diversity; the slider uses the field-trial range (Bowles et al. 2020) as a labelled scenario.",
-  "2045: NEX-GDDP-CMIP6 deltas from 4 GCM(s) (ACCESS-CM2, GFDL-ESM4, MPI-ESM1-2-HR, MRI-ESM2-0; 10 sampled years per 20-year period) applied to observed 1981-2024 NASA POWER weather (delta method; root-zone wetness shifted with an emulator fitted to NASA POWER, or held at observed - both shown as structural uncertainty; year-to-year variability held at today's). The rise is driven by more extreme heat (EDD > 30 C) and by how much the soils dry with it; the emulator's drying is likely overstated (dry soils also cause hot summers), so the low end matters. The GCM spread is wide. No adaptation is assumed.",
+  "2045: NEX-GDDP-CMIP6 deltas from 5 GCM(s) (ACCESS-CM2, GFDL-ESM4, MPI-ESM1-2-HR, MRI-ESM2-0, NorESM2-MM; 10 sampled years per 20-year period) applied to observed 1981-2024 NASA POWER weather (delta method; root-zone wetness shifted with an emulator fitted to NASA POWER, or held at observed - both shown as structural uncertainty; year-to-year variability held at today's). The rise is driven by more extreme heat (EDD > 30 C) and by how much the soils dry with it; the emulator's drying is likely overstated (dry soils also cause hot summers), so the low end matters. The GCM spread is wide. No adaptation is assumed.",
   "Precipitation is NASA POWER (MERRA-2), not GPM IMERG: the IMERG host was not reachable from the build environment."
  ],
  "validation": {
