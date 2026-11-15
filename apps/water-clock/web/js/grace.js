@@ -1,7 +1,7 @@
 // "GRACE from space" view: time series chart, gridded map, wells-vs-GRACE numbers.
 import { esc, fmt, num, isNum, toSeries, NA, decYear, rangeText } from './util.js';
 
-let D, chart = null, mapIdx = 0, mapLayer = 'gws_pct';
+let D, chart = null, mapIdx = 0, mapLayer = 'gws_pct', trendPeriod = null;
 
 export function initGrace(data) { D = data; }
 
@@ -38,7 +38,7 @@ function mapFrames() {
   };
   const southUp = Array.isArray(m.lats) && m.lats.length > 1 && m.lats[1] > m.lats[0] || m.row_order === 'south_up';
   const fix = g => (g && southUp ? [...g].reverse() : g);
-  const frames = { gws_pct: [], tws_trend_cm_yr: null };
+  const frames = { gws_pct: [], tws_trend_cm_yr: null, trendPeriods: [] };
   const gp = m.gws_pct;
   if (Array.isArray(gp)) {
     const is3d = Array.isArray(gp[0]) && Array.isArray(gp[0][0]);
@@ -47,7 +47,22 @@ function mapFrames() {
     else { const g = asGrid(gp); if (g) frames.gws_pct.push({ date: Array.isArray(m.dates) ? m.dates[m.dates.length - 1] : (m.date || ''), grid: fix(g) }); }
   }
   frames.gws_pct = frames.gws_pct.filter(f => f.grid);
-  if (m.tws_trend_cm_yr) frames.tws_trend_cm_yr = fix(asGrid(m.tws_trend_cm_yr));
+  const tt = m.tws_trend_cm_yr;
+  if (Array.isArray(tt)) {
+    const g = fix(asGrid(tt));
+    if (g) frames.tws_trend_cm_yr = { '': { grid: g, bbox, cell } };
+  } else if (tt && typeof tt === 'object') {
+    // own grid: {cell_deg, lat, lon, bbox, <period>: rows x cols, ...}
+    const tb = Array.isArray(tt.bbox) ? tt.bbox : bbox, tc = isNum(tt.cell_deg) ? tt.cell_deg : cell;
+    const tSouthUp = Array.isArray(tt.lat) && tt.lat.length > 1 && tt.lat[1] > tt.lat[0];
+    const out = {};
+    for (const [k, v] of Object.entries(tt)) {
+      if (['cell_deg', 'lat', 'lon', 'bbox'].includes(k) || !Array.isArray(v) || !Array.isArray(v[0])) continue;
+      out[k] = { grid: tSouthUp ? [...v].reverse() : v, bbox: tb, cell: tc };
+    }
+    if (Object.keys(out).length) frames.tws_trend_cm_yr = out;
+  }
+  frames.trendPeriods = frames.tws_trend_cm_yr ? Object.keys(frames.tws_trend_cm_yr) : [];
   return { bbox, cell, frames };
 }
 
@@ -57,12 +72,19 @@ function drawMap(canvas, mf) {
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#f4f6f4'; ctx.fillRect(0, 0, W, H);
-  const grid = mapLayer === 'tws_trend_cm_yr' ? mf.frames.tws_trend_cm_yr : mf.frames.gws_pct[mapIdx]?.grid;
-  const colorFn = mapLayer === 'tws_trend_cm_yr' ? trendColor : pctColor;
+  const isTrend = mapLayer === 'tws_trend_cm_yr';
+  const layer = isTrend ? mf.frames.tws_trend_cm_yr?.[trendPeriod]
+    : (mf.frames.gws_pct[mapIdx] ? { grid: mf.frames.gws_pct[mapIdx].grid, bbox: mf.bbox, cell: mf.cell } : null);
+  const colorFn = isTrend ? trendColor : pctColor;
   const px = lon => (lon - x0) / (x1 - x0) * W, py = lat => (y1 - lat) / (y1 - y0) * H;
-  if (grid) {
-    const nr = grid.length, cw = W / (grid[0]?.length || 1), ch = H / nr;
-    grid.forEach((row, r) => row.forEach((v, c) => { const col = colorFn(v); if (col) { ctx.fillStyle = col; ctx.fillRect(c * cw, r * ch, cw + 0.5, ch + 0.5); } }));
+  if (layer?.grid) {
+    // each cell placed by its own lon/lat (row 0 = north edge of the layer's bbox)
+    const [gx0, , , gy1] = layer.bbox, cd = layer.cell;
+    layer.grid.forEach((row, r) => row.forEach((v, c) => {
+      const col = colorFn(v); if (!col) return;
+      const lx = px(gx0 + c * cd), rx = px(gx0 + (c + 1) * cd), ty = py(gy1 - r * cd), by = py(gy1 - (r + 1) * cd);
+      ctx.fillStyle = col; ctx.fillRect(lx, ty, rx - lx + 0.5, by - ty + 0.5);
+    }));
   }
   // County outlines for orientation
   ctx.strokeStyle = 'rgba(20,32,28,.55)'; ctx.lineWidth = 0.8;
@@ -84,11 +106,22 @@ function seriesChart(canvas) {
   if (!window.Chart) { canvas.replaceWith(Object.assign(document.createElement('p'), { textContent: 'Chart library could not load.' })); return; }
   const s = D.grace?.series || {};
   const gws = toSeries({ dates: s.dates, v: s.gws_pct }, ['v']);
-  const tws = Array.isArray(s.tws_cm) ? toSeries({ dates: s.dates, v: s.tws_cm }, ['v']) : [];
-  const wells = toSeries(D.grace?.wells_vs_grace?.well_storage_anom_series);
+  // cm series have different zero baselines in the source files; set each to zero on its own
+  // average over the common years so only trend and timing are compared.
+  const Y0 = 2003, Y1 = 2027;
+  const center = pts => {
+    const inWin = pts.filter(p => p.x >= Y0 && p.x < Y1);
+    if (!inWin.length) return pts;
+    const m = inWin.reduce((a, p) => a + p.y, 0) / inWin.length;
+    return pts.map(p => ({ x: p.x, y: p.y - m }));
+  };
+  const tws = Array.isArray(s.tws_cm) ? center(toSeries({ dates: s.dates, v: s.tws_cm }, ['v'])) : [];
+  const g3p = Array.isArray(s.g3p_gws_cm) ? center(toSeries({ dates: s.dates, v: s.g3p_gws_cm }, ['v'])) : [];
+  const wells = center(toSeries(D.grace?.wells_vs_grace?.well_storage_anom_series));
   const ds = [];
   if (gws.length) ds.push({ label: 'GRACE groundwater percentile (left axis)', data: gws, yAxisID: 'y', borderColor: '#1f6f8b', backgroundColor: 'rgba(31,111,139,.12)', fill: 'origin', borderWidth: 1.5, pointRadius: 0, tension: 0.2 });
   if (tws.length) ds.push({ label: 'GRACE total water storage anomaly, cm (right axis)', data: tws, yAxisID: 'y2', borderColor: '#b2182b', borderWidth: 1.5, pointRadius: 0 });
+  if (g3p.length) ds.push({ label: 'GRACE groundwater (G3P), cm (right axis)', data: g3p, yAxisID: 'y2', borderColor: '#7b3294', borderWidth: 1.5, pointRadius: 0 });
   if (wells.length) ds.push({ label: 'Wells: storage anomaly, cm (right axis)', data: wells, yAxisID: 'y2', borderColor: '#4a4a4a', borderDash: [5, 3], borderWidth: 2, pointRadius: 2 });
   if (!ds.length) { canvas.replaceWith(Object.assign(document.createElement('p'), { innerHTML: NA + ': grace.json has no series.' })); return; }
   chart?.destroy();
@@ -102,7 +135,7 @@ function seriesChart(canvas) {
       scales: {
         x: { type: 'linear', ticks: { callback: v => (Number.isInteger(v) ? String(v) : ''), maxTicksLimit: 10 }, grid: { color: '#eef0ee' } },
         y: { display: gws.length > 0, min: 0, max: 100, title: { display: true, text: 'percentile' }, grid: { color: '#eef0ee' } },
-        y2: { display: tws.length + wells.length > 0, position: 'right', title: { display: true, text: 'cm of water' }, grid: { drawOnChartArea: false } },
+        y2: { display: tws.length + wells.length + g3p.length > 0, position: 'right', title: { display: true, text: 'cm of water' }, grid: { drawOnChartArea: false } },
       },
     },
   });
@@ -126,6 +159,9 @@ export function renderGrace() {
   const root = document.getElementById('grace-panel');
   const mf = mapFrames();
   const hasTrend = !!mf?.frames.tws_trend_cm_yr;
+  const periods = mf?.frames.trendPeriods || [];
+  if (!periods.includes(trendPeriod)) trendPeriod = periods.includes('2003_latest') ? '2003_latest' : periods[0] ?? null;
+  const periodLabel = k => (k === '2003_latest' ? '2003 to latest' : k === '2003_2016' ? '2003 to 2016 (GRACE)' : k.replace(/_/g, ' to '));
   const nFrames = mf?.frames.gws_pct.length || 0;
   if (!nFrames && hasTrend) mapLayer = 'tws_trend_cm_yr';
   mapIdx = Math.min(mapIdx || Math.max(0, nFrames - 1), Math.max(0, nFrames - 1));
@@ -135,6 +171,7 @@ export function renderGrace() {
       <p class="ck-sub">NASA's GRACE and GRACE-FO satellites weigh the water in and under the ground by measuring tiny changes in Earth's gravity.
       The groundwater percentile compares each week with the same time of year since 2002 (0 = driest on record, 100 = wettest).</p>
       <div class="chart-box"><canvas id="grace-chart" aria-label="GRACE groundwater over time" role="img"></canvas></div>
+      <p class="fine">Lines in cm are each set to zero on their own 2003-2026 average, because the files use different reference levels; compare their trend and timing, not their height.</p>
     </section>
     <div class="two-col">
       <section class="card">
@@ -145,9 +182,11 @@ export function renderGrace() {
             <button type="button" class="chip" data-gl="tws_trend_cm_yr" aria-pressed="${mapLayer === 'tws_trend_cm_yr'}">Storage trend</button></div>` : ''}
           <canvas id="grace-map" width="360" height="${Math.round(360 * (mf.bbox[3] - mf.bbox[1]) / (mf.bbox[2] - mf.bbox[0]) * 1.27)}" role="img" aria-label="Map of GRACE groundwater"></canvas>
           ${legend()}
+          ${mapLayer === 'tws_trend_cm_yr' && periods.length > 1 ? `<label class="picker">Period <select id="gm-period">${periods.map(k => `<option value="${esc(k)}" ${k === trendPeriod ? 'selected' : ''}>${esc(periodLabel(k))}</option>`).join('')}</select></label>` : ''}
+          ${mapLayer === 'tws_trend_cm_yr' ? `<p class="fine">Total water storage trend on a coarser ${fmt(mf.frames.tws_trend_cm_yr[trendPeriod]?.cell, 1)}&deg; grid (GRACE sees ~300 km blobs).</p>` : ''}
           ${mapLayer === 'gws_pct' && nFrames > 1 ? `<label class="picker">Date: <b id="gm-date">${esc(mf.frames.gws_pct[mapIdx].date)}</b>
-            <input id="gm-idx" type="range" min="0" max="${nFrames - 1}" value="${mapIdx}"></label>` : (nFrames ? `<p class="fine">Date: ${esc(mf.frames.gws_pct[mapIdx]?.date || '')}</p>` : '')}
-          <p class="fine">Grid cells ${fmt(mf.cell, 3)}&deg;; county outlines for orientation.</p>` : `<p>${NA}: grace.json has no maps.</p>`}
+            <input id="gm-idx" type="range" min="0" max="${nFrames - 1}" value="${mapIdx}"></label>` : (nFrames && mapLayer === 'gws_pct' ? `<p class="fine">Date: ${esc(mf.frames.gws_pct[mapIdx]?.date || '')}</p>` : '')}
+          ${mapLayer === 'gws_pct' ? `<p class="fine">Grid cells ${fmt(mf.cell, 3)}&deg;; county outlines for orientation.</p>` : ''}` : `<p>${NA}: grace.json has no maps.</p>`}
       </section>
       <section class="card">
         <h3>Do the wells agree with the satellites?</h3>
@@ -164,6 +203,7 @@ export function renderGrace() {
     drawMap(cv, mf);
   }
   root.querySelector('#gm-idx')?.addEventListener('input', e => { mapIdx = +e.target.value; document.getElementById('gm-date').textContent = mf.frames.gws_pct[mapIdx].date; drawMap(cv, mf); });
+  root.querySelector('#gm-period')?.addEventListener('change', e => { trendPeriod = e.target.value; drawMap(cv, mf); });
   root.querySelectorAll('[data-gl]').forEach(b => b.addEventListener('click', () => { mapLayer = b.dataset.gl; renderGrace(); }));
 }
 

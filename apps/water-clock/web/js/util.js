@@ -27,6 +27,7 @@ export function hi(v) {
 
 export function fmt(v, d = 0) {
   if (!isNum(v)) return 'n/a';
+  if (Math.abs(v) < 0.5 * 10 ** -d) v = 0; // no "-0
   return v.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d });
 }
 export function fmtSigned(v, d = 0) {
@@ -137,7 +138,39 @@ export function toSeries(s, yKeys = ['cm', 'values', 'value', 'anom_cm', 'storag
   return [];
 }
 
+// Plain-language labels for model keys shown in the Proof & data tables.
+const KEY_LABELS = {
+  cov80: 'Share inside 80% range (target 0.80)',
+  coverage80: 'Share inside 80% range (target 0.80)',
+  median_halfwidth80: 'Typical \u00b1 range (ft)',
+  halfwidth80: 'Typical \u00b1 range (ft)',
+  bias: 'Average over/under (ft)',
+  mae: 'Average error (ft)',
+  rmse: 'Root-mean-square error (ft)',
+  model: 'Water Clock model',
+  model_without_pooling: 'Model, each well on its own',
+  baseline_own_trend: 'Simple rule: each well keeps its past trend',
+  baseline_no_change: 'Simple rule: no change',
+  baseline_county_trend: 'Simple rule: county average trend',
+  train_end: 'Model trained on data up to',
+  test_years: 'Years hidden and predicted',
+  n_wells_test: 'Wells tested',
+  saturated_thickness_vs_usgs_2009: 'Our water-bearing layer vs the USGS 2009 map',
+  water_balance: 'Pumping vs water-table drop (water balance)',
+  model_settings: 'Model settings (technical)',
+  temporal: 'Wells we kept, later years hidden',
+  spatial: 'Wells the model never saw',
+  n: 'Number of wells',
+  n_wells: 'Number of wells',
+};
 export function prettyKey(k) {
+  if (KEY_LABELS[k]) return KEY_LABELS[k];
+  const h = String(k).match(/^hindcast_(\d{4})_(temporal|spatial)_(10yr_change|latest_level)_ft$/);
+  if (h) {
+    const who = h[2] === 'spatial' ? 'Wells the model never saw' : 'Wells we kept';
+    const what = h[3] === '10yr_change' ? `predicted ${h[1]}-${+h[1] + 10} change` : `predicted latest water level after ${h[1]}`;
+    return `${who}: ${what} (ft)`;
+  }
   return String(k).replace(/_/g, ' ').replace(/\bpct\b/g, '%').replace(/\bft\b/g, 'ft').replace(/\bmae\b/gi, 'MAE')
     .replace(/\brmse\b/gi, 'RMSE').replace(/\bcm yr\b/g, 'cm/yr').replace(/\bft yr\b/g, 'ft/yr').replace(/^./, c => c.toUpperCase());
 }

@@ -34,13 +34,32 @@ export function clockSvg(y, size = 168) {
   </svg>`;
 }
 
+// Range p10..p90 that spans "already below" to "100+" carries no information for a farmer.
+export function veryUncertain(y) {
+  return isNum(y.p10) && isNum(y.p90) && y.p10 <= 0 && y.p90 >= CAP;
+}
+
 export function uncertaintyText(y, thr) {
-  if (y.below) return `The aquifer here is already thinner than ${thr} ft, the level used as "too thin to irrigate reliably". Wells may still pump, but at falling rates.`;
+  if (y.below) return `The aquifer here is already thinner than ${thr} ft, the level used as "too thin to irrigate reliably". Wells may still pump, but at falling rates. Try a lower threshold to see how long the remaining water lasts.`;
   if (!isNum(y.p50)) return 'Not enough data to estimate the clock here.';
   if (y.p50 >= CAP) return `The water table here is flat or rising, or falling so slowly that the aquifer stays thicker than ${thr} ft for more than 100 years at today's pace.`;
-  const r = isNum(y.p10) && isNum(y.p90)
-    ? ` There is roughly a 1-in-10 chance it is shorter than <b>${yrs(y.p10)}</b> years and a 1-in-10 chance it is longer than <b>${yrs(y.p90)}</b> years.` : '';
+  let r = '';
+  if (veryUncertain(y)) {
+    r = ` This estimate is <b>very uncertain here</b>: depending on how thick the water-bearing layer really is and how fast it is falling, parts of this area may already be below ${thr} ft while others could last more than 100 years.`;
+  } else if (isNum(y.p10) && isNum(y.p90)) {
+    const low = y.p10 <= 0
+      ? ` Parts of this area may already be below ${thr} ft.`
+      : ` There is roughly a 1-in-10 chance it is shorter than <b>${yrs(y.p10)}</b> years.`;
+    r = `${low} There is roughly a 1-in-10 chance it is longer than <b>${yrs(y.p90)}</b> years.`;
+  }
   return `If pumping and weather continue like the past decade, the aquifer under this spot is expected to stay thicker than ${thr} ft for about <b>${yrs(y.p50)}</b> more years.${r} The spread comes from how fast the water table has been falling, how much water the sand and gravel hold, and how much rain soaks back in.`;
+}
+
+export function rangeLine(y) {
+  if (y.below) return 'pick a lower threshold to see the remaining water';
+  if (!isNum(y.p10) || !isNum(y.p90)) return 'range not available';
+  if (veryUncertain(y)) return 'very uncertain here (range 0 to 100+ years)';
+  return `likely range <b>${yrs(y.p10)} to ${yrs(y.p90)}</b> years`;
 }
 
 export function headlineRange(y) {

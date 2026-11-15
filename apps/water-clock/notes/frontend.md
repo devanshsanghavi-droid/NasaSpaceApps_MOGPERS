@@ -20,7 +20,7 @@ Run with `cd apps/water-clock/web && python3 -m http.server 8000` and open http:
 | `js/util.js` | Formatting, range text, colour bins (<10, 10-25, 25-50, 50-100, 100+ years) |
 | `mock/make_mock.py` + `mock/mock_*.json` | Shape-only fake fixtures (round numbers, schematic box counties, names suffixed "(MOCK)") |
 | `tests/smoke.js` | Playwright smoke test (desktop 1366px + phone 375px) |
-| `screenshots/` | Screenshots from the smoke test (taken with mock data, so they show the MOCK banner) |
+| `screenshots/` | Screenshots from the smoke test, re-taken on the real web/data (no MOCK banner), desktop 1366px + phone 375px |
 
 Libraries: `maplibre-gl@4.7.1` (unpkg, falls back to jsdelivr) and `chart.js@4.4.4` `dist/chart.umd.js` (jsdelivr, falls back to unpkg).
 Basemap: `https://tiles.openfreemap.org/styles/positron` is fetched first (5 s timeout); if that fails, a plain background style
@@ -64,13 +64,28 @@ For a real demo, all are needed:
 ## Client-side formulas (js/scenario.js)
 - Field years at a threshold T other than 30 ft: years scale by (sat_ft - T)/(sat_ft - 30) (exact when the uncertainty is in
   the decline rate only). If sat_ft <= T: "already below". If the field is below 30 ft but above T, only a point estimate (sat_ft - T)/decl.
+- Strategies are only shown/offered where assessed: a strategy is dropped for a county when `s.counties` is a list that
+  does not contain it, or when `per_county[fips]` exists but has no entry for it (S4 cotton = 7 southern counties).
 - Years gained for a strategy at a field: p = fractional pumping change vs S0 (county net pumping if present, else
-  pumping_change_pct/100); share = decline_from_pumping / decline for the county (1 if missing, flagged as upper bound);
+  pumping_change_pct/100). The strategy-level lo/hi spread is scaled proportionally to the county estimate
+  (lo_local = local * lo/est), and for a water-saving strategy the upper bound of p is clamped to <= 0, so a plan that
+  pumps less never shows negative years. share = scenario `pumping_share` (else decline_from_pumping / decline; 1 if missing).
+  When the share is 1 and the model capped it (`pumping_share_capped`) or the aquifer-mean decline is <= 0, the text says
+  "treated as all from pumping (an upper bound)" instead of "attributes about 100%".
   Y_new = Y / (1 + share * p), capped at 100; gain = Y_new - Y. Range = min/max over Y in {p10,p50,p90} x p in {lo,est,hi}.
   The UI states that this assumes neighbours on the same part of the aquifer make the same change.
 - Community slider: saved_af = X * irrigated_corn_acres * (net_S0 - net_Sk)/12; new_decline = decline -
   decline_from_pumping * saved_af / pumping_af_yr (fallback: decline - ft_per_af_ac * saved_af / irrigated_acres);
   years = sat_avail_ft[T] / decline (cap 100); Z = years(new) - years(old). Range from decline lo/hi.
+  If `median_below_threshold[T]` is true the slider shows `median_below_threshold_note[T]` instead of numbers; if the
+  strategy is not assessed for the county, or would use more water than corn there, it shows an error, never a negative saving.
+- Already below: county clocks use `countyYears(c, thr, D)`, which sets `below` from scenario `median_below_threshold[T]`
+  (or sat_thick p50 <= T when the flag is absent); the clock then says "Already below T ft" and years gained are not shown.
+- Ranges with p10 = 0 and p90 = 100+ are shown as "very uncertain here" (the model's Monte Carlo spreads many counties and
+  ~900 fields that wide); a p10 of 0 alone is phrased "parts of this area may already be below T ft".
+- GRACE chart: cm series (GFZ TWS, G3P groundwater, wells storage) are each centred on their own 2003-2026 mean before
+  plotting (the files use different reference levels); the chart says so. The storage-trend map layer reads
+  `maps.tws_trend_cm_yr` as its own 1-degree grid ({cell_deg, lat, lon, bbox, <period>: rows}) with a period picker.
   **If the model's `scenario.formula` differs, js/scenario.js `countyShift` must be updated to match.**
 - Priority slider: score = w * normalised(years gained) + (1 - w) * normalised(income); the best non-current strategy gets the
   "Best fit for your priorities" badge and cards re-order (current practice always first).
@@ -83,6 +98,9 @@ serves the pinned CDN files from the local npm packs, blocks the basemap (fallba
 field clock, threshold switch (40 -> 29 years on mock), priority slider re-orders cards, a real map click on a field dot opens
 its clock, community slider changes the sentence, GRACE chart + map render, validation tables + sources render.
 Result on 2026-11-14 (mock data): all checks pass at both widths, 0 errors.
+Result on 2026-11-15 after the fix pass (real web/data, commit after a2dce47): all checks pass at both widths, MOCK banner
+hidden, 0 page/console errors (the one "Failed to load resource" is the blocked basemap style). Overflow was also checked
+with `body{overflow-x}` temporarily set to visible: scrollWidth == innerWidth at 375px on home, field, county, GRACE and data views.
 
 ## Caveats / not done
 - The positron basemap could not be tested here (host blocked by the proxy); only the fallback style was exercised.

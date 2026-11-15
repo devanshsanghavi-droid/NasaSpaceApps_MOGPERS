@@ -1,7 +1,7 @@
 // Farmer view: "Your Water Clock" for a field (or county) + strategy cards.
 import { esc, fmt, num, lo, hi, isNum, yrs, money, rangeText, list, link, NA, fmtSigned, CAP } from './util.js';
-import { fieldYears, countyYears, yearsGained, pumpingShare } from './scenario.js';
-import { clockSvg, uncertaintyText } from './clock.js';
+import { fieldYears, countyYears, yearsGained, pumpingShare, strategyApplies } from './scenario.js';
+import { clockSvg, uncertaintyText, rangeLine } from './clock.js';
 import { countyName } from './data.js';
 
 let D, S, actions;
@@ -30,7 +30,7 @@ function strategyNumbers(fips, s) {
 }
 
 function scoreStrategies(fips, years) {
-  const rows = D.strategyList.map(s => {
+  const rows = D.strategyList.filter(s => strategyApplies(D, fips, s)).map(s => {
     const n = strategyNumbers(fips, s);
     const g = yearsGained(D, fips, s.id, years);
     return { s, n, g };
@@ -52,8 +52,10 @@ function card(r, years, best, rank) {
   const ev = Array.isArray(s.evidence) && s.evidence.length
     ? '<ul class="ev">' + s.evidence.map(e => `<li>${esc(e.text || '')}${e.source || e.url ? ` <span class="src">(${link(e.source || 'source', e.url)})</span>` : ''}</li>`).join('') + '</ul>'
     : NA;
-  const gainTxt = isCur ? 'Today\'s clock' : (g ? `${rangeText(g, v => fmtSigned(v, 0), 'years')}` : NA);
-  const newClock = !isCur && g && isNum(years.p50) && years.p50 < CAP
+  const gainTxt = isCur ? 'Today\'s clock'
+    : years.below ? '<span class="na">already below the threshold here; try a lower threshold</span>'
+    : (g ? `${rangeText(g, v => fmtSigned(v, 0), 'years')}` : NA);
+  const newClock = !isCur && g && !years.below && isNum(years.p50) && years.p50 > 0 && years.p50 < CAP
     ? `<div class="sub">clock ${yrs(years.p50)} &rarr; ${yrs(years.p50 + g.est)} years</div>` : '';
   const rot = Array.isArray(s.rotation) && s.rotation.length ? s.rotation.map(c => `<span class="crop">${esc(c)}</span>`).join('<span class="arrow" aria-hidden="true">&rarr;</span>') : '';
   return `<article class="strat ${best ? 'best' : ''} ${isCur ? 'current' : ''}" aria-label="${esc(s.name || s.id)}">
@@ -82,12 +84,16 @@ function card(r, years, best, rank) {
   </article>`;
 }
 
-function strategiesBlock(fips, years) {
+function strategiesBlock(fips, years, crop) {
   if (!D.strategyList.length) return `<section class="card"><h3>Strategies</h3><p>${NA}: strategies.json is missing.</p></section>`;
   const rows = scoreStrategies(fips, years);
   const best = rows.filter(r => r.s.id !== 'S0').sort((a, b) => b.score - a.score)[0];
   const sorted = [...rows].sort((a, b) => (a.s.id === 'S0' ? -1 : b.s.id === 'S0' ? 1 : b.score - a.score));
   const share = pumpingShare(D, fips);
+  const nAll = D.strategyList.length, nHere = rows.length;
+  const cropNote = crop && !/corn/i.test(crop)
+    ? `<p class="note">Compared with continuous irrigated corn, the most common plan here. This well's crop on record is <b>${esc(crop)}</b>, so its own savings may differ.</p>` : '';
+  const hidNote = nHere < nAll ? `<p class="fine">${nAll - nHere} plan${nAll - nHere > 1 ? 's are' : ' is'} not shown because ${nAll - nHere > 1 ? 'they were' : 'it was'} only assessed for other counties.</p>` : '';
   return `<section class="card strategies" aria-labelledby="st-h">
     <h3 id="st-h">What could you grow instead?</h3>
     <div class="prio">
@@ -96,9 +102,13 @@ function strategiesBlock(fips, years) {
         <input id="prio" type="range" min="0" max="100" step="5" value="${S.priority}" aria-valuetext="${S.priority < 35 ? 'mostly income' : S.priority > 65 ? 'mostly water life' : 'balanced'}">
         <span>Make water last</span></div>
     </div>
+    ${cropNote}
     <div class="strat-list">${sorted.map((r, i) => card(r, years, best && r === best, i)).join('')}</div>
+    ${hidNote}
     <p class="fine">Years gained assume this field <em>and its neighbours</em> on the same part of the aquifer make the same change; one field alone barely moves the local water table.
-      ${share.assumed ? 'The share of the decline caused by pumping is not available for this county, so all of it is attributed to pumping (an upper bound on gains).' : `In ${esc(countyName(D, fips))} County the model attributes about ${fmt(share.share * 100, 0)}% of the water-table decline to local pumping.`}
+      ${share.assumed ? 'The share of the decline caused by pumping is not available for this county, so all of it is attributed to pumping (an upper bound on gains).'
+        : share.upperBound ? `In ${esc(countyName(D, fips))} County the whole water-table decline is treated as coming from local pumping (an upper bound, so gains may be smaller).`
+        : `In ${esc(countyName(D, fips))} County the model attributes about ${fmt(share.share * 100, 0)}% of the water-table decline to local pumping.`}
       Income ranges come from year-to-year swings in county yields and Kansas prices. ${D.strategies?.method ? esc(D.strategies.method) : ''}</p>
     <p class="agro"><b>Decision support, not a replacement for your agronomist.</b> Talk to your agronomist, crop insurer and GMD before changing a rotation or water right.</p>
   </section>`;
@@ -138,8 +148,8 @@ function clockCard(title, sub, y, extra) {
     <div class="clock-row">
       ${clockSvg(y)}
       <div class="clock-text">
-        <div class="ck-big"><span class="n">${yrs(y.p50)}</span> years left</div>
-        <div class="ck-range">${isNum(y.p10) && isNum(y.p90) ? `likely range <b>${yrs(y.p10)} to ${yrs(y.p90)}</b> years` : 'range not available'}</div>
+        <div class="ck-big">${y.below ? `Already below <span class="n">${S.thr}</span> ft` : `<span class="n">${yrs(y.p50)}</span> years left`}</div>
+        <div class="ck-range">${rangeLine(y)}</div>
         ${thrButtons()}
       </div>
     </div>
@@ -165,10 +175,10 @@ export function renderFarmer() {
     const y = fieldYears(f, S.thr, D.defaultThr);
     html += clockCard('Your Water Clock', `Irrigation well ${esc(f.id)}, ${esc(countyName(D, f.fips))} County`, y,
       fieldFacts(f) + `<button type="button" class="link-btn" id="to-county">See ${esc(countyName(D, f.fips))} County's clock</button>`);
-    html += strategiesBlock(f.fips, y);
+    html += strategiesBlock(f.fips, y, f.crop);
   } else if (S.fips) {
     const c = D.countyByFips[S.fips];
-    const y = c ? countyYears(c, S.thr) : { p10: null, p50: null, p90: null };
+    const y = c ? countyYears(c, S.thr, D) : { p10: null, p50: null, p90: null };
     const extra = (c ? `<dl class="facts">
         <div><dt>Water-bearing layer (typical)</dt><dd>${rangeText(c.sat_thick_ft, v => fmt(v), 'ft')}</dd></div>
         <div><dt>Water table change</dt><dd>${isNum(num(c.decline_ft_yr)) ? rangeText(c.decline_ft_yr, v => fmt(v, 1), 'ft/yr falling') : NA}</dd></div>

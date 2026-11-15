@@ -1,6 +1,6 @@
 // Community view: GMD + county clocks, sortable list, and the "shift X% of corn" slider.
 import { esc, fmt, num, isNum, yrs, yearColor, rangeText, NA, fmtSigned, CAP } from './util.js';
-import { countyYears, countyShift } from './scenario.js';
+import { countyYears, countyShift, strategyApplies } from './scenario.js';
 import { countyName } from './data.js';
 
 let D, S, actions;
@@ -25,14 +25,14 @@ function gmdCards() {
     return `<div class="gmd" style="border-top-color:${yearColor(y.p50)}">
       <div class="gmd-name">${esc(g.name || g.gmd)}</div>
       <div class="gmd-num"><b>${yrs(y.p50)}</b> yrs</div>
-      <div class="gmd-rng">${isNum(y.p10) ? `range ${yrs(y.p10)} to ${yrs(y.p90)}` : ''}</div>
+      <div class="gmd-rng">${isNum(y.p10) ? (y.p10 <= 0 && y.p90 >= CAP ? 'very uncertain (0 to 100+)' : `range ${yrs(y.p10)} to ${yrs(y.p90)}`) : ''}</div>
       <div class="gmd-meta">${isNum(g.irrigated_acres) ? fmt(g.irrigated_acres) + ' irrigated ac' : ''}</div>
     </div>`;
   }).join('')}</div>`;
 }
 
 function countyTable() {
-  const cs = (D.clocks?.counties || []).map(c => ({ c, y: countyYears(c, S.thr) }));
+  const cs = (D.clocks?.counties || []).map(c => ({ c, y: countyYears(c, S.thr, D) }));
   if (!cs.length) return `<p>${NA}: county_clocks.json is missing.</p>`;
   const key = {
     years: r => (isNum(r.y.p50) ? r.y.p50 : 1e9),
@@ -49,7 +49,7 @@ function countyTable() {
     <tbody>${cs.map(({ c, y }) => `<tr class="${S.fips === String(c.fips) ? 'sel' : ''}">
       <th scope="row"><button type="button" class="link-btn" data-fips="${esc(c.fips)}">${esc(c.name)}</button>${c.data_quality === 'thin' ? ' <span class="dq dq-thin" title="few monitoring wells">thin data</span>' : ''}</th>
       <td class="hide-xs">${esc(c.gmd || '')}</td>
-      <td><b>${yrs(y.p50)}</b><span class="rng-sm">${isNum(y.p10) ? ` ${yrs(y.p10)}-${yrs(y.p90)}` : ''}</span></td>
+      <td><b>${yrs(y.p50)}</b>${y.below ? ' <span class="rng-sm">already below</span>' : `<span class="rng-sm">${isNum(y.p10) ? ` ${yrs(y.p10)}-${yrs(y.p90)}` : ''}</span>`}</td>
       <td class="hide-sm">${rangeBar(y)}</td>
       <td>${isNum(num(c.decline_ft_yr)) ? fmt(num(c.decline_ft_yr), 1) : 'n/a'}</td>
       <td>${isNum(c.irrigated_acres) ? compact(c.irrigated_acres) : 'n/a'}</td></tr>`).join('')}</tbody>
@@ -61,7 +61,7 @@ function sliderBlock() {
   if (!fipsList.length) return `<section class="card"><h3>What if farmers shift?</h3><p>${NA}: scenario.json is missing.</p></section>`;
   if (!S.fips || !fipsList.includes(S.fips)) S.cFips = S.cFips && fipsList.includes(S.cFips) ? S.cFips : fipsList.slice().sort((a, b) => countyName(D, a).localeCompare(countyName(D, b)))[0];
   else S.cFips = S.fips;
-  const strats = D.strategyList.filter(s => s.id !== 'S0');
+  const strats = D.strategyList.filter(s => s.id !== 'S0' && strategyApplies(D, S.cFips, s));
   if (!S.cStrat || !strats.find(s => s.id === S.cStrat)) S.cStrat = strats[0]?.id;
   return `<section class="card shift" aria-labelledby="sh-h">
     <h3 id="sh-h">What if farmers shift?</h3>
@@ -88,6 +88,7 @@ function renderShift() {
   const name = esc(countyName(D, S.cFips));
   const s = D.strategyList.find(x => x.id === S.cStrat);
   if (r.error) { out.innerHTML = `<p>${esc(r.error)}</p>`; return; }
+  if (r.below) { out.innerHTML = `<p class="sh-big">${name} County: ${esc(r.note)}</p>`; return; }
   if (r.risingAlready || r.before >= CAP) {
     out.innerHTML = `<p class="sh-big">${name} County already has <b>100+</b> years at the ${S.thr} ft threshold.</p>`;
     return;
@@ -101,13 +102,32 @@ function renderShift() {
     Water-table drop: ${fmt(r.decline, 2)} &rarr; ${fmt(r.newDecline, 2)} ft/yr.</p>`;
 }
 
+const CTX_LABELS = {
+  population: 'People',
+  main_towns: 'Main towns',
+  towns: 'Towns',
+  crop_sales_per_resident_usd: 'Crop sales per resident',
+  ag_share_of_economy: 'Share of economy from irrigated farming',
+  econ_note: 'Local economy',
+};
+
 function countyContext() {
   const c = D.countyByFips[S.cFips];
   if (!c) return '';
-  const bits = [];
-  if (c.town_note) bits.push(esc(c.town_note));
-  for (const k of ['population', 'main_towns', 'towns', 'ag_share_of_economy', 'econ_note']) {
-    if (c[k] != null && c[k] !== '') bits.push(`<b>${esc(k.replace(/_/g, ' '))}:</b> ${esc(Array.isArray(c[k]) ? c[k].join(', ') : typeof c[k] === 'number' ? fmt(c[k]) : c[k])}`);
+  const items = [];
+  // town_note already lists the main towns; keep only its first sentence (drops model jargon)
+  const townNote = typeof c.town_note === 'string'
+    ? c.town_note.replace(/\s*Town public-supply[^.]*\.?/i, '').replace(/\s*\(not verified\)/i, '').replace(/^Main towns:\s*/i, '').replace(/\.\s*$/, '').trim() : '';
+  if (townNote) items.push(['Main towns (people)', esc(townNote)]);
+  for (const k of Object.keys(CTX_LABELS)) {
+    if (townNote && (k === 'main_towns' || k === 'towns')) continue;
+    const v = c[k];
+    if (v == null || v === '') continue;
+    let t;
+    if (Array.isArray(v)) t = esc(v.join(', '));
+    else if (typeof v === 'number') t = k.endsWith('_usd') ? '$' + fmt(v) : k === 'ag_share_of_economy' && v <= 1 ? fmt(v * 100) + '%' : fmt(v);
+    else t = esc(v);
+    items.push([CTX_LABELS[k], t]);
   }
   const corn = isNum(c.corn_share_irrigated) ? `${fmt(c.corn_share_irrigated * 100)}% of irrigated acres are corn.` : '';
   return `<section class="card"><h3>${esc(c.name)} County: who depends on this water</h3>
@@ -117,7 +137,8 @@ function countyContext() {
       <div><dt>Water-bearing layer</dt><dd>${rangeText(c.sat_thick_ft, v => fmt(v), 'ft')}</dd></div>
       <div><dt>Corn share</dt><dd>${corn || NA}</dd></div>
     </dl>
-    <p>${bits.length ? bits.join('<br>') : 'Town and local-economy details: not available.'}</p></section>`;
+    ${items.length ? `<dl class="kv ctx">${items.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}</dl>` : '<p>Town and local-economy details: not available.</p>'}
+    ${c.town_note ? '<p class="fine">Town public-supply wells are not linked to this clock.</p>' : ''}</section>`;
 }
 
 export function renderCommunity() {

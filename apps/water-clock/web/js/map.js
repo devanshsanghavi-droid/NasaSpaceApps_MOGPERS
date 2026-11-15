@@ -78,6 +78,7 @@ function bboxOf(fc) {
 export function renderLegend(elm, thr) {
   elm.innerHTML = `<div class="lg-title">Years of irrigation water left<br><span>(middle estimate, ${thr} ft threshold)</span></div>` +
     YEAR_BINS.map(b => `<div class="lg-row"><span class="sw" style="background:${b.color}"></span>${b.label}</div>`).join('') +
+    `<div class="lg-row"><span class="sw" style="background:#9aa0a6"></span>no estimate (outside mapped aquifer)</div>` +
     `<div class="lg-row"><span class="sw dot"></span>irrigation well (click)</div>`;
 }
 

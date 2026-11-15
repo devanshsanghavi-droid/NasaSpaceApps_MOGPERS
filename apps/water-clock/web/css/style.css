@@ -109,6 +109,11 @@ select { font: inherit; padding: 6px 8px; border: 1px solid #a9b3ae; border-radi
 .facts dt, .kv dt { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
 .facts dd, .kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .big-facts dd { font-size: 22px; }
+.big-facts > div { min-width: 0; }
+.big-facts .rng { display: block; white-space: normal; font-size: 14px; font-weight: 400; }
+.kv.ctx dd { font-weight: 400; }
+.kv.ctx { grid-template-columns: 1fr; }
+.strategies .note { background: #fff8e6; border-left: 3px solid #f2b04f; padding: 6px 10px; margin: 8px 0; font-size: 14px; }
 .link-btn { font: inherit; background: none; border: 0; color: #165a72; text-decoration: underline; cursor: pointer; padding: 0; text-align: left; }
 .picker { display: flex; flex-direction: column; gap: 4px; font-size: 14px; margin-top: 10px; }
 .picker select, .picker input { width: 100%; }

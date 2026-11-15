@@ -28,10 +28,26 @@ export function fieldYears(f, thr, defThr = 30) {
   return { p10: CAP, p50: CAP, p90: CAP, below: false };
 }
 
-export function countyYears(c, thr) {
+// Optional D: lets the scenario.json "median_below_threshold" flag mark counties whose typical
+// irrigated acre is already thinner than the threshold (p50 = 0 there means "already below").
+export function countyYears(c, thr, D = null) {
   const y = c?.years_left?.[thrKey(thr)];
-  if (y) return { p10: num(y.p10), p50: num(y.p50), p90: num(y.p90) };
-  return { p10: null, p50: null, p90: null };
+  const flag = D && c?.fips ? D.scenByFips?.[c.fips]?.median_below_threshold?.[thrKey(thr)] : undefined;
+  const satMid = num(c?.sat_thick_ft);
+  const below = flag === true || (flag === undefined && isNum(satMid) && satMid <= thr);
+  if (y) return { p10: num(y.p10), p50: num(y.p50), p90: num(y.p90), below };
+  return { p10: null, p50: null, p90: null, below };
+}
+
+// Is strategy s assessed for this county? strategies.json may restrict a strategy to a list of
+// counties (s.counties) and per_county may lack an entry for it.
+export function strategyApplies(D, fips, s) {
+  if (!s) return false;
+  if (s.id === 'S0') return true;
+  if (Array.isArray(s.counties) && fips && !s.counties.map(String).includes(String(fips))) return false;
+  const pcAll = D.strategies?.per_county;
+  if (pcAll && fips && pcAll[fips] && !pcAll[fips][s.id]) return false;
+  return true;
 }
 
 // --- Strategy -> pumping change ------------------------------------------------------
@@ -45,23 +61,37 @@ export function pumpingChange(D, fips, sid) {
   let est = null, a = null, b = null;
   if (isNum(num(pct))) { est = num(pct) / 100; a = lo(pct) / 100; b = hi(pct) / 100; }
   const n0 = num(pc?.S0?.net_pumping_in_ac), nk = num(pc?.[sid]?.net_pumping_in_ac);
+  const regionLess = isNum(est) && est < 0; // the strategy saves water at region level
   if (isNum(n0) && n0 > 0 && isNum(nk)) {
     const local = (nk - n0) / n0;
-    // keep the strategy-level spread around the county estimate
-    const spreadLo = isNum(a) && isNum(est) ? a - est : 0, spreadHi = isNum(b) && isNum(est) ? b - est : 0;
-    est = local; a = local + spreadLo; b = local + spreadHi;
+    // scale the strategy-level spread proportionally around the county estimate
+    if (isNum(est) && Math.abs(est) > 1e-9 && isNum(a) && isNum(b)) { a = local * (a / est); b = local * (b / est); }
+    else { a = local; b = local; }
+    est = local;
   }
   if (!isNum(est)) return null;
+  if (!isNum(a)) a = est;
+  if (!isNum(b)) b = est;
   const clamp = v => Math.max(-1, v);
-  return { est: clamp(est), lo: clamp(Math.min(a, b)), hi: clamp(Math.max(a, b)) };
+  let L = clamp(Math.min(a, b)), H = clamp(Math.max(a, b));
+  // a water-saving plan never shows more pumping than today
+  if (regionLess || est < 0) H = Math.min(0, H);
+  return { est: clamp(est), lo: L, hi: Math.max(L, H) };
 }
 
 // Share of the local decline that is caused by pumping (rest = regional/background).
+// upperBound: the share was capped at 1 by the model, or the aquifer-mean decline is not
+// positive so a ratio is undefined; then "all from pumping" is an upper bound, not an estimate.
 export function pumpingShare(D, fips) {
   const s = D.scenByFips[fips];
   const d = num(s?.decline_ft_yr), dp = num(s?.decline_from_pumping_ft_yr);
-  if (isNum(d) && d > 0 && isNum(dp)) return { share: Math.max(0, Math.min(1, dp / d)), assumed: false };
-  return { share: 1, assumed: true };
+  let share = null;
+  if (isNum(s?.pumping_share)) share = Math.max(0, Math.min(1, s.pumping_share));
+  else if (isNum(d) && d > 0 && isNum(dp)) share = Math.max(0, Math.min(1, dp / d));
+  if (!isNum(share)) return { share: 1, assumed: true, upperBound: true };
+  const mean = num(s?.decline_aquifer_mean_ft_yr);
+  const upperBound = share >= 0.999 && (s?.pumping_share_capped === true || (isNum(mean) && mean <= 0));
+  return { share, assumed: false, upperBound };
 }
 
 // Years gained at a field if the field (and its neighbours drawing on the same aquifer)
@@ -105,8 +135,13 @@ export function countyShift(D, fips, sid, x, thr) {
   const ftPer = num(s.ft_per_af_ac);
   const pc = D.strategies?.per_county?.[fips];
   const strat = id => D.strategyList.find(z => z.id === id);
-  const net0 = num(pc?.S0?.net_pumping_in_ac) ?? num(strat('S0')?.water_in_ac);
-  const netK = num(pc?.[sid]?.net_pumping_in_ac) ?? num(strat(sid)?.water_in_ac);
+  if (!strategyApplies(D, fips, strat(sid))) return { error: 'This plan is not assessed for this county.' };
+  if (s.median_below_threshold?.[thrKey(thr)] === true) {
+    return { below: true, note: s.median_below_threshold_note?.[thrKey(thr)] || `The typical irrigated acre here is already below ${thr} ft of water-bearing layer, so this threshold cannot show a gain.` };
+  }
+  const usePc = !!(pc && pc.S0);
+  const net0 = usePc ? num(pc.S0.net_pumping_in_ac) : num(strat('S0')?.water_in_ac);
+  const netK = usePc ? num(pc?.[sid]?.net_pumping_in_ac) : num(strat(sid)?.water_in_ac);
   const missingIn = [];
   if (!isNum(avail)) missingIn.push('usable saturated thickness');
   if (!isNum(decl)) missingIn.push('decline rate');
@@ -114,7 +149,8 @@ export function countyShift(D, fips, sid, x, thr) {
   if (!isNum(net0) || !isNum(netK)) missingIn.push('strategy water use');
   if (missingIn.length) return { error: 'Missing ' + missingIn.join(', ') + ' for this county.' };
 
-  const savedAf = x * corn * (net0 - netK) / 12;
+  if (netK > net0) return { error: 'This plan would not use less water than corn in this county.' };
+  const savedAf = Math.max(0, x * corn * (net0 - netK) / 12);
   let dDecl = null, how = '';
   if (isNum(dPump) && isNum(pump) && pump > 0) { dDecl = dPump * savedAf / pump; how = 'pumping share'; }
   else if (isNum(ftPer) && isNum(irrAc) && irrAc > 0) { dDecl = ftPer * savedAf / irrAc; how = 'response coefficient'; }
